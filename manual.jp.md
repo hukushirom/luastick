@@ -176,7 +176,7 @@ Luaにエクスポートする機能の前に記述する。以下で使用可�
 - 関数  
 - 変数[^1]
 
-[^1]:変数はstructのメンバー変数のみエクスポート可能。classのメンバー変数、グローバル変数はエクスポートできない。
+[^1]: 変数はstructのメンバー変数のみエクスポート可能。classのメンバー変数、グローバル変数はエクスポートできない。
 
 ###### 例  
 
@@ -1386,7 +1386,7 @@ Luaオブジェクト。
 
 ### デバッグ方法  
 
-<img src="https://github.com/hukushirom/luastick/blob/master/StickTest/image01.png">
+<img src="https://github.com/hukushirom/luastick/blob/master/Examples_5_3/Sticktrace/image01.png">
 
 1. StickTest.exe を起動。  
 
