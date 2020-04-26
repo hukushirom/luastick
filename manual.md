@@ -115,7 +115,7 @@ Components example of application files and binding source files created by LuaS
 ```  
 **Sticklib.h**
 - C\+\+ libraries which are used in Stick.cpp.  
-- It exists in LuaStick directory.  
+- It exists in LuaStick/files directory.  
 - Application developer does not have to modify it.  
 
 **main.h, srcx.h**   
@@ -125,7 +125,7 @@ Components example of application files and binding source files created by LuaS
 
 **Stickrun.h**
 - C\+\+ libraries which include functions for executing Lua.  
-- It exists in LuaStick directory.  
+- It exists in LuaStick/files directory.  
 - Application developer does not have to modify it.  
 
 **Stick.h, Stick.cpp**
@@ -140,7 +140,7 @@ Components example of application files and binding source files created by LuaS
 
 **Stick.css**
 - Style sheet for Stick.html.  
-- It exists in LuaStick directory.  
+- It exists in LuaStick/files directory.  
 - Application developer can modify it, if needed.  
 
 ************************************************************  
