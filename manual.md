@@ -237,7 +237,7 @@ class ABC
 
 ##### ctype  
 
-Optional. It changes the type of constant. It's required for '#define'.  
+Optional. It changes the type of constant. It's required for '\#define'.  
 
 ###### Example  
 
@@ -275,8 +275,8 @@ Optional. Specifies the name which is used in Lua script. You can specify it for
 - enum
 - static const
 - constexpr
-- #define
--   
+- \#define
+- function
 
 ###### Example  
 

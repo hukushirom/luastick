@@ -236,7 +236,7 @@ class ABC
 
 ##### ctype  
 
-任意。定数の型を指定する場合に記述する。#defineの場合は必須。  
+任意。定数の型を指定する場合に記述する。\#defineの場合は必須。  
 
 ###### 例  
 
@@ -269,7 +269,14 @@ static const __int64 ABC=....;
 ##### lname  
 
 任意。Luaにエクスポートする際に名称を変更する。以下で使用可能。  
-class, struct, namespace, enum, static const, constexpr, #define, 関数  
+- class
+- struct
+- namespace
+- enum
+- static const
+- constexpr
+- \#define
+- 関数
 
 ###### 例  
 
