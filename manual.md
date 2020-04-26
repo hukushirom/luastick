@@ -7,6 +7,12 @@
 **LuaStick**
 - C\+\+ source code of LuaStick.exe. I wrote it using standard C\+\+11, as possible.  
 
+**lua-5.3.5**
+- lua-5.3.5 source code and Visual Studio project.
+
+**lua-5.4.0**
+- lua-5.4.0 Visual Studio project.
+
 **Examples_5_3**  
 - Examples for lua 5.3
 
@@ -65,7 +71,7 @@ Followings are directories in the Examples_X_X.
 2. Open the solution 'BuildAll.sln'.  
 3. Build.  
 
-If you wish to build examples for lua 5.4, take the following steps.  
+Lua 5.4.0 is not released yet. After released, you can become to build examples for lua 5.4, take the following steps.  
 
 1. Open the solution 'Build_5_4.sln'.  
 2. Build.  
