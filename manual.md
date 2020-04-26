@@ -71,7 +71,7 @@ Followings are directories in the Examples_X_X.
 2. Open the solution 'BuildAll.sln'.  
 3. Build.  
 
-Lua 5.4.0 is not released yet. After released, you can become to build examples for lua 5.4, take the following steps.  
+Lua 5.4.0 is not released yet. After released, you will become to be able to build examples for lua 5.4, take the following steps.  
 
 1. Open the solution 'Build_5_4.sln'.  
 2. Build.  
