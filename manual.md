@@ -174,7 +174,7 @@ Exports the function which exists just below the tag. You can use this with the 
 - enum  
 - static const  
 - constexpr  
-- #define  
+- \#define  
 - function  
 - variable[^1]
 
