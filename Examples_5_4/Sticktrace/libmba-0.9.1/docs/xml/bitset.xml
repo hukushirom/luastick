@@ -1,0 +1,87 @@
+<interface name="bitset"
+	short="functions for manipulating memory as sets of bits">
+
+<comments>
+	Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/bitset.h</include>
+
+<title>Bitset</title>
+<desc>
+	The <def>bitset</def>(3m) module provides functions for testing and manipulating an arbitrary pointer to memory as a set of bits. Unlike other modules in Libmba, this is not an abstract data type in that it is the responsibility of the user to manage the memory of the bitset. All <def>bitset</def>(3m) operations threat the target memory as an array of <tt>unsigned char</tt> elements. Bit 0 of each element is the least significant bit whereas bit 7 is the most significant bit.
+<p/>
+Paramters and return values that represent the index of a bit in the <def>bitset</def>(3m) start at 0 relative to the provided target memory. It is the caller's responsability to ensure that a bit index parameter falls within the target memory.
+</desc>
+
+<group>
+<title>The <ident>bitset</ident> functions</title>
+<desc>
+These functions should be used to test and manipulate a memory pointer as a set of bits.
+</desc>
+<meth name="isset">
+	<pre>int bitset_isset(void *ptr, int bit);</pre>
+	<param name="ptr"/>
+	<param name="bit"/>
+	<desc>
+The <ident>bitset_isset</ident> function tests the bit at the index identified by <tt>bit</tt> and returns 1 or 0 to indicate that it is set or unset respectively.
+	</desc>
+	<ret>
+The <ident>bitset_isset</ident> function returns 1 or 0 to indicate that the bit at the index identified by <tt>bit</tt> is set or unset respectively.
+	</ret>
+</meth>
+<meth name="set">
+	<pre>int bitset_set(void *ptr, int bit);</pre>
+	<param name="ptr"/>
+	<param name="bit"/>
+	<desc>
+The <ident>bitset_set</ident> function sets the bit at the index identified by <tt>bit</tt> and returns 1 if the bit was set or 0 if the <ident>bitset</ident> was not modified.
+	</desc>
+</meth>
+<meth name="unset">
+	<pre>int bitset_unset(void *ptr, int bit);</pre>
+	<param name="ptr"/>
+	<param name="bit"/>
+	<desc>
+The <ident>bitset_unset</ident> function unsets the bit at the index identified by <tt>bit</tt> and returns 1 if the bit was unset or 0 if the <ident>bitset</ident> was not modified.
+	</desc>
+</meth>
+<meth name="toggle">
+	<pre>void bitset_toggle(void *ptr, int bit);</pre>
+	<param name="ptr"/>
+	<param name="bit"/>
+	<desc>
+The <ident>bitset_toggle</ident> function toggles the bit identified by <tt>bit</tt>. This function does not return a value.
+	</desc>
+</meth>
+<meth name="find_first">
+	<pre>int bitset_find_first(void *ptr, void *plim, int val);</pre>
+	<param name="ptr"/>
+	<param name="plim"/>
+	<param name="val"/>
+	<desc>
+The <ident>bitset_find_first</ident> function returns the index of the first bit with the value <tt>val</tt> starting at the memory <tt>ptr</tt> up to, but not including, the memory at <tt>plim</tt>. Specifically if <tt>val</tt> is 0 the index of the first bit not set is returned whereas if <tt>val</tt> is non-zero the index of the first bit that is set is returned.
+	</desc>
+	<ret>
+The <ident>bitset_find_first</ident> function returns the index of the first bit with the value <tt>val</tt> or -1 and sets <ident>errno</ident> to <tt>ENOENT</tt> if there is no such bit in the memory between <tt>ptr</tt> and <tt>plim</tt>.
+	</ret>
+</meth>
+<meth name="iterate">
+	<pre>void bitset_iterate(iter_t *iter); </pre>
+	<param name="iter"/>
+	<desc combine="next">
+The <ident>bitset_iterate</ident> and <ident>bitset_next</ident> functions are used to iterate over the bits in the <def>bitset</def>(3m) identified by the memory at <tt>ptr</tt>.
+	</desc>
+</meth>
+<meth name="next">
+	<pre>int bitset_next(void *ptr, void *plim, iter_t *iter);</pre>
+	<param name="ptr"/>
+	<param name="plim"/>
+	<param name="iter"/>
+	<ret>
+The <ident>bitset_next</ident> function returns 0, 1, or -1 to indicate the next bit in the memory at <tt>ptr</tt> representing this <def>bitset</def>(3m). If the next bit is unset, 0 is returned. If the bit is set, 1 is returned. Only memory up to, but not including, <tt>plim</tt> will be examined. When <tt>plim</tt> is reached -1 is returned.
+	</ret>
+</meth>
+</group>
+
+</interface>

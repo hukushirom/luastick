@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Path</TITLE>
+</HEAD>
+<BODY>
+<H1>11. Path</H1>
+	The <I>path</I>(3m) module provides functions for some common path manipulations.
+<H3>11.1. Path functions</H3>
+<A name="canon"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>path_canon</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/path.h&gt;
+  int path_canon(const unsigned char *src,
+           const unsigned char *slim,
+           unsigned char *dst,
+           unsigned char *dlim,
+           int srcsep,
+           int dstsep);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <tt>path_canon</tt> function canonicalizes the path at <tt>src</tt> up to but not including the memory at <tt>slim</tt> into the memory at <tt>dst</tt> up to but not including <tt>dlim</tt>. The character that separates path components in the <tt>src</tt> path is specified with the <tt>srcsep</tt> parameter whereas <tt>dstsep</tt> specifies the separator with which the <tt>dst</tt> path is constructed.
+<p>
+</p>
+Specifically, canonicalization will eliminate '.' and '..' components in paths in the conventional way as well as normalize redundant separators. The presence or lack of an initial and/or trailing separator is preserved. The following lists some examples of paths before and after canonicalization:
+<PRE>
+
+  before      after
+  .
+  ..
+  /           /
+  /.          /
+  ./
+  ../
+  .../        .../
+  a/..        
+  abc/../
+  a/b/c       a/b/c
+  /a/b/c      /a/b/c 
+  /./a/b/c    /a/b/c
+  /../a/b/c   /a/b/c
+  ..a/b/c     ..a/b/c
+  a/b/c/      a/b/c/
+  a/b/c/..    a/b/
+  a/b/c/../   a/b/
+  a/b/c/./    a/b/c/
+  </PRE>
+<B>Returns</B>
+<BR>
+The <tt>path_canon</tt> function returns the number of bytes written to <tt>dst</tt> not including the zero terminator or -1 if <tt>slim</tt> or <tt>dlim</tt> has been reached in which case <TT>errno</TT> is set to <TT>ERANGE</TT>.
+<P>
+</P>
+<HR NOSHADE>
+<small>
+Copyright 2003 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

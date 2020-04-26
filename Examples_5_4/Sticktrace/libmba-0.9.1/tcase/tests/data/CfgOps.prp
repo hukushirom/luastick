@@ -1,0 +1,29 @@
+some=prp
+# This is a comment
+
+one.two.three = 1 2 3
+ a=b
+somequitelongpropertyname   =value 
+! this.is = disabled
+
+mail.folder.0 = Junk
+mail.folder.1 = Spam
+mail.folder.2 = Susan & Brad
+mail.folder.1.idx = 0x2
+
+      ! not great eather
+
+# not supported  this.has.no.value=			
+! this.is = disabled
+
+Truth = Beauty
+# colon and space not supported yet
+#	Truth:Beauty
+#Truth			:Beauty
+fruits =		apple, banana, pear, \
+				cantaloupe, watermelon, \
+                kiwi, mango
+!comment1
+ # comment2
+
+foo = b\tar\ 

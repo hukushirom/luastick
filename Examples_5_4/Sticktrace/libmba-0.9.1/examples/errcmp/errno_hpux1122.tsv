@@ -1,0 +1,117 @@
+E2BIG	7	Arg list too long
+EACCES	13	Permission denied
+EADDRINUSE	226	Address already in use
+EADDRNOTAVAIL	227	Can't assign requested address
+EADV	58	advertise error
+EAFNOSUPPORT	225	Address family not supported by protocol family
+EAGAIN	11	No more processes
+EALREADY	244	Operation already in progress
+EBADF	9	Bad file number
+EBADMSG	67	trying to read unreadable message
+EBADVER	156	Version number mismatch for loadable kernel module
+EBUSY	16	Mount device busy
+ECANCELED	253	aio request was canceled before complete
+ECHILD	10	No children
+ECHRNG	37	Channel number out of range
+ECOMM	60	Communication error on send
+ECONFIG	157	Configured kernle resource exhausted
+ECONNABORTED	231	Software caused connection abort
+ECONNREFUSED	239	Connection refused
+ECONNRESET	232	Connection reset by peer
+EDEADLK	45	A deadlock would occur
+EDESTADDRREQ	217	Destination address required
+EDOTDOT	66	Cross mount point (not really error)
+EDQUOT	69	Disc quota exceeded
+EEXIST	17	File exists
+EFAULT	14	Bad address
+EFBIG	27	File too large
+EHOSTDOWN	241	Host is down
+EHOSTUNREACH	242	No route to host
+EIDRM	36	Identifier removed
+EILSEQ	47	Illegal byte sequence
+EINPROGRESS	245	Operation now in progress
+EINTR	4	interrupted system call
+EINVAL	22	Invalid argument
+EIO	5	I/O error
+EISCONN	234	Socket is already connected
+EISDIR	21	Is a directory
+EL2HLT	44	Level 2 halted
+EL2NSYNC	38	Level 2 not synchronized
+EL3HLT	39	Level 3 halted
+EL3RST	40	Level 3 reset
+ELNRNG	41	Link number out of range
+ELOOP	249	Too many levels of symbolic links
+EMEDIA	124	
+EMFILE	24	Too many open files
+EMLINK	31	Too many links
+EMSGSIZE	218	Message too long
+EMULTIHOP	64	multihop attempted
+ENAMETOOLONG	248	File name too long
+ENETDOWN	228	Network is down
+ENETRESET	230	Network dropped connection on reset
+ENETUNREACH	229	Network is unreachable
+ENFILE	23	File table overflow
+ENOBUFS	233	No buffer space available
+ENOCSI	43	No CSI structure available
+ENODATA	51	no data (for no delay io)
+ENODEV	19	No such device
+ENOENT	2	No such file or directory
+ENOEXEC	8	Exec format error
+ENOLCK	46	System record lock table was full
+ENOLINK	57	the link has been severed
+ENOLOAD	152	Cannot load required kernel module
+ENOMATCH	154	Symbol matching given spec not found
+ENOMEM	12	Not enough core
+ENOMSG	35	No message of desired type
+ENONET	50	Machine is not on the network
+ENOPKG	55	Package not installed
+ENOPROTOOPT	220	Protocol not available
+ENOREG	158	Cannot register required kernel module
+ENOSPC	28	No space left on device
+ENOSR	53	out of streams resources
+ENOSTR	54	Device not a stream
+ENOSYM	215	symbol does not exist in executable
+ENOSYS	251	Function not implemented
+ENOTBLK	15	Block device required
+ENOTCONN	235	Socket is not connected
+ENOTDIR	20	Not a directory
+ENOTEMPTY	247	Directory not empty
+ENOTSOCK	216	Socket operation on non-socket
+ENOTSUP	252	Function not implemented
+ENOTTY	25	Not a typewriter
+ENOUNLD	155	Cannot unload kernel module
+ENOUNREG	159	Cannot unregister kernel module
+ENXIO	6	No such device or address
+EOPCOMPLETE	134	Operation completed at server
+EOPNOTSUPP	223	Operation not supported
+EOVERFLOW	72	Value too large to be stored in data type
+EPATHREMOTE	133	Pathname is remote
+EPERM	1	Not super-user
+EPFNOSUPPORT	224	Protocol family not supported
+EPIPE	32	Broken pipe
+EPOWERF	126	
+EPROTO	61	Protocol error
+EPROTONOSUPPORT	221	Protocol not supported
+EPROTOTYPE	219	Protocol wrong type for socket
+EREFUSED	239	Double define for NFS
+ERELOC	153	Object file error in loading kernel module
+ERELOCATED	125	
+EREMOTE	71	Too many levels of remote in path
+EREMOTERELEASE	240	Remote peer released connection
+EROFS	30	Read only file system
+ESHUTDOWN	236	Can't send after socket shutdown
+ESOCKTNOSUPPORT	222	Socket type not supported
+ESOFT	123	
+ESPIPE	29	Illegal seek
+ESRCH	3	No such process
+ESRMNT	59	srmount error
+ESTALE	70	Stale NFS file handle
+ESUCCESS	0	
+ETIME	52	timer expired
+ETIMEDOUT	238	Connection timed out
+ETOOMANYREFS	237	Too many references: can't splice
+ETXTBSY	26	Text file busy
+EUNATCH	42	Protocol driver not attached
+EUSERS	68	For Sun compatibilty, will not occur
+EWOULDBLOCK	246	Operation would block
+EXDEV	18	Cross-device link

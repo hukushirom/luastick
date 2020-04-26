@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+        BODY {
+            font-family: verdana, arial;
+            font-size: small;
+            background-color: #ffffff;
+        }
+        H1 {
+            font-family: verdana, arial;
+            font-size: normal;
+            color: #000000;
+        }
+        H2 {
+            font-family: arial, verdana;
+            font-size: normal;
+            color: #000000;
+        }
+        H3 {
+            font-family: arial, verdana;
+            font-size: small;
+            color: #000080;
+        }
+        A {
+            font-family: arial, verdana;
+            font-weight: bold;
+            color: #000080;
+        }
+        A:HOVER {
+            text-decoration: none;
+        }
+        BIG {
+            color: #000080;
+            font-family: arial, verdana;
+            font-weight: bold;
+            font-size: 50px;
+        }
+        EM {
+            color: #000080;
+            font-family: Times New Roman;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        PRE {
+            font-family: monospaced, courier;
+            border: 1px lightgrey dotted;
+            white-space: pre; 
+            color: black;
+            padding: 4px;
+            background-color: #f0f0f0; 
+        }
+        TABLE {
+            border-collapse: collapse;
+            border: 1px lightgrey solid;
+        }
+        TH {
+            font-family: verdana, arial;
+            border: 1px lightgrey solid;
+            font-size: small;
+            background-color: #f0f0f0;
+        }
+        TD {
+            font-family: verdana, arial;
+            font-size: x-small;
+            border: 1px lightgrey solid;
+        }
+    </STYLE>
+<TITLE>Errno Codes by Platform</TITLE>
+</HEAD>
+<BODY>
+
+<H1>Errno Codes by Platform</H1>
+
+An identifier is defined for platforms that have a numeric value listed (even though there may not be an associated message shown). Column 2 is a score that indicates the fraction of platforms on which the identifier is found (1 meaning all).
+<p/>
+
+<TABLE>
+<TR><TH><TH>
+<TH colspan='2'>SUSv3
+<TH colspan='2'>AIX 4.3,5.1
+<TH colspan='2'>HP-UX 11.22
+<TH colspan='2'>Solaris 9,10
+<TH colspan='2'>Linux 2.4.28,2.6.9
+<TH colspan='2'>IRIX 6.5<small>[4]</small>
+<TH colspan='2'>OSF1
+<TH colspan='2'>FreeBSD 5.2.1
+<TH colspan='2'>OSX 10.3.8
+<TH colspan='2'>MSVC6
+
+
+<tr><td>EPERM<td>1<td>0<td>Operation not permitted.<td>1<td>Operation not permitted<td>1<td>Not super-user<td>1<td>Not super-user<td>1<td>Operation not permitted<td>1<td>Operation not permitted<td>1<td>Not owner<td>1<td>Operation not permitted<td>1<td>Operation not permitted<td>1<td>Operation not permitted
+<tr><td>ENOENT<td>1<td>0<td>No such file or directory.<td>2<td>No such file or directory<td>2<td>No such file or directory<td>2<td>No such file or directory<td>2<td>No such file or directory<td>2<td>No such file or directory<td>2<td>No such file or directory<td>2<td>No such file or directory<td>2<td>No such file or directory<td>2<td>No such file or directory
+<tr><td>ESRCH<td>1<td>0<td>No such process.<td>3<td>No such process<td>3<td>No such process<td>3<td>No such process<td>3<td>No such process<td>3<td>No such process<td>3<td>No such process<td>3<td>No such process<td>3<td>No such process<td>3<td>No such process
+<tr><td>EINTR<td>1<td>0<td>Interrupted function.<td>4<td>interrupted system call<td>4<td>interrupted system call<td>4<td>interrupted system call<td>4<td>Interrupted system call<td>4<td>Interrupted function call<td>4<td>Interrupted system call<td>4<td>Interrupted system call<td>4<td>Interrupted system call<td>4<td>Interrupted function call
+<tr><td>EIO<td>1<td>0<td>I/O error.<td>5<td>I/O error<td>5<td>I/O error<td>5<td>I/O error<td>5<td>I/O error<td>5<td>I/O error<td>5<td>I/O error<td>5<td>Input/output error<td>5<td>Input/output error<td>5<td>Input/output error
+<tr><td>ENXIO<td>1<td>0<td>No such device or address.<td>6<td>No such device or address<td>6<td>No such device or address<td>6<td>No such device or address<td>6<td>No such device or address<td>6<td>No such device or address<td>6<td>No such device or address<td>6<td>Device not configured<td>6<td>Device not configured<td>6<td>No such device or address
+<tr><td>E2BIG<td>1<td>0<td>Argument list too long.<td>7<td>Arg list too long<td>7<td>Arg list too long<td>7<td>Arg list too long<td>7<td>Arg list too long<td>7<td>Arg list too long<td>7<td>Arg list too long<td>7<td>Argument list too long<td>7<td>Argument list too long<td>7<td>Arg list too long
+<tr><td>ENOEXEC<td>1<td>0<td>Executable file format error.<td>8<td>Exec format error<td>8<td>Exec format error<td>8<td>Exec format error<td>8<td>Exec format error<td>8<td>Exec format error<td>8<td>Exec format error<td>8<td>Exec format error<td>8<td>Exec format error<td>8<td>Exec format error
+<tr><td>EBADF<td>1<td>0<td>Bad file descriptor.<td>9<td>Bad file descriptor<td>9<td>Bad file number<td>9<td>Bad file number<td>9<td>Bad file number<td>9<td>Bad file number<td>9<td>Bad file number<td>9<td>Bad file descriptor<td>9<td>Bad file descriptor<td>9<td>Bad file descriptor
+<tr><td>ECHILD<td>1<td>0<td>No child processes.<td>10<td>No child processes<td>10<td>No children<td>10<td>No children<td>10<td>No child processes<td>10<td>No child processes<td>10<td>No children<td>10<td>No child processes<td>10<td>No child processes<td>10<td>No child processes
+<tr><td>EAGAIN<td>1<td>0<td>Resource unavailable, try again [3]<td>11<td>Resource temporarily unavailable<td>11<td>No more processes<td>11<td>Resource temporarily unavailable<td>11<td>Try again<td>11<td>Resource temporarily unavailable<td>11<td>ditto<td>35<td>Resource temporarily unavailable<td>35<td>Resource temporarily unavailable<td>11<td>Resource temporarily unavailable
+<tr><td>ENOMEM<td>1<td>0<td>Not enough space.<td>12<td>Not enough space<td>12<td>Not enough core<td>12<td>Not enough core<td>12<td>Out of memory<td>12<td>Not enough space<td>12<td>Not enough core<td>12<td>Cannot allocate memory<td>12<td>Cannot allocate memory<td>12<td>Not enough space
+<tr><td>EACCES<td>1<td>0<td>Permission denied.<td>13<td>Permission denied<td>13<td>Permission denied<td>13<td>Permission denied<td>13<td>Permission denied<td>13<td>Permission denied<td>13<td>Permission denied<td>13<td>Permission denied<td>13<td>Permission denied<td>13<td>Permission denied
+<tr><td>EFAULT<td>1<td>0<td>Bad address.<td>14<td>Bad address<td>14<td>Bad address<td>14<td>Bad address<td>14<td>Bad address<td>14<td>Bad address<td>14<td>Bad address<td>14<td>Bad address<td>14<td>Bad address<td>14<td>Bad address
+<tr><td>ENOTBLK<td>0.9<td><td><td>15<td>Block device required<td>15<td>Block device required<td>15<td>Block device required<td>15<td>Block device required<td>15<td>Block device required<td>15<td>Block device required<td>15<td>Block device required<td>15<td>Block device required<td>15<td>Unknown error
+<tr><td>EBUSY<td>1<td>0<td>Device or resource busy.<td>16<td>Resource busy<td>16<td>Mount device busy<td>16<td>Mount device busy<td>16<td>Device or resource busy<td>16<td>Resource busy<td>16<td>Mount device busy<td>16<td>Device busy<td>16<td>Device busy<td>16<td>Resource device
+<tr><td>EEXIST<td>1<td>0<td>File exists.<td>17<td>File exists<td>17<td>File exists<td>17<td>File exists<td>17<td>File exists<td>17<td>File exists<td>17<td>File exists<td>17<td>File exists<td>17<td>File exists<td>17<td>File exists
+<tr><td>EXDEV<td>1<td>0<td>Cross-device link.<td>18<td>Improper link<td>18<td>Cross-device link<td>18<td>Cross-device link<td>18<td>Cross-device link<td>18<td>Improper link<td>18<td>Cross-device link<td>18<td>Cross-device link<td>18<td>Cross-device link<td>18<td>Improper link
+<tr><td>ENODEV<td>1<td>0<td>No such device.<td>19<td>No such device<td>19<td>No such device<td>19<td>No such device<td>19<td>No such device<td>19<td>No such device<td>19<td>No such device<td>19<td>Operation not supported by device<td>19<td>Operation not supported by device<td>19<td>No such device
+<tr><td>ENOTDIR<td>1<td>0<td>Not a directory.<td>20<td>Not a directory<td>20<td>Not a directory<td>20<td>Not a directory<td>20<td>Not a directory<td>20<td>Not a directory<td>20<td>Not a directory<td>20<td>Not a directory<td>20<td>Not a directory<td>20<td>Not a directory
+<tr><td>EISDIR<td>1<td>0<td>Is a directory.<td>21<td>Is a directory<td>21<td>Is a directory<td>21<td>Is a directory<td>21<td>Is a directory<td>21<td>Is a directory<td>21<td>Is a directory<td>21<td>Is a directory<td>21<td>Is a directory<td>21<td>Is a directory
+<tr><td>EINVAL<td>1<td>0<td>Invalid argument.<td>22<td>Invalid argument<td>22<td>Invalid argument<td>22<td>Invalid argument<td>22<td>Invalid argument<td>22<td>Invalid argument<td>22<td>Invalid argument<td>22<td>Invalid argument<td>22<td>Invalid argument<td>22<td>Invalid argument
+<tr><td>ENFILE<td>1<td>0<td>Too many files open in system.<td>23<td>Too many open files in system<td>23<td>File table overflow<td>23<td>File table overflow<td>23<td>File table overflow<td>23<td>File table overflow<td>23<td>File table overflow<td>23<td>Too many open files in system<td>23<td>Too many open files in system<td>23<td>Too many open files in system
+<tr><td>EMFILE<td>1<td>0<td>Too many open files.<td>24<td>Too many open files<td>24<td>Too many open files<td>24<td>Too many open files<td>24<td>Too many open files<td>24<td>Too many open files<td>24<td>Too many open files<td>24<td>Too many open files<td>24<td>Too many open files<td>24<td>Too many open files
+<tr><td>ENOTTY<td>1<td>0<td>Inappropriate I/O control operation.<td>25<td>Inappropriate I/O control operation<td>25<td>Not a typewriter<td>25<td>Inappropriate ioctl for device<td>25<td>Not a typewriter<td>25<td>Inappropriate I/O control operation<td>25<td>Not a typewriter<td>25<td>Inappropriate ioctl for device<td>25<td>Inappropriate ioctl for device<td>25<td>Inappropriate I/O control operation
+<tr><td>ETXTBSY<td>1<td>0<td>Text file busy.<td>26<td>Text file busy<td>26<td>Text file busy<td>26<td>Text file busy<td>26<td>Text file busy<td>26<td>Text file busy<td>26<td>Text file busy<td>26<td>Text file busy<td>26<td>Text file busy<td>26<td>Unknown error
+<tr><td>EFBIG<td>1<td>0<td>File too large.<td>27<td>File too large<td>27<td>File too large<td>27<td>File too large<td>27<td>File too large<td>27<td>File too large<td>27<td>File too large<td>27<td>File too large<td>27<td>File too large<td>27<td>File too large
+<tr><td>ENOSPC<td>1<td>0<td>No space left on device.<td>28<td>No space left on device<td>28<td>No space left on device<td>28<td>No space left on device<td>28<td>No space left on device<td>28<td>No space left on device<td>28<td>No space left on device<td>28<td>No space left on device<td>28<td>No space left on device<td>28<td>No space left on device
+<tr><td>ESPIPE<td>1<td>0<td>Invalid seek.<td>29<td>Invalid seek<td>29<td>Illegal seek<td>29<td>Illegal seek<td>29<td>Illegal seek<td>29<td>Illegal seek<td>29<td>Illegal seek<td>29<td>Illegal seek<td>29<td>Illegal seek<td>29<td>Invalid seek
+<tr><td>EROFS<td>1<td>0<td>Read-only file system.<td>30<td>Read only file system<td>30<td>Read only file system<td>30<td>Read only file system<td>30<td>Read-only file system<td>30<td>Read only file system<td>30<td>Read-only file system<td>30<td>Read-only filesystem<td>30<td>Read-only file system<td>30<td>Read-only file system
+<tr><td>EMLINK<td>1<td>0<td>Too many links.<td>31<td>Too many links<td>31<td>Too many links<td>31<td>Too many links<td>31<td>Too many links<td>31<td>Too many links<td>31<td>Too many links<td>31<td>Too many links<td>31<td>Too many links<td>31<td>Too many links
+<tr><td>EPIPE<td>1<td>0<td>Broken pipe.<td>32<td>Broken pipe<td>32<td>Broken pipe<td>32<td>Broken pipe<td>32<td>Broken pipe<td>32<td>Broken pipe<td>32<td>Broken pipe<td>32<td>Broken pipe<td>32<td>Broken pipe<td>32<td>Broken pipe
+<tr><td>EDOM<td>0.9<td>0<td>Mathematics argument out of domain of function.<td>33<td>Domain error within math function<td><td><td>33<td>Math arg out of domain of func<td>33<td>Math argument out of domain of func<td>33<td>Domain error<td>33<td>Argument too large<td>33<td>Numerical argument out of domain<td>33<td>Numerical argument out of domain<td>33<td>Domain error
+<tr><td>ERANGE<td>0.9<td>0<td>Result too large.<td>34<td>Result too large<td><td><td>34<td>Math result not representable<td>34<td>Math result not representable<td>34<td>Result too large<td>34<td>Result too large<td>34<td>Result too large<td>34<td>Result too large<td>34<td>Result too large
+<tr><td>ENOMSG<td>0.9<td>0<td>No message of the desired type.<td>35<td>No message of desired type<td>35<td>No message of desired type<td>35<td>No message of desired type<td>42<td>No message of desired type<td>35<td>No message of desired type<td>80<td>No msg matches receive request<td>83<td>No message of desired type<td>91<td>No message of desired type<td><td>
+<tr><td>EIDRM<td>0.9<td>0<td>Identifier removed.<td>36<td>Identifier removed<td>36<td>Identifier removed<td>36<td>Identifier removed<td>43<td>Identifier removed<td>36<td>Identifier removed<td>81<td>Msg queue id has been removed<td>82<td>Identifier removed<td>90<td>Identifier removed<td><td>
+<tr><td>ECHRNG<td>0.5<td><td><td>37<td>Channel number out of range<td>37<td>Channel number out of range<td>37<td>Channel number out of range<td>44<td>Channel number out of range<td>37<td>Channel number out of range<td><td><td><td><td><td><td><td>
+<tr><td>EL2NSYNC<td>0.5<td><td><td>38<td>Level 2 not synchronized<td>38<td>Level 2 not synchronized<td>38<td>Level 2 not synchronized<td>45<td>Level 2 not synchronized<td>38<td>Level 2 not synchronized<td><td><td><td><td><td><td><td>
+<tr><td>EL3HLT<td>0.5<td><td><td>39<td>Level 3 halted<td>39<td>Level 3 halted<td>39<td>Level 3 halted<td>46<td>Level 3 halted<td>39<td>Level 3 halted<td><td><td><td><td><td><td><td>
+<tr><td>EL3RST<td>0.5<td><td><td>40<td>Level 3 reset<td>40<td>Level 3 reset<td>40<td>Level 3 reset<td>47<td>Level 3 reset<td>40<td>Level 3 reset<td><td><td><td><td><td><td><td>
+<tr><td>ELNRNG<td>0.5<td><td><td>41<td>Link number out of range<td>41<td>Link number out of range<td>41<td>Link number out of range<td>48<td>Link number out of range<td>41<td>Link number out of range<td><td><td><td><td><td><td><td>
+<tr><td>EUNATCH<td>0.5<td><td><td>42<td>Protocol driver not attached<td>42<td>Protocol driver not attached<td>42<td>Protocol driver not attached<td>49<td>Protocol driver not attached<td>42<td>Protocol driver not attached<td><td><td><td><td><td><td><td>
+<tr><td>ENOCSI<td>0.5<td><td><td>43<td>No CSI structure available<td>43<td>No CSI structure available<td>43<td>No CSI structure available<td>50<td>No CSI structure available<td>43<td>No CSI structure available<td><td><td><td><td><td><td><td>
+<tr><td>EL2HLT<td>0.5<td><td><td>44<td>Level 2 halted<td>44<td>Level 2 halted<td>44<td>Level 2 halted<td>51<td>Level 2 halted<td>44<td>Level 2 halted<td><td><td><td><td><td><td><td>
+<tr><td>EDEADLK<td>1<td>0<td>Resource deadlock would occur.<td>45<td>Resource deadlock avoided<td>45<td>A deadlock would occur<td>45<td>Deadlock condition.<td>35<td>Resource deadlock would occur<td>45<td>Resource deadlock avoided<td>11<td>Operation would cause deadlock<td>11<td>Resource deadlock avoided [5]<td>11<td>Resource deadlock avoided<td>36<td>Resource deadlock avoided
+<tr><td>ENOTREADY<td>0.1<td><td><td>46<td>Device not ready<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>EWRPROTECT<td>0.1<td><td><td>47<td>Write-protected media<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>EFORMAT<td>0.1<td><td><td>48<td>Unformatted media<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOLCK<td>1<td>0<td>No locks available.<td>49<td>No locks available<td>46<td>System record lock table was full<td>46<td>No record locks available.<td>37<td>No record locks available<td>46<td>No locks available<td>77<td>No locks available<td>77<td>No locks available<td>77<td>No locks available<td>39<td>No locks available
+<tr><td>ENOCONNECT<td>0.1<td><td><td>50<td>no connection<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ESTALE<td>0.9<td>0<td>Reserved.<td>52<td>no filesystem<td>70<td>Stale NFS file handle<td>151<td>Stale NFS file handle<td>116<td>Stale NFS file handle<td>151<td>Stale NFS file handle<td>70<td>Stale NFS file handle<td>70<td>Stale NFS file handle<td>70<td>Stale NFS file handle<td><td>
+<tr><td>EDIST<td>0.1<td><td><td>53<td>old, currently unused AIX errno<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>EWOULDBLOCK<td>0.9<td>0<td>Operation would block [3]<td>54<td>Operation would block [2]<td>246<td>Operation would block<td>11<td><td>11<td>Operation would block<td>11<td>Resource temporarily unavailable<td>35<td>Operation would block<td>35<td>Operation would block<td>35<td>Operation would block<td><td>
+<tr><td>EINPROGRESS<td>0.9<td>0<td>Operation in progress.<td>55<td>Operation now in progress<td>245<td>Operation now in progress<td>150<td>operation now in progress<td>115<td>Operation now in progress<td>150<td>operation now in progress<td>36<td>Operation now in progress<td>36<td>Operation now in progress<td>36<td>Operation now in progress<td><td>
+<tr><td>EALREADY<td>0.9<td>0<td>Connection already in progress.<td>56<td>Operation already in progress<td>244<td>Operation already in progress<td>149<td>operation already in progress<td>114<td>Operation already in progress<td>149<td>operation already in progress<td>37<td>Operation already in progress<td>37<td>Operation already in progress<td>37<td>Operation already in progress<td><td>
+<tr><td>ENOTSOCK<td>0.9<td>0<td>Not a socket.<td>57<td>Socket operation on non-socket<td>216<td>Socket operation on non-socket<td>95<td>Socket operation on non-socket<td>88<td>Socket operation on non-socket<td>95<td>Socket operation on non-socket<td>38<td>Socket operation on non-socket<td>38<td>Socket operation on non-socket<td>38<td>Socket operation on non-socket<td><td>
+<tr><td>EDESTADDRREQ<td>0.9<td>0<td>Destination address required.<td>58<td>Destination address required<td>217<td>Destination address required<td>96<td>Destination address required<td>89<td>Destination address required<td>96<td>Destination address required<td>39<td>Destination address required<td>39<td>Destination address required<td>39<td>Destination address required<td><td>
+<tr><td>EDESTADDREQ<td>0.1<td><td><td>58<td>Destination address required<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>EMSGSIZE<td>0.9<td>0<td>Message too large.<td>59<td>Message too long<td>218<td>Message too long<td>97<td>Message too long<td>90<td>Message too long<td>97<td>Inappropriate message buffer length<td>40<td>Message too long<td>40<td>Message too long<td>40<td>Message too long<td><td>
+<tr><td>EPROTOTYPE<td>0.9<td>0<td>Protocol wrong type for socket.<td>60<td>Protocol wrong type for socket<td>219<td>Protocol wrong type for socket<td>98<td>Protocol wrong type for socket<td>91<td>Protocol wrong type for socket<td>98<td>Protocol wrong type for socket<td>41<td>Protocol wrong type for socket<td>41<td>Protocol wrong type for socket<td>41<td>Protocol wrong type for socket<td><td>
+<tr><td>ENOPROTOOPT<td>0.9<td>0<td>Protocol not available.<td>61<td>Protocol not available<td>220<td>Protocol not available<td>99<td>Protocol not available<td>92<td>Protocol not available<td>99<td>Protocol not available<td>42<td>Protocol not available<td>42<td>Protocol not available<td>42<td>Protocol not available<td><td>
+<tr><td>EPROTONOSUPPORT<td>0.9<td>0<td>Protocol not supported.<td>62<td>Protocol not supported<td>221<td>Protocol not supported<td>120<td>Protocol not supported<td>93<td>Protocol not supported<td>120<td>Protocol not supported<td>43<td>Protocol not supported<td>43<td>Protocol not supported<td>43<td>Protocol not supported<td><td>
+<tr><td>ESOCKTNOSUPPORT<td>0.8<td><td><td>63<td>Socket type not supported<td>222<td>Socket type not supported<td>121<td>Socket type not supported<td>94<td>Socket type not supported<td>121<td>Socket type not supported<td>44<td>Socket type not supported<td>44<td>Socket type not supported<td>44<td>Socket type not supported<td><td>
+<tr><td>EOPNOTSUPP<td>0.9<td>0<td>Operation not supported on socket.<td>64<td>Operation not supported on socket<td>223<td>Operation not supported<td>122<td>Operation not supported on socket<td>95<td>Operation not supported on transport endpoint<td>122<td>Operation not supported on socket<td>45<td>Operation not supported on socket<td>45<td>Operation not supported<td>45<td>Operation not supported<td><td>
+<tr><td>EPFNOSUPPORT<td>0.8<td><td><td>65<td>Protocol family not supported<td>224<td>Protocol family not supported<td>123<td>Protocol family not supported<td>96<td>Protocol family not supported<td>123<td>Protocol family not supported<td>46<td>Protocol family not supported<td>46<td>Protocol family not supported<td>46<td>Protocol family not supported<td><td>
+<tr><td>EAFNOSUPPORT<td>0.9<td>0<td>Address family not supported.<td>66<td>Address family not supported by protocol family<td>225<td>Address family not supported by protocol family<td>124<td>Address family not supported by<td>97<td>Address family not supported by protocol<td>124<td>Address family not supported by<td>47<td>Address family not supported by protocol family<td>47<td>Address family not supported by protocol family<td>47<td>Address family not supported by protocol family<td><td>
+<tr><td>EADDRINUSE<td>0.9<td>0<td>Address in use.<td>67<td>Address already in use<td>226<td>Address already in use<td>125<td>Address already in use<td>98<td>Address already in use<td>125<td>Address already in use<td>48<td>Address already in use<td>48<td>Address already in use<td>48<td>Address already in use<td><td>
+<tr><td>EADDRNOTAVAIL<td>0.9<td>0<td>Address not available.<td>68<td>Can't assign requested address<td>227<td>Can't assign requested address<td>126<td>Can't assign requested address<td>99<td>Cannot assign requested address<td>126<td>Can't assign requested address<td>49<td>Can't assign requested address<td>49<td>Can't assign requested address<td>49<td>Can't assign requested address<td><td>
+<tr><td>ENETDOWN<td>0.9<td>0<td>Network is down.<td>69<td>Network is down<td>228<td>Network is down<td>127<td>Network is down<td>100<td>Network is down<td>127<td>Network is down<td>50<td>Network is down<td>50<td>Network is down<td>50<td>Network is down<td><td>
+<tr><td>ENETUNREACH<td>0.9<td>0<td>Network unreachable.<td>70<td>Network is unreachable<td>229<td>Network is unreachable<td>128<td>Network is unreachable<td>101<td>Network is unreachable<td>128<td>Network is unreachable<td>51<td>Network is unreachable<td>51<td>Network is unreachable<td>51<td>Network is unreachable<td><td>
+<tr><td>ENETRESET<td>0.9<td>0<td>Connection aborted by network.<td>71<td>Network dropped connection on reset<td>230<td>Network dropped connection on reset<td>129<td>Network dropped connection because<td>102<td>Network dropped connection because of reset<td>129<td>Network dropped connection because<td>52<td>Network dropped connection on reset<td>52<td>Network dropped connection on reset<td>52<td>Network dropped connection on reset<td><td>
+<tr><td>ECONNABORTED<td>0.9<td>0<td>Connection aborted.<td>72<td>Software caused connection abort<td>231<td>Software caused connection abort<td>130<td>Software caused connection abort<td>103<td>Software caused connection abort<td>130<td>Software caused connection abort<td>53<td>Software caused connection abort<td>53<td>Software caused connection abort<td>53<td>Software caused connection abort<td><td>
+<tr><td>ECONNRESET<td>0.9<td>0<td>Connection reset.<td>73<td>Connection reset by peer<td>232<td>Connection reset by peer<td>131<td>Connection reset by peer<td>104<td>Connection reset by peer<td>131<td>Connection reset by peer<td>54<td>Connection reset by peer<td>54<td>Connection reset by peer<td>54<td>Connection reset by peer<td><td>
+<tr><td>ENOBUFS<td>0.9<td>0<td>No buffer space available.<td>74<td>No buffer space available<td>233<td>No buffer space available<td>132<td>No buffer space available<td>105<td>No buffer space available<td>132<td>No buffer space available<td>55<td>No buffer space available<td>55<td>No buffer space available<td>55<td>No buffer space available<td><td>
+<tr><td>EISCONN<td>0.9<td>0<td>Socket is connected.<td>75<td>Socket is already connected<td>234<td>Socket is already connected<td>133<td>Socket is already connected<td>106<td>Transport endpoint is already connected<td>133<td>Socket is already connected<td>56<td>Socket is already connected<td>56<td>Socket is already connected<td>56<td>Socket is already connected<td><td>
+<tr><td>ENOTCONN<td>0.9<td>0<td>The socket is not connected.<td>76<td>Socket is not connected<td>235<td>Socket is not connected<td>134<td>Socket is not connected<td>107<td>Transport endpoint is not connected<td>134<td>Socket is not connected<td>57<td>Socket is not connected<td>57<td>Socket is not connected<td>57<td>Socket is not connected<td><td>
+<tr><td>ESHUTDOWN<td>0.8<td><td><td>77<td>Can't send after socket shutdown<td>236<td>Can't send after socket shutdown<td>143<td>Can't send after socket shutdown<td>108<td>Cannot send after transport endpoint shutdown<td>143<td>Can't send after socket shutdown<td>58<td>Can't send after socket shutdown<td>58<td>Can't send after socket shutdown<td>58<td>Can't send after socket shutdown<td><td>
+<tr><td>ETIMEDOUT<td>0.9<td>0<td>Connection timed out.<td>78<td>Connection timed out<td>238<td>Connection timed out<td>145<td>Connection timed out<td>110<td>Connection timed out<td>145<td>Connection timed out<td>60<td>Connection timed out<td>60<td>Operation timed out<td>60<td>Operation timed out<td><td>
+<tr><td>ECONNREFUSED<td>0.9<td>0<td>Connection refused.<td>79<td>Connection refused<td>239<td>Connection refused<td>146<td>Connection refused<td>111<td>Connection refused<td>146<td>Connection refused<td>61<td>Connection refused<td>61<td>Connection refused<td>61<td>Connection refused<td><td>
+<tr><td>EHOSTDOWN<td>0.8<td><td><td>80<td>Host is down<td>241<td>Host is down<td>147<td>Host is down<td>112<td>Host is down<td>147<td>Host is down<td>64<td>Host is down<td>64<td>Host is down<td>64<td>Host is down<td><td>
+<tr><td>EHOSTUNREACH<td>0.9<td>0<td>Host is unreachable.<td>81<td>No route to host<td>242<td>No route to host<td>148<td>No route to host<td>113<td>No route to host<td>148<td>No route to host<td>65<td>No route to host<td>65<td>No route to host<td>65<td>No route to host<td><td>
+<tr><td>ERESTART<td>0.4<td><td><td>82<td>restart the system call<td><td><td>91<td>Restartable system call<td>85<td>Interrupted system call should be restarted<td>91<td>Restartable system call<td><td><td><td><td><td><td><td>
+<tr><td>ECLONEME<td>0.2<td><td><td>82<td>this is the way we clone a stream ...<td><td><td><td><td><td><td><td><td>88<td>Tells open to clone the device<td><td><td><td><td><td>
+<tr><td>EPROCLIM<td>0.4<td><td><td>83<td>Too many processes<td><td><td><td><td><td><td><td><td>67<td>Too many processes<td>67<td>Too many processes<td>67<td>Too many processes<td><td>
+<tr><td>EUSERS<td>0.8<td><td><td>84<td>Too many users<td>68<td>For Sun compatibilty, will not occur<td>94<td>Too many users (for UFS)<td>87<td>Too many users<td>94<td>Too many users (for UFS)<td>68<td>Too many users<td>68<td>Too many users<td>68<td>Too many users<td><td>
+<tr><td>ELOOP<td>0.9<td>0<td>Too many levels of symbolic links.<td>85<td>Too many levels of symbolic links<td>249<td>Too many levels of symbolic links<td>90<td>Symbolic link loop<td>40<td>Too many symbolic links encountered<td>90<td>Symbolic link loop<td>62<td>Too many levels of symbolic links<td>62<td>Too many levels of symbolic links<td>62<td>Too many levels of symbolic links<td><td>
+<tr><td>ENAMETOOLONG<td>1<td>0<td>Filename too long.<td>86<td>File name too long<td>248<td>File name too long<td>78<td>path name is too long<td>36<td>File name too long<td>78<td>Filename too long<td>63<td>File name too long<td>63<td>File name too long<td>63<td>File name too long<td>38<td>Filename too long
+<tr><td>ENOTEMPTY<td>1<td>0<td>Directory not empty.<td>87<td>Directory not empty [1]<td>247<td>Directory not empty<td>93<td>directory not empty<td>39<td>Directory not empty<td>93<td>Directory not empty<td>66<td>Directory not empty<td>66<td>Directory not empty<td>66<td>Directory not empty<td>41<td>Directory not empty
+<tr><td>EDQUOT<td>0.8<td>0<td>Reserved.<td>88<td>Disc quota exceeded<td>69<td>Disc quota exceeded<td>49<td>Disc quota exceeded<td>122<td>Quota exceeded<td><td><td>69<td>Disc quota exceeded<td>69<td>Disc quota exceeded<td>69<td>Disc quota exceeded<td><td>
+<tr><td>ECORRUPT<td>0.1<td><td><td>89<td>Invalid file system control data<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>EREMOTE<td>0.8<td><td><td>93<td>Item is not local to host<td>71<td>Too many levels of remote in path<td>66<td>The object is remote<td>66<td>Object is remote<td>66<td>The object is remote<td>71<td>Too many levels of remote in path<td>71<td>Too many levels of remote in path<td>71<td>Too many levels of remote in path<td><td>
+<tr><td>ENOSYS<td>1<td>0<td>Function not supported.<td>109<td>Function not implemented POSIX<td>251<td>Function not implemented<td>89<td>Unsupported file system operation<td>38<td>Function not implemented<td>89<td>Function not implemented<td>78<td>Function not implemented<td>78<td>Function not implemented<td>78<td>Function not implemented<td>40<td>Function not implemented
+<tr><td>EMEDIA<td>0.2<td><td><td>110<td>media surface error<td>124<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ESOFT<td>0.2<td><td><td>111<td>I/O completed, but needs relocation<td>123<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOATTR<td>0.3<td><td><td>112<td>no attribute found<td><td><td><td><td><td><td><td><td><td><td>87<td>Attribute not found<td>93<td>Attribute not found<td><td>
+<tr><td>ESAD<td>0.1<td><td><td>113<td>security authentication denied<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOTRUST<td>0.1<td><td><td>114<td>not a trusted program<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ETOOMANYREFS<td>0.8<td><td><td>115<td>Too many references: can't splice<td>237<td>Too many references: can't splice<td>144<td>Too many references: can't splice<td>109<td>Too many references: cannot splice<td>144<td>Too many references: can't splice<td>59<td>Too many references: can't splice<td>59<td>Too many references: can't splice<td>59<td>Too many references: can't splice<td><td>
+<tr><td>EILSEQ<td>1<td>0<td>Illegal byte sequence.<td>116<td>Invalid wide character<td>47<td>Illegal byte sequence<td>88<td>Illegal byte sequence.<td>84<td>Illegal byte sequence<td>88<td>Illegal byte sequence.<td>116<td>Invalid wide character<td>86<td>Illegal byte sequence<td>92<td>Illegal byte sequence<td>42<td>Illegal byte sequence
+<tr><td>ECANCELED<td>0.8<td>0<td>Operation canceled.<td>117<td>asynchronous i/o cancelled<td>253<td>aio request was canceled before complete<td>47<td>Operation canceled<td><td><td>158<td>AIO operation canceled<td>94<td>operation canceled<td>85<td>Operation canceled<td>89<td>Operation canceled<td><td>
+<tr><td>ENOSR<td>0.7<td>0<td>XSR No STREAM resources.<td>118<td>temp out of streams resources<td>53<td>out of streams resources<td>63<td>out of streams resources<td>63<td>Out of streams resources<td>63<td>out of streams resources<td>82<td>Out of STREAMS resources<td><td><td><td><td><td>
+<tr><td>ETIME<td>0.7<td>0<td>XSR Stream ioctl() timeout.<td>119<td>I_STR ioctl timed out<td>52<td>timer expired<td>62<td>timer expired<td>62<td>Timer expired<td>62<td>timer expired<td>83<td>System call timed out<td><td><td><td><td><td>
+<tr><td>EBADMSG<td>0.7<td>0<td>Bad message.<td>120<td>wrong message type at stream head<td>67<td>trying to read unreadable message<td>77<td>trying to read unreadable message<td>74<td>Not a data message<td>77<td>Bad message<td>84<td>Next message has wrong type<td><td><td><td><td><td>
+<tr><td>EPROTO<td>0.7<td>0<td>Protocol error.<td>121<td>STREAMS protocol error<td>61<td>Protocol error<td>71<td>Protocol error<td>71<td>Protocol error<td>71<td>Protocol error<td>85<td>STREAMS protocol error<td><td><td><td><td><td>
+<tr><td>ENODATA<td>0.7<td>0<td>XSR No message is available on the STREAM head read queue.<td>122<td>no message ready at stream head<td>51<td>no data (for no delay io)<td>61<td>no data (for no delay io)<td>61<td>No data available<td>61<td>no data (for no delay io)<td>86<td>No message on stream head read q<td><td><td><td><td><td>
+<tr><td>ENOSTR<td>0.7<td>0<td>XSR Not a STREAM.<td>123<td>fd is not a stream<td>54<td>Device not a stream<td>60<td>Device not a stream<td>60<td>Device not a stream<td>60<td>Device not a stream<td>87<td>fd not associated with a stream<td><td><td><td><td><td>
+<tr><td>ENOTSUP<td>0.7<td>0<td>Not supported.<td>124<td>POSIX threads unsupported value<td>252<td>Function not implemented<td>48<td>Operation not supported<td><td><td><td><td>99<td>function not implemented<td>45<td>Operation not supported<td>45<td>Operation not supported<td><td>
+<tr><td>EMULTIHOP<td>0.7<td>0<td>Reserved.<td>125<td>multihop is not allowed<td>64<td>multihop attempted<td>74<td>multihop attempted<td>72<td>Multihop attempted<td>74<td>multihop attempted<td>101<td>Reserved [5]<td><td><td><td><td><td>
+<tr><td>ENOLINK<td>0.7<td>0<td>Reserved.<td>126<td>the link has been severed<td>57<td>the link has been severed<td>67<td>the link has been severed<td>67<td>Link has been severed<td>67<td>the link has been severed<td>102<td>Reserved [5]<td><td><td><td><td><td>
+<tr><td>EOVERFLOW<td>0.9<td>0<td>Value too large to be stored in data type.<td>127<td>value too large to be stored in data type<td>72<td>Value too large to be stored in data type<td>79<td>value too large to be stored in data type<td>75<td>Value too large for defined data type<td>79<td>value too large to be stored in data type<td>103<td>Value too large to be stored in data type [5]<td>84<td>Value too large to be stored in data type<td>84<td>Value too large to be stored in data type<td><td>
+<tr><td>ESUCCESS<td>0.2<td><td><td><td><td>0<td><td><td><td><td><td><td><td>0<td>Successful<td><td><td><td><td><td>
+<tr><td>ENONET<td>0.4<td><td><td><td><td>50<td>Machine is not on the network<td>64<td>Machine is not on the network<td>64<td>Machine is not on the network<td>64<td>Machine is not on the network<td><td><td><td><td><td><td><td>
+<tr><td>ENOPKG<td>0.5<td><td><td><td><td>55<td>Package not installed<td>65<td>Package not installed<td>65<td>Package not installed<td>65<td>Package not installed<td>92<td>unresolved package name<td><td><td><td><td><td>
+<tr><td>EADV<td>0.4<td><td><td><td><td>58<td>advertise error<td>68<td>advertise error<td>68<td>Advertise error<td>68<td>advertise error<td><td><td><td><td><td><td><td>
+<tr><td>ESRMNT<td>0.4<td><td><td><td><td>59<td>srmount error<td>69<td>srmount error<td>69<td>Srmount error<td>69<td>srmount error<td><td><td><td><td><td><td><td>
+<tr><td>ECOMM<td>0.4<td><td><td><td><td>60<td>Communication error on send<td>70<td>Communication error on send<td>70<td>Communication error on send<td>70<td>Communication error on send<td><td><td><td><td><td><td><td>
+<tr><td>EDOTDOT<td>0.2<td><td><td><td><td>66<td>Cross mount point (not really error)<td><td><td>73<td>RFS specific error<td><td><td><td><td><td><td><td><td><td>
+<tr><td>ERELOCATED<td>0.1<td><td><td><td><td>125<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>EPOWERF<td>0.1<td><td><td><td><td>126<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>EPATHREMOTE<td>0.1<td><td><td><td><td>133<td>Pathname is remote<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>EOPCOMPLETE<td>0.1<td><td><td><td><td>134<td>Operation completed at server<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOLOAD<td>0.1<td><td><td><td><td>152<td>Cannot load required kernel module<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ERELOC<td>0.1<td><td><td><td><td>153<td>Object file error in loading kernel module<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOMATCH<td>0.1<td><td><td><td><td>154<td>Symbol matching given spec not found<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOUNLD<td>0.1<td><td><td><td><td>155<td>Cannot unload kernel module<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>EBADVER<td>0.1<td><td><td><td><td>156<td>Version number mismatch for loadable kernel module<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ECONFIG<td>0.1<td><td><td><td><td>157<td>Configured kernle resource exhausted<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOREG<td>0.1<td><td><td><td><td>158<td>Cannot register required kernel module<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOUNREG<td>0.1<td><td><td><td><td>159<td>Cannot unregister kernel module<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOSYM<td>0.2<td><td><td><td><td>215<td>symbol does not exist in executable<td><td><td><td><td><td><td>93<td>unresolved symbol name<td><td><td><td><td><td>
+<tr><td>EREFUSED<td>0.1<td><td><td><td><td>239<td>Double define for NFS<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>EREMOTERELEASE<td>0.1<td><td><td><td><td>240<td>Remote peer released connection<td><td><td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>EBADE<td>0.3<td><td><td><td><td><td><td>50<td>invalid exchange<td>52<td>Invalid exchange<td>50<td>invalid exchange<td><td><td><td><td><td><td><td>
+<tr><td>EBADR<td>0.3<td><td><td><td><td><td><td>51<td>invalid request descriptor<td>53<td>Invalid request descriptor<td>51<td>invalid request descriptor<td><td><td><td><td><td><td><td>
+<tr><td>EXFULL<td>0.3<td><td><td><td><td><td><td>52<td>exchange full<td>54<td>Exchange full<td>52<td>exchange full<td><td><td><td><td><td><td><td>
+<tr><td>ENOANO<td>0.3<td><td><td><td><td><td><td>53<td>no anode<td>55<td>No anode<td>53<td>no anode<td><td><td><td><td><td><td><td>
+<tr><td>EBADRQC<td>0.3<td><td><td><td><td><td><td>54<td>invalid request code<td>56<td>Invalid request code<td>54<td>invalid request code<td><td><td><td><td><td><td><td>
+<tr><td>EBADSLT<td>0.3<td><td><td><td><td><td><td>55<td>invalid slot<td>57<td>Invalid slot<td>55<td>invalid slot<td><td><td><td><td><td><td><td>
+<tr><td>EDEADLOCK<td>0.3<td><td><td><td><td><td><td>56<td>file locking deadlock error<td>35<td>Resource deadlock would occur<td>56<td>file locking deadlock error<td><td><td><td><td><td><td><td>
+<tr><td>EBFONT<td>0.3<td><td><td><td><td><td><td>57<td>bad font file fmt<td>59<td>Bad font file format<td>57<td>bad font file fmt<td><td><td><td><td><td><td><td>
+<tr><td>EOWNERDEAD<td>0.1<td><td><td><td><td><td><td>58<td>process died with the lock<td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOTRECOVERABLE<td>0.1<td><td><td><td><td><td><td>59<td>lock is not recoverable<td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ELOCKUNMAPPED<td>0.1<td><td><td><td><td><td><td>72<td>locked lock was unmapped<td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOTACTIVE<td>0.1<td><td><td><td><td><td><td>73<td>Facility is not active<td><td><td><td><td><td><td><td><td><td><td><td>
+<tr><td>ENOTUNIQ<td>0.3<td><td><td><td><td><td><td>80<td>given log. name not unique<td>76<td>Name not unique on network<td>80<td>given log. name not unique<td><td><td><td><td><td><td><td>
+<tr><td>EBADFD<td>0.3<td><td><td><td><td><td><td>81<td>f.d. invalid for this operation<td>77<td>File descriptor in bad state<td>81<td>f.d. invalid for this operation<td><td><td><td><td><td><td><td>
+<tr><td>EREMCHG<td>0.3<td><td><td><td><td><td><td>82<td>Remote address changed<td>78<td>Remote address changed<td>82<td>Remote address changed<td><td><td><td><td><td><td><td>
+<tr><td>ELIBACC<td>0.3<td><td><td><td><td><td><td>83<td>Can't access a needed shared lib.<td>79<td>Can not access a needed shared library<td>83<td>Can't access a needed shared lib.<td><td><td><td><td><td><td><td>
+<tr><td>ELIBBAD<td>0.3<td><td><td><td><td><td><td>84<td>Accessing a corrupted shared lib.<td>80<td>Accessing a corrupted shared library<td>84<td>Accessing a corrupted shared lib.<td><td><td><td><td><td><td><td>
+<tr><td>ELIBSCN<td>0.3<td><td><td><td><td><td><td>85<td>.lib section in a.out corrupted.<td>81<td>.lib section in a.out corrupted<td>85<td>.lib section in a.out corrupted.<td><td><td><td><td><td><td><td>
+<tr><td>ELIBMAX<td>0.3<td><td><td><td><td><td><td>86<td>Attempting to link in too many libs.<td>82<td>Attempting to link in too many shared libraries<td>86<td>Attempting to link in too many libs.<td><td><td><td><td><td><td><td>
+<tr><td>ELIBEXEC<td>0.3<td><td><td><td><td><td><td>87<td>Attempting to exec a shared library.<td>83<td>Cannot exec a shared library directly<td>87<td>Attempting to exec a shared library.<td><td><td><td><td><td><td><td>
+<tr><td>ESTRPIPE<td>0.3<td><td><td><td><td><td><td>92<td>if pipe/FIFO, don't sleep in stream head<td>86<td>Streams pipe error<td>92<td>if pipe/FIFO, don't sleep in stream head<td><td><td><td><td><td><td><td>
+<tr><td>EUCLEAN<td>0.3<td><td><td><td><td><td><td><td><td>117<td>Structure needs cleaning<td>135<td>Structure needs cleaning<td><td><td><td><td><td><td>35<td>Unknown error
+<tr><td>ENOTNAM<td>0.2<td><td><td><td><td><td><td><td><td>118<td>Not a XENIX named type file<td>137<td>Not a XENIX named type file<td><td><td><td><td><td><td><td>
+<tr><td>ENAVAIL<td>0.2<td><td><td><td><td><td><td><td><td>119<td>No XENIX semaphores available<td>138<td>No XENIX semaphores available<td><td><td><td><td><td><td><td>
+<tr><td>EISNAM<td>0.2<td><td><td><td><td><td><td><td><td>120<td>Is a named type file<td>139<td>Is a named type file<td><td><td><td><td><td><td><td>
+<tr><td>EREMOTEIO<td>0.2<td><td><td><td><td><td><td><td><td>121<td>Remote I/O error<td>140<td>Remote I/O error<td><td><td><td><td><td><td><td>
+<tr><td>ENOMEDIUM<td>0.1<td><td><td><td><td><td><td><td><td>123<td>No medium found<td><td><td><td><td><td><td><td><td><td>
+<tr><td>EMEDIUMTYPE<td>0.1<td><td><td><td><td><td><td><td><td>124<td>Wrong medium type<td><td><td><td><td><td><td><td><td><td>
+<tr><td>ECKPT<td>0.1<td><td><td><td><td><td><td><td><td><td><td>47<td>POSIX checkpoint/restart error<td><td><td><td><td><td><td><td>
+<tr><td>LASTERRNO<td>0.1<td><td><td><td><td><td><td><td><td><td><td>134<td>used by nfs kernel and also decnet code<td><td><td><td><td><td><td><td>
+<tr><td>EINIT<td>0.1<td><td><td><td><td><td><td><td><td><td><td>141<td>Reserved for future<td><td><td><td><td><td><td><td>
+<tr><td>EREMDEV<td>0.1<td><td><td><td><td><td><td><td><td><td><td>142<td>Error 142<td><td><td><td><td><td><td><td>
+<tr><td>EBADRPC<td>0.3<td><td><td><td><td><td><td><td><td><td><td><td><td>72<td>RPC struct is bad<td>72<td>RPC struct is bad<td>72<td>RPC struct is bad<td><td>
+<tr><td>ERPCMISMATCH<td>0.3<td><td><td><td><td><td><td><td><td><td><td><td><td>73<td>RPC version wrong<td>73<td>RPC version wrong<td>73<td>RPC version wrong<td><td>
+<tr><td>EPROGUNAVAIL<td>0.3<td><td><td><td><td><td><td><td><td><td><td><td><td>74<td>RPC prog. not avail<td>74<td>RPC prog. not avail<td>74<td>RPC prog. not avail<td><td>
+<tr><td>EPROGMISMATCH<td>0.3<td><td><td><td><td><td><td><td><td><td><td><td><td>75<td>Program version wrong<td>75<td>Program version wrong<td>75<td>Program version wrong<td><td>
+<tr><td>EPROCUNAVAIL<td>0.3<td><td><td><td><td><td><td><td><td><td><td><td><td>76<td>Bad procedure for program<td>76<td>Bad procedure for program<td>76<td>Bad procedure for program<td><td>
+<tr><td>EFTYPE<td>0.3<td><td><td><td><td><td><td><td><td><td><td><td><td>79<td>Inappropriate file type or format<td>79<td>Inappropriate file type or format<td>79<td>Inappropriate file type or format<td><td>
+<tr><td>EDIRTY<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td>89<td>Mounting a dirty fs w/o force<td><td><td><td><td><td>
+<tr><td>EDUPPKG<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td>90<td>duplicate package name on install<td><td><td><td><td><td>
+<tr><td>EVERSION<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td>91<td>version number mismatch<td><td><td><td><td><td>
+<tr><td>EFAIL<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td>95<td>cannot start operation<td><td><td><td><td><td>
+<tr><td>EINPROG<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td>97<td>operation (now) in progress<td><td><td><td><td><td>
+<tr><td>EMTIMERS<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td>98<td>too many timers<td><td><td><td><td><td>
+<tr><td>EAIO<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td>100<td>internal AIO operation complete<td><td><td><td><td><td>
+<tr><td>ELAST<td>0.2<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>88<td>Must be equal largest errno<td>93<td>Must be equal largest errno<td><td>
+<tr><td>EAUTH<td>0.2<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>80<td>Authentication error<td>80<td>Authentication error<td><td>
+<tr><td>EDOOFUS<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>88<td>Programming error<td><td><td><td>
+<tr><td>ENEEDAUTH<td>0.2<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>81<td>Need authenticator<td>81<td>Need authenticator<td><td>
+<tr><td>EPWROFF<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>82<td>Device power is off<td><td>
+<tr><td>EBADMACHO<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>88<td>Malformed Macho file<td><td>
+<tr><td>EDEVERR<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>83<td>Device error, e.g. paper out<td><td>
+<tr><td>ESHLIBVERS<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>87<td>Shared library version mismatch<td><td>
+<tr><td>EBADEXEC<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>85<td>Bad executable<td><td>
+<tr><td>EBADARCH<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>86<td>Bad CPU type in executable<td><td>
+<tr><td>-<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>43<td>Unknown error
+<tr><td>UNKNOWN<td>0.1<td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td><td>37<td>Unknown error
+
+</TABLE>
+<p/>
+<small>
+[1] AIX ENOTEMPTY is 17 "Directory not empty" if _ALL_SOURCE and !_LINUX_SOURCE_COMPAT<br/>
+[2] AIX EWOULDBLOCK is 11 "Operation would block" if _XOPEN_SOURCE_EXTENDED is 1 meaning SUS UNIX95<br/>
+[3] SUSv3 states EAGAIN "Resource unavailable, try again" may be the same value as EWOULDBLOCK and indeed many of the platforms listed here have the same value.<br/>
+[4] IRIX error codes &gt; 256 omitted<br/>
+[5] FreeBSD EDEADLK 11 "Resource deadlock avoided" used to be EAGAIN<br/>
+[6] Linux does not have ECANCELED so it is defined to the invlid code 125<br/>
+[*] HP-UX must define EDOM and ERANGE somewhere as they are ANSI C. I have to investigate why they weren't defined in the main errno header<br/>
+<p/>
+Michael B Allen &lt;mba2000 ioplex com&gt;<br/>
+Copyright (c) Sat Feb 26 15:02:33 EST 2005
+</small>
+
+</BODY></HTML>

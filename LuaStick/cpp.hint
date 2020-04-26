@@ -1,0 +1,5 @@
+// ヒント ファイルは、Visual Studio IDE が Visual C++ 識別子を解釈するのに役立ちます
+// 関数およびマクロの名前などです。
+// 詳細については次を参照してください https://go.microsoft.com/fwlink/?linkid=865984
+#define ThrowLeException(ec, __VA_ARGS__) { DebugBreak(); throw LeException(__WFILE__, __LINE__, ec, AnyValue::GetJoinWString(__VA_ARGS__)); }
+#define ThrowLeException(ec, __VA_ARGS__) { throw LeException(__WFILE__, __LINE__, ec, AnyValue::GetJoinWString(__VA_ARGS__)); }

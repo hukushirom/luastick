@@ -1,0 +1,146 @@
+,,,wctype_t,wctype,(const char *property);,,,
+,,,int,iswctype,"(wint_t wc, wctype_t desc);",,,
+int,isalnum,(int c);,int,iswalnum,(wint_t wc);,int,istalnum,(tint_t tc);
+int,isalpha,(int c);,int,iswalpha,(wint_t wc);,int,istalpha,(tint_t tc);
+int,iscntrl,(int c);,int,iswcntrl,(wint_t wc);,int,istcntrl,(tint_t tc);
+int,isdigit,(int c);,int,iswdigit,(wint_t wc);,int,istdigit,(tint_t tc);
+int,isgraph,(int c);,int,iswgraph,(wint_t wc);,int,istgraph,(tint_t tc);
+int,islower,(int c);,int,iswlower,(wint_t wc);,int,istlower,(tint_t tc);
+int,isprint,(int c);,int,iswprint,(wint_t wc);,int,istprint,(tint_t tc);
+int,ispunct,(int c);,int,iswpunct,(wint_t wc);,int,istpunct,(tint_t tc);
+int,isspace,(int c);,int,iswspace,(wint_t wc);,int,istspace,(tint_t tc);
+int,isupper,(int c);,int,iswupper,(wint_t wc);,int,istupper,(tint_t tc);
+int,isxdigit,(int c);,int,iswxdigit,(wint_t wc);,int,istxdigit,(tint_t tc);
+int,isblank,(int c);,int,iswblank,(wint_t wc);,int,istblank,(tint_t tc);
+int,isascii,(int c);,,,,,,
+int,tolower,(int c);,wint_t,towlower,(wint_t wc);,tint_t,totlower,(tint_t tc);
+int,toupper,(int c);,wint_t,towupper,(wint_t wc);,tint_t,totupper,(tint_t tc);
+int,toascii,(int c);,,,,,,
+char *,strcpy,"(char *dest, const char *src);",wchar_t *,wcscpy,"(wchar_t *dest, const wchar_t *src);",tchar *,tcscpy,"(tchar *dest, const tchar *src);"
+char *,strncpy,"(char *dest, const char *src, size_t n);",wchar_t *,wcsncpy,"(wchar_t *dest, const wchar_t *src, size_t n);",tchar *,tcsncpy,"(tchar *dest, const tchar *src, size_t n);"
+char *,strcat,"(char *dest, const char *src);",wchar_t *,wcscat,"(wchar_t *dest, const wchar_t *src);",tchar *,tcscat,"(tchar *dest, const tchar *src);"
+char *,strncat,"(char *dest, const char *src, size_t n);",wchar_t *,wcsncat,"(wchar_t *dest, const wchar_t *src, size_t n);",tchar *,tcsncat,"(tchar *dest, const tchar *src, size_t n);"
+int,strcmp,"(const char *s1, const char *s2);",int,wcscmp,"(const wchar_t *s1, const wchar_t *s2);",int,tcscmp,"(const tchar *s1, const tchar *s2);"
+int,strncmp,"(const char *s1, const char *s2, size_t n)",int,wcsncmp,"(const wchar_t *s1, const wchar_t *s2, size_t n);",int,tcsncmp,"(const tchar *s1, const tchar *s2, size_t n);"
+int,strcoll,"(const char *s1, const char *s2);",int,wcscoll,"(const wchar_t *s1, const wchar_t *s2);",int,tcscoll,"(const tchar *s1, const tchar *s2);"
+size_t,strxfrm,"(char *dest, const char *src, size_t n);",size_t,wcsxfrm,"(wchar_t *s1, const wchar_t *s2, size_t n);",size_t,tcsxfrm,"(tchar *s1, const tchar *s2, size_t n);"
+int,strcoll_l,"(const char *s1, const char *s2, locale_t l);",int,wcscoll_l,"(const wchar_t *s1, const wchar_t *s2, locale_t loc);",int,tcscoll_l,"(const tchar *s1, const tchar *s2, locale_t loc);"
+size_t,strxfrm_l,"(char *dest, const char *src, size_t n, locale_t l);",size_t,wcsxfrm_l,"(wchar_t *s1, const wchar_t *s2, size_t n, locale_t loc);",size_t,tcsxfrm_l,"(tchar *s1, const tchar *s2, size_t n, locale_t loc);"
+char *,strdup,(const char *s);,wchar_t *,wcsdup,(const wchar_t *s);,tchar *,tcsdup,(const tchar *s);
+char *,strndup,"(const char *string, size_t n);",,,,,,
+char *,strdupa,(const char *s);,,,,,,
+char *,strndupa,"(const char *s, size_t n);",,,,,,
+char *,strchr,"(const char *s, int c);",wchar_t *,wcschr,"(const wchar_t *wcs, wchar_t wc);",tchar *,tcschr,"(const tchar *tcs, tchar tc);"
+char *,strrchr,"(const char *s, int c);",wchar_t *,wcsrchr,"(const wchar_t *wcs, wchar_t wc);",tchar *,tcsrchr,"(const tchar *tcs, tchar tc);"
+char *,strchrnul,"(const char *s, int c);",wchar_t *,wcschrnul,"(const wchar_t *s, wchar_t wc);",tchar *,tcschrnul,"(const tchar *s, tchar tc);"
+size_t,strcspn,"(const char *s, const char *reject);",size_t,wcscspn,"(const wchar_t *wcs, const wchar_t *reject);",size_t,tcscspn,"(const tchar *tcs, const tchar *reject);"
+size_t,strspn,"(const char *s, const char *accept);",size_t,wcsspn,"(const wchar_t *wcs, const wchar_t *accept);",size_t,tcsspn,"(const tchar *tcs, const tchar *accept);"
+char *,strpbrk,"(const char *s, const char *accept);",wchar_t *,wcspbrk,"(const wchar_t *wcs, const wchar_t *accept);",tchar *,tcspbrk,"(const tchar *tcs, const tchar *accept);"
+char *,strstr,"(const char *haystack, const char *needle);",wchar_t *,wcsstr,"(const wchar_t *haystack, const wchar_t *needle);",tchar *,tcsstr,"(const tchar *haystack, const tchar *needle);"
+,,,wchar_t *,wcswcs,"(const wchar_t *haystack, const wchar_t *needle);",,,
+char *,strtok,"(char *s, const char *delim);",,,,,,
+char *,strtok_r,"(char *s, const char *delim, char **save_ptr);",wchar_t *,wcstok,"(wchar_t *s, const wchar_t *delim, wchar_t **ptr);",tchar *,tcstok,"(tchar *s, const tchar *delim, tchar **ptr);"
+size_t,strlen,(const char *s);,size_t,wcslen,(const wchar_t *s);,size_t,tcslen,(const tchar *s);
+size_t,strnlen,"(const char *string, size_t maxlen);",size_t,wcsnlen,"(const wchar_t *s, size_t maxlen);",size_t,tcsnlen,"(const tchar *s, size_t maxlen);"
+char *,strerror,(int errnum);,,,,,,
+char *,strerror_r,"(int errnum, char *buf, size_t buflen);",,,,,,
+char *,index,"(const char *s, int c);",,,,,,
+char *,rindex,"(const char *s, int c);",,,,,,
+char *,strcasestr,"(const char *haystack, const char *needle);",,,,,,
+void *,memcpy,"(void *dest, const void *src, size_t n);",wchar_t *,wmemcpy,"(wchar_t *s1, const wchar_t *s2, size_t n);",tchar *,tmemcpy,"(tchar *s1, const tchar *s2, size_t n);"
+void *,memmove,"(void *dest, const void *src, size_t n)",wchar_t *,wmemmove,"(wchar_t *s1, const wchar_t *s2, size_t n);",tchar *,tmemmove,"(tchar *s1, const tchar *s2, size_t n);"
+void *,memccpy,"(void *dest, const void *src, int c, size_t n)",,,,,,
+void *,memset,"(void *s, int c, size_t n);",wchar_t *,wmemset,"(wchar_t *s, wchar_t c, size_t n);",tchar *,tmemset,"(tchar *s, tchar c, size_t n);"
+int,memcmp,"(const void *s1, const void *s2, size_t n)",int,wmemcmp,"(const wchar_t *s1, const wchar_t *s2, size_t n);",int,tmemcmp,"(const tchar *s1, const tchar *s2, size_t n);"
+void *,memchr,"(const void *s, int c, size_t n)",wchar_t *,wmemchr,"(const wchar_t *s, wchar_t c, size_t n);",tchar *,tmemchr,"(const tchar *s, tchar c, size_t n);"
+void *,rawmemchr,"(const void *s, int c);",,,,,,
+void *,memrchr,"(const void *s, int c, size_t n)",,,,,,
+,,,wchar_t *,wmempcpy,"(wchar_t *s1, const wchar_t *s2, size_t n);",,,
+int,strcasecmp,"(const char *s1, const char *s2);",int,wcscasecmp,"(const wchar_t *s1, const wchar_t *s2);",int,tcscasecmp,"(const tchar *s1, const tchar *s2);"
+int,strncasecmp,"(const char *s1, const char *s2, size_t n);",int,wcsncasecmp,"(const wchar_t *s1, const wchar_t *s2, size_t n);",int,tcsncasecmp,"(const tchar *s1, const tchar *s2, size_t n);"
+int,strcasecmp_l,"(const char *s1, const char *s2, locale_t loc);",int,wcscasecmp_l,"(const wchar_t *s1, const wchar_t *s2, locale_t loc);",int,tcscasecmp_l,"(const tchar *s1, const tchar *s2, locale_t loc);"
+int,strncasecmp_l,"(const char *s1, const char *s2, size_t n, locale_t loc);",int,wcsncasecmp_l,"(const wchar_t *s1, const wchar_t *s2, size_t n, locale_t loc);",int,tcsncasecmp_l,"(const tchar *s1, const tchar *s2, size_t n, locale_t loc);"
+char *,strsep,"(char **stringp, const char *delim);",,,,,,
+int,strverscmp,"(const char *s1, const char *s2);",,,,,,
+char *,strsignal,(int sig);,,,,,,
+char *,stpcpy,"(char *dest, const char *src);",wchar_t *,wcpcpy,"(wchar_t *dest, const wchar_t *src);",tchar *,tcpcpy,"(tchar *dest, const tchar *src);"
+char *,stpncpy,"(char *dest, const char *src, size_t n);",wchar_t *,wcpncpy,"(wchar_t *dest, const wchar_t *src, size_t n);",tchar *,tcpncpy,"(tchar *dest, const tchar *src, size_t n);"
+char *,strfry,(char *string);,,,,,,
+double,atof,(const char *nptr);,,,,,,
+int,atoi,(const char *nptr);,,,,,,
+long int,atol,(const char *nptr);,,,,,,
+long long int,atoll,(const char *nptr);,,,,,,
+double,strtod,"(const char *nptr, char **endptr);",double,wcstod,"(const wchar_t *nptr, wchar_t **endptr);",double,tcstod,"(const tchar *nptr, tchar **endptr);"
+float,strtof,"(const char *nptr, char **endptr);",float,wcstof,"(const wchar_t *nptr, wchar_t **endptr);",float,tcstof,"(const tchar *nptr, tchar **endptr);"
+long double,strtold,"(const char *nptr, char **endptr);",long double,wcstold,"(const wchar_t *nptr, wchar_t **endptr);",long double,tcstold,"(const tchar *nptr, tchar **endptr);"
+long int,strtol,"(const char *nptr, char **endptr, int base);",long int,wcstol,"(const wchar_t *nptr, wchar_t **endptr, int base);",long int,tcstol,"(const tchar *nptr, tchar **endptr, int base);"
+unsigned long int,strtoul,"(const char *nptr, char **endptr, int base);",unsigned long int,wcstoul,"(const wchar_t *nptr, wchar_t **endptr, int base)",unsigned long int,tcstoul,"(const tchar *nptr, tchar **endptr, int base)"
+long long int,strtoq,"(const char *nptr, char **endptr, int base);",long long int,wcstoq,"(const wchar_t *nptr, wchar_t **endptr, int base);",long long int,tcstoq,"(const tchar *nptr, tchar **endptr, int base);"
+unsigned long long int,strtouq,"(const char *nptr, char **endptr, int base);",unsigned long long int,wcstouq,"(const wchar_t *nptr, wchar_t **endptr, int base);",unsigned long long int,tcstouq,"(const tchar *nptr, tchar **endptr, int base);"
+long long int,strtoll,"(const char *nptr, char **endptr, int base);",long long int,wcstoll,"(const wchar_t *nptr, wchar_t **endptr, int base);",long long int,tcstoll,"(const tchar *nptr, tchar **endptr, int base);"
+unsigned long long int,strtoull,"(const char *nptr, char **endptr, int base);",unsigned long long int,wcstoull,"(const wchar_t *nptr, wchar_t **endptr, int base);",unsigned long long int,tcstoull,"(const tchar *nptr, tchar **endptr, int base);"
+long int,strtol_l,"(const char *nptr, char **endptr, int base, locale_t loc);",long int,wcstol_l,"(const wchar_t *nptr, wchar_t **endptr, int base, locale_t loc);",long int,tcstol_l,"(const tchar *nptr, tchar **endptr, int base, locale_t loc);"
+unsigned long int,strtoul_l,"(const char *nptr, char **endptr, int base, locale_t loc);",unsigned long int,wcstoul_l,"(const wchar_t *nptr, wchar_t **endptr, int base, locale_t loc);",unsigned long int,tcstoul_l,"(const tchar *nptr, tchar **endptr, int base, locale_t loc);"
+long long int,strtoll_l,"(const char *nptr, char **endptr, int base, locale_t loc);",long long int,wcstoll_l,"(const wchar_t *nptr, wchar_t **endptr, int base, locale_t loc);",long long int,tcstoll_l,"(const tchar *nptr, tchar **endptr, int base, locale_t loc);"
+unsigned long long int,strtoull_l,"(const char *nptr, char **endptr, int base, locale_t loc);",unsigned long long int,wcstoull_l,"(const wchar_t *nptr, wchar_t **endptr, int base, locale_t loc);",unsigned long long int,tcstoull_l,"(const tchar *nptr, tchar **endptr, int base, locale_t loc);"
+double,strtod_l,"(const char *nptr, char **endptr, locale_t loc);",double,wcstod_l,"(const wchar_t *nptr, wchar_t **endptr, locale_t loc);",double,tcstod_l,"(const tchar *nptr, tchar **endptr, locale_t loc);"
+float,strtof_l,"(const char *nptr, char **endptr, locale_t loc);",float,wcstof_l,"(const wchar_t *nptr, wchar_t **endptr, locale_t loc);",float,tcstof_l,"(const tchar *nptr, tchar **endptr, locale_t loc);"
+long double,strtold_l,"(const char *nptr, char **endptr, locale_t loc);",long double,wcstold_l,"(const wchar_t *nptr, wchar_t **endptr, locale_t loc);",long double,tcstold_l,"(const tchar *nptr, tchar **endptr, locale_t loc);"
+char *,l64a,(long int n);,,,,,,
+long int,a64l,(const char *s);,,,,,,
+char *,getenv,(const char *name);,,,,,,
+char *,secure_getenv,(const char *name);,,,,,,
+int,putenv,(char *string);,,,,,,
+int,setenv,"(const char *name, const char *value, int replace);",,,,,,
+int,unsetenv,(const char *name);,,,,,,
+int,clearenv,(void);,,,,,,
+int,fprintf,"(FILE *stream, const char *format, ...);",int,fwprintf,"(FILE *stream, const wchar_t *format, ...);",int,ftprintf,"(FILE *stream, const tchar *format, ...);"
+int,printf,"(const char *format, ...);",int,wprintf,"(const wchar_t *format, ...);",int,tprintf,"(const tchar *format, ...);"
+int,sprintf,"(char *s, const char *format, ...);",,,,,,
+int,vfprintf,"(FILE *s, const char *format, va_list arg);",int,vfwprintf,"(FILE *s, const wchar_t *format, va_list arg);",int,vftprintf,"(FILE *s, const tchar *format, va_list arg);"
+int,vprintf,"(const char *format, va_list arg);",int,vwprintf,"(const wchar_t *format, va_list arg);",int,vtprintf,"(const tchar *format, va_list arg);"
+int,vsprintf,"(char *s, const char *format, va_list arg);",,,,,,
+int,snprintf,"(char *s, size_t maxlen, const char *format, ...);",int,swprintf,"(wchar_t *s, size_t maxlen, const wchar_t *format, ...);",int,stprintf,"(tchar *s, size_t maxlen, const tchar *format, ...);"
+int,vsnprintf,"(char *s, size_t maxlen, const char *format, va_list arg);",int,vswprintf,"(wchar_t *s, size_t maxlen, const wchar_t *format, va_list arg);",int,vstprintf,"(tchar *s, size_t maxlen, const tchar *format, va_list arg);"
+int,vasprintf,"(char **ptr, const char *f, va_list arg);",,,,,,
+int,asprintf,"(char **ptr, const char *fmt, ...);",,,,,,
+int,vdprintf,"(int fd, const char *fmt, va_list arg);",,,,,,
+int,dprintf,"(int fd, const char *fmt, ...);",,,,,,
+int,fscanf,"(FILE *stream, const char *format, ...);",int,fwscanf,"(FILE *stream, const wchar_t *format, ...);",int,ftscanf,"(FILE *stream, const tchar *format, ...);"
+int,scanf,"(const char *format, ...);",int,wscanf,"(const wchar_t *format, ...);",int,tscanf,"(const tchar *format, ...);"
+int,sscanf,"(const char *s, const char *format, ...);",int,swscanf,"(const wchar_t *s, const wchar_t *format, ...);",int,stscanf,"(const tchar *s, const tchar *format, ...);"
+int,vfscanf,"(FILE *s, const char *format, va_list arg);",int,vfwscanf,"(FILE *s, const wchar_t *format, va_list arg);",int,vftscanf,"(FILE *s, const tchar *format, va_list arg);"
+int,vscanf,"(const char *format, va_list arg);",int,vwscanf,"(const wchar_t *format, va_list arg);",int,vtscanf,"(const tchar *format, va_list arg);"
+int,vsscanf,"(const char *s, const char *format, va_list arg);",int,vswscanf,"(const wchar_t *s, const wchar_t *format, va_list arg);",int,vstscanf,"(const tchar *s, const tchar *format, va_list arg);"
+int,fgetc,(FILE *stream);,wint_t,fgetwc,(FILE *stream);,tint_t,fgettc,(FILE *stream);
+int,getc,(FILE *stream);,wint_t,getwc,(FILE *stream);,tint_t,gettc,(FILE *stream);
+int,getchar,(void);,wint_t,getwchar,(void);,tint_t,gettchar,(void);
+int,getc_unlocked,(FILE *stream);,wint_t,getwc_unlocked,(FILE *stream);,tint_t,gettc_unlocked,(FILE *stream);
+int,getchar_unlocked,(void);,wint_t,getwchar_unlocked,(void);,tint_t,gettchar_unlocked,(void);
+int,fgetc_unlocked,(FILE *stream);,wint_t,fgetwc_unlocked,(FILE *stream);,tint_t,fgettc_unlocked,(FILE *stream);
+int,fputc,"(int c, FILE *stream);",wint_t,fputwc,"(wchar_t wc, FILE *stream);",tint_t,fputtc,"(tchar tc, FILE *stream);"
+int,putc,"(int c, FILE *stream);",wint_t,putwc,"(wchar_t wc, FILE *stream);",tint_t,puttc,"(tchar tc, FILE *stream);"
+int,putchar,(int c);,wint_t,putwchar,(wchar_t wc);,tint_t,puttchar,(tchar tc);
+int,fputc_unlocked,"(int c, FILE *stream);",wint_t,fputwc_unlocked,"(wchar_t wc, FILE *stream);",tint_t,fputtc_unlocked,"(tchar tc, FILE *stream);"
+int,putc_unlocked,"(int c, FILE *stream);",wint_t,putwc_unlocked,"(wchar_t wc, FILE *stream);",tint_t,puttc_unlocked,"(tchar tc, FILE *stream);"
+int,putchar_unlocked,(int c);,wint_t,putwchar_unlocked,(wchar_t wc);,tint_t,puttchar_unlocked,(tchar tc);
+int,getw,(FILE *stream);,,,,,,
+int,putw,"(int w, FILE *stream);",,,,,,
+char *,fgets,"(char *s, int n, FILE *stream);",wchar_t *,fgetws,"(wchar_t *ws, int n, FILE *stream);",tchar *,fgetts,"(tchar *ts, int n, FILE *stream);"
+char *,fgets_unlocked,"(char *s, int n, FILE *stream);",wchar_t *,fgetws_unlocked,"(wchar_t *ws, int n, FILE *stream);",tchar *,fgetts_unlocked,"(tchar *ts, int n, FILE *stream);"
+char *,gets,(char *s);,,,,,,
+ssize_t,getdelim,"(char **lineptr, size_t *n, int delimiter, FILE *stream);",,,,,,
+ssize_t,getline,"(char **lineptr, size_t *n, FILE *stream);",,,,,,
+int,fputs,"(const char *s, FILE *stream);",int,fputws,"(const wchar_t *ws, FILE *stream);",int,fputts,"(const tchar *ts, FILE *stream);"
+int,fputs_unlocked,"(const char *s, FILE *stream);",int,fputws_unlocked,"(const wchar_t *ws, FILE *stream);",int,fputts_unlocked,"(const tchar *ts, FILE *stream);"
+int,puts,(const char *s);,,,,,,
+int,ungetc,"(int c, FILE *stream);",wint_t,ungetwc,"(wint_t wc, FILE *stream);",tint_t,ungettc,"(int tc, FILE *stream);"
+void,perror,(const char *s);,,,,,,
+size_t,strftime,"(char *s, size_t maxsize, const char *format, const struct tm *tp);",size_t,wcsftime,"(wchar_t *s, size_t maxsize, const wchar_t *format, const struct tm *tp);",size_t,tcsftime,"(tchar *s, size_t maxsize, const tchar *format, const struct tm *tp);"
+char *,strptime,"(const char *s, const char *fmt, struct tm *tp);",,,,,,
+char *,asctime,(const struct tm *tp);,,,,,,
+char *,ctime,(const time_t *timer);,,,,,,
+char *,asctime_r,"(const struct tm *tp, char *buf);",,,,,,
+char *,ctime_r,"(const time_t *timer, char *buf);",,,,,,
+struct tm *,getdate,(const char *string);,,,,,
+int,getdate_r,"(const char *string, struct tm *resbufp);",,,,,

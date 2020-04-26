@@ -1,0 +1,413 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Linkedlist</TITLE>
+</HEAD>
+<BODY>
+<H1>9. Linkedlist</H1>
+The <I>linkedlist</I> functions manipulate a sigularly linked list of data pointers.
+<P>
+<B CLASS="tfc">Example 4. Inserting and Enumerating Elements in a List</B>
+<BR>
+The following example illustrates how to insert and iterate over elements in a <I>linkedlist</I>(3m):
+<PRE>
+
+  #include &lt;stdlib.h&gt;
+  #include &lt;stdio.h&gt;
+  #include &lt;mba/linkedlist.h&gt;
+  
+  int
+  main(int argc, char *argv[])
+  {
+      struct linkedlist list;
+      int i;
+      iter_t iter;
+      const char *elem;
+  
+      linkedlist_init(&amp;list,
+                    0,                               /* no size limit */
+                    NULL); /* use standard library allocator (malloc) */
+  
+      for (i = 1; i &lt; argc; i++) {
+          linkedlist_insert_sorted(&amp;list,
+                    cmp_text,               /* simple text comparison */
+                    NULL,   /* cmp_text does not use a context object */
+                    NULL,            /* do not replace equal elements */
+                    argv[i]);
+      }
+  
+      linkedlist_iterate(&amp;list, &amp;iter);
+      while ((elem = linkedlist_next(&amp;list, &amp;iter))) {
+          printf("%s\n", elem);
+      }
+  
+      linkedlist_deinit(&amp;list, NULL, NULL);
+  
+      return EXIT_SUCCESS;
+  }
+  
+  $ ./t carbon silicon germanium carbon
+  carbon
+  carbon
+  germanium
+  silicon
+  </PRE>
+</P>
+<H3>9.1. Memory management functions</H3>These functions should be used to manage <I>linkedlist</I> objects.<A name="init"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_init</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  int linkedlist_init(struct linkedlist *l, unsigned int max_size, struct allocator *al);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>linkedlist_init</TT> function initializes a <I>linkedlist</I> object. The <TT>linkedlist</TT> will accepts no more than <tt>max_size</tt> items. If <TT>max_size</TT> is zero the list will accept no more than <TT>MAX_INT</TT> items. Memory for list elements will be allocated from the allocator <tt>al</tt>. It may be necessary to call <TT>linkedlist_deinit</TT> to release memory from the allocator <tt>al</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>linkedlist_init</TT> function returns -1 if sets <TT>errno</TT> to an appropriate value if the operation failed or 0 if the list was successfully initialized.
+	<P>
+</P>
+<A name="deinit"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_deinit</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  int linkedlist_deinit(struct linkedlist *l, del_fn data_del, void *context);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>linkedlist_deinit</TT> function calls the <tt>data_del</tt> function if it is not <TT>NULL</TT> with each data pointer in the list and the context parameter <tt>context</tt> and then releases memory allocated for list elements.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>linkedlist_deinit</TT> function returns -1 and sets <TT>errno</TT> to an appropriate value if the operation failed or 0 if the list was successfully deinitialized.
+	<P>
+</P>
+<A name="new"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_new</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  struct linkedlist *linkedlist_new(unsigned int max_size, struct allocator *al);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>linkedlist_new</TT> function allocates memory from the allocator <tt>al</tt>, initializes it with the <TT>linkedlist_init</TT> function and returns a pointer to the a new linkedlist object. If memory for the linkedlist cannot be allocated a null pointer is returned and <TT>errno</TT> is set appropriately.
+	<P>
+</P>
+<A name="del"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_del</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  int linkedlist_del(struct linkedlist *l, del_fn data_del, void *context);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>linkedlist_del</TT> function deinitializes the list <tt>l</tt> with the <TT>linkedlist_deinit</TT> function before freeing <tt>l</tt> itself.
+	<BR>
+<P>
+</P>
+<A name="clear"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_clear</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  int linkedlist_clear(struct linkedlist *l, del_fn data_del, void *context);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>linkedlist_clear</TT> function clears the list of all elements. If the <tt>data_del</tt> function is not <TT>NULL</TT> it will be called with the <tt>context</tt> argument and each data pointer in the list before releasing memory for list elements.
+	<BR>
+<P>
+</P>
+<H3>9.2. List functions</H3>
+<A name="add"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_add</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  int linkedlist_add(struct linkedlist *l, void *data);<BR>
+</PRE>
+<B>Description</B>
+<BR>The <TT>linkedlist_add</TT> function appends a data pointer to the end of the list. If the list has <tt>max_size</tt> elements, -1 is returned and <TT>errno</TT> is set to <TT>ERANGE</TT>.<BR>
+<B>Returns</B>
+<BR>The <TT>linkedlist_insert</TT> function returns 0 if the operation was successful and -1 if an error occurred in which case <TT>errno</TT> will be set appropriately.<P>
+</P>
+<A name="insert"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_insert</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  int linkedlist_insert(struct linkedlist *l, unsigned int idx, void *data);<BR>
+</PRE>
+<B>Description</B>
+<BR>inserts a data pointer before the item at <TT>idx</TT>. If
+		idx equals the size of the list, the data pointer will
+		be appended to the list.<BR>
+<B>Returns</B>
+<BR>The <TT>linkedlist_insert</TT> function returns 0 if the operation was successful and -1 if an error occurred in which case <TT>errno</TT> will be set appropriately.<P>
+</P>
+<A name="insert_sorted"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_insert_sorted</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  int linkedlist_insert_sorted(struct linkedlist *l,
+           cmp_fn cmp,
+           void *context,
+           void **replaced,
+           const void *data);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>linkedlist_insert_sorted</TT> function inserts the data pointer <tt>data</tt> into the linked list <tt>l</tt> in a position determined by the comparison function <tt>cmp</tt> which is defined as follows:
+<PRE>
+
+  typedef int (*cmp_fn)(const void *object1, const void *object2, void *context);
+  </PRE>
+This function will be called repeatedly with the new data pointer and each data pointer in the list until the insertion is complete or an error occurs. The context parameter is passed as-is. The following describes the outcome of the insertion based on the return value of the <TT>cmp_fn</TT>:
+<ul>
+<li>&gt; 0 - No operation is performed. The next data element in the list is compared.</li>
+<li>== 0 - If the <tt>replaced</tt> parameter is not <ident>NULL</ident> the replaced data pointer is assigned to it, removed from the list, and the new pointer is inserted in it's place. If the <tt>replaced</tt> parameter is <ident>NULL</ident> the new data pointer is inserted before the equal element.</li>
+<li>&lt; 0 - The new data pointer is inserted before the compared element.</li>
+</ul>
+<BR>
+<B>Returns</B>
+<BR>The <TT>linkedlist_insert_sorted</TT> function returns 0 if the operation was successful and -1 if an error occurred in which case <TT>errno</TT> will be set appropriately.<P>
+</P>
+<A name="is_empty"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_is_empty</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  int linkedlist_is_empty(const struct linkedlist *l);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>linkedlist_is_empty</TT> function returns non-zero if the list is empty and zero if it is not empty.
+	<BR>
+<P>
+</P>
+<A name="size"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_size</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  unsigned int linkedlist_size(const struct linkedlist *l);<BR>
+</PRE>
+<B>Description</B>
+<BR>The <TT>linkedlist_size</TT> function returns the number of items in the list.<BR>
+<P>
+</P>
+<A name="get"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_get</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  void *linkedlist_get(const struct linkedlist *l, unsigned int idx);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>linkedlist_get</TT> function retrieves an item from the list by index. If elements are accessed forward-sequentially each call is an O(1) operation.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>linkedlist_get</TT> function returns the data pointer being retrieved. If the specified <TT>idx</TT> was out of range, a null pointer is returned and <TT>errno</TT> is set to <tt>ERANGE</tt>.
+	<P>
+</P>
+<A name="get_last"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_get_last</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  void *linkedlist_get_last(const struct linkedlist *l);<BR>
+</PRE>
+<B>Description</B>
+<BR>The <TT>linkedlist_get_last</TT> function returns the last data pointer int the list or a null pointer if the list is empty.<BR>
+<P>
+</P>
+<A name="iterate"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_iterate</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  void linkedlist_iterate(void *l, iter_t *iter);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+Enumerate each element in the list. The <TT>linkedlist_iterate</TT> function initializes the <tt>iter</tt> object to point to the first item in the list. Each subsequent call to <TT>linkedlist_next</TT> returns the next element in the list or <TT>NULL</TT> if all elements have been enumerated. The elements are returned in order.
+<p>
+</p>
+Because linkedlist uses an element index for the state of an interator, after a <tt>data</tt> object returned by <TT>linkedlist_next</TT> is removed a subsequent call to <TT>linkedlist_next</TT> will skip an element. Therefore, to remove elements during iteration, <TT>linkedlist_get</TT> should be used instead. This will have no performance impact as sequential access is O(1) optimized.
+<p>
+</p>
+To enumerate each element in a list the following code might be used:
+<PRE>
+
+  iter_t iter;
+  linkedlist_iterate(lst, &amp;iter);
+  while ((el = linkedlist_next(lst, &amp;iter))) {
+      /* use el */
+  }
+  </PRE>
+	<P>
+</P>
+<A name="next"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_next</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  void *linkedlist_next(void *l, iter_t *iter);<BR>
+</PRE>
+<B>Returns</B>
+<BR>
+The <TT>linkedlist_next</TT> function returns the next data pointer in the list or <TT>NULL</TT> if all elements have been enumerated.
+	<P>
+</P>
+<A name="remove"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_remove</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  void *linkedlist_remove(struct linkedlist *l, unsigned int idx);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>linkedlist_remove</TT> function removes the data pointer at <TT>idx</TT> from the list. Please refer to the description of <TT>linkedlist_iterate</TT> for important information regarding the removal of elements during an iteration.
+<BR>
+<B>Returns</B>
+<BR>The <TT>linkedlist_remove</TT> function returns the data pointer removed from the list.<P>
+</P>
+<A name="remove_data"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_remove_data</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  void *linkedlist_remove_data(struct linkedlist *l, const void *data);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>linkedlist_remove_data</TT> function removes the data pointer <tt>data</tt> from the list <tt>l</tt>. Note that if the key is not returned or freed -- that operation must be performed independantly if necessary. Also, please refer to the description of <TT>linkedlist_iterate</TT> for important information regarding the removal of elements during an iteration.
+<BR>
+<B>Returns</B>
+<BR>The <TT>linkedlist_remove_data</TT> function returns the data pointer removed from the list.<P>
+</P>
+<A name="remove_last"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>linkedlist_remove_last</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/linkedlist.h&gt;
+  void *linkedlist_remove_last(struct linkedlist *l);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>linkedlist_remove_last</TT> function removes the last data pointer in the list.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>linkedlist_remove_last</TT> function returns the data pointer removed from the list.
+	<P>
+</P>
+<HR NOSHADE>
+<small>
+	Copyright 2002 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

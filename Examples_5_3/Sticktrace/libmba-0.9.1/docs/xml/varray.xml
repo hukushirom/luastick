@@ -1,0 +1,108 @@
+<interface name="varray"
+	short="A variable sized array.">
+
+<comments>
+Copyright 2003 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/varray.h</include>
+
+<title>Varray</title>
+<desc>
+The <def>varray</def>(3m) module is a variable array that permits quick access to elements by index without allocating all the memory for the array when the array is created. Instead, memory is allocated as necessary in increasingly larger chunks (32 * <tt>membsize</tt>, 64 * <tt>membsize</tt>, 128 * <tt>membsize</tt>, upto 2^20 * <tt>membsize</tt>).
+</desc>
+
+<group>
+<title>Varray functions</title>
+<desc>These functions should be used to manage <def>varray</def> objects.</desc>
+
+<meth name="init">
+	<pre>int varray_init(struct varray *va, size_t membsize, struct allocator *al);</pre>
+	<param name="va"/>
+	<param name="membsize"/>
+	<param name="al"/>
+	<desc>
+The <ident>varray_init</ident> function with initialize the <ident>varray</ident> <tt>va</tt> with no initial elements. The size of each element in the array will be <tt>membsize</tt>. The <ident>allocator</ident> <tt>al</tt> will be used to allocate memory to back the array.
+	</desc>
+	<ret>
+The <ident>varray_init</ident> function returns 0 on success or -1 for failure in which case <tt>errno</tt> will be set to an appropriate value.
+	</ret>
+</meth>
+<meth name="deinit">
+	<pre>int varray_deinit(struct varray *va);</pre>
+	<param name="va"/>
+	<desc>
+The <ident>varray_deinit</ident> function deinitializes the <ident>varray</ident> <tt>va</tt> and releases any storage backing the array.
+	</desc>
+	<ret>
+The <ident>varray_deinit</ident> function returns 0 on success or -1 for failure in which case <tt>errno</tt> will be set to an appropriate value.
+	</ret>
+</meth>
+<meth name="new">
+	<pre>struct varray *varray_new(size_t membsize, struct allocator *al);</pre>
+	<param name="membsize"/>
+	<param name="al"/>
+	<desc>
+The <ident>varray_new</ident> function allocates storage for a new <ident>varray</ident> object and initializes with the <ident>varray_init</ident> function.
+	</desc>
+	<ret>
+The <ident>varray_new</ident> function returns the new <tt>varray</tt> object or a null pointer if an error occurred in which case <tt>errno</tt> will be set appropriately.
+	</ret>
+</meth>
+<meth name="del">
+	<pre>void varray_del(void *va);</pre>
+	<param name="va"/>
+	<desc>
+The <ident>varray_del</ident> function calls <ident>varray_deinit</ident> on the object <tt>va</tt> and then frees the <tt>va</tt> object itself.
+	</desc>
+</meth>
+<meth name="get">
+	<pre>void *varray_get(struct varray *va, unsigned int idx);</pre>
+	<param name="va"/>
+	<param name="idx"/>
+	<desc>
+The <ident>varray_get</ident> function returns a pointer to memory at index <tt>idx</tt>. The memory will be <tt>membsize</tt> bytes in size as specified in the <ident>varray_new</ident> function. The memory is initialized to 0 when the chunk backing it is allocated meaning the memory should initially be 0.
+	</desc>
+	<ret>
+The <ident>varray_get</ident> function returns a pointer to the memory at index <tt>idx</tt> or a null pointer if an error occured in which case errno will be set appropriately.
+	</ret>
+</meth>
+<meth name="index">
+	<pre>int varray_index(struct varray *va, void *elem);</pre>
+	<param name="va"/>
+	<param name="elem"/>
+	<desc>
+The <ident>varray_index</ident> function returns the index of the element <tt>elem</tt>. If the element is not found -1 is returned and <ident>errno</ident> is set to <tt>EFAULT</tt>.
+	</desc>
+	<ret>
+The <ident>varray_index</ident> function returns the index of the element or -1 and sets <ident>errno</ident> to <tt>EFAULT</tt> to indicate the element is not in the array.
+	</ret>
+</meth>
+<meth name="release">
+	<pre>void varray_release(struct varray *va, unsigned int from);</pre>
+	<param name="va"/>
+	<param name="from"/>
+	<desc>
+The <ident>varray_release</ident> function may release all memory chunks storing elements from index <tt>from</tt> and higher. This function will only free memory chunks that constitute elements at the <tt>from</tt> index and above. If the <tt>from</tt> index is the first element of a chunk, that chunk will be freed as well. This function should only be used if it is understood that the range of elements being accessed has been significantly reduced such that memory will not be frequently allocated and freed.
+	</desc>
+</meth>
+<meth name="iterate">
+	<pre>void varray_iterate(void *va, iter_t *iter);</pre>
+	<param name="va"/>
+	<param name="iter"/>
+	<desc combine="next">
+The <ident>varray_iterate</ident> and <ident>varray_next</ident> functions will enumerate over every element in the array that has ever been accessed with the <tt>varray_get</tt> function. However, adjacent elements in the same memory chunk will also be returned by <tt>varray_next</tt> even if they those elements have never been accessed with <tt>varray_get</tt>. Similarly, there may be gaps in the full range that are not returned by <tt>varray_next</tt> because no element was accessed in a range necessary for the chunk of memory for that range to be allocated. The <tt>varray_iterate</tt> function initializes the <tt>iter</tt> object to point to the beginning of the array. The <tt>varray_next</tt> function returns each element in the array or <tt>NULL</tt> if all elements have been enumerated.
+	</desc>
+</meth>
+<meth name="next">
+	<pre>void *varray_next(void *va, iter_t *iter);</pre>
+	<param name="va"/>
+	<param name="iter"/>
+	<ret>
+The <ident>varray_next</ident> function returns a pointer to the memory of the next element in the enumeration or a null pointer if there are no more elements to be enumerated.
+	</ret>
+</meth>
+
+</group>
+</interface>
+

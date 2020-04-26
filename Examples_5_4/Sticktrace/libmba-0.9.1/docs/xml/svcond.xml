@@ -1,0 +1,99 @@
+<interface name="svcond"
+	short="POSIX-like condition variables implemented using SysV semaphores.">
+
+<comments>
+	Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/svcond.h</include>
+
+<title>Svcond</title>
+<desc>
+Condition variables are similar to semaphores however a lock can be specified with the wait function that will be unlocked just before blocking. When the blocked process or thread is subsequently signalled the lock will be reaquired. In practice this is frequently a superior coordination mechanism to semaphores alone. The <def>svcond</def>(3m) module provides a POSIX-like condition variables interface implemented using only System V semaphores.
+<p/>
+The <def>svcond</def>(3m) module is not available in the Win32 environment.
+</desc>
+
+<group>
+<title>Memry management functions</title>
+<desc>These functions should be used to create and destroy <ident>svcond</ident> condition variables.</desc>
+<meth name="create">
+	<pre>int svcond_create(svcond_t *cond, struct pool *sempool);</pre>
+	<param name="cond"/>
+	<param name="sempool"/>
+	<desc>
+The <ident>svcond_create</ident> function initializes the condition variable <tt>cond</tt>. The <tt>sempool</tt> parameter is an <def>svsem</def>(3m) pool created with the <ident>svsem_pool_create</ident> function as illustrated below. The <tt>value</tt> parameter must be 1 and the <tt>max_size</tt> parameter must be 3 times the number of condition variables that will be in use at any moment. If semaphores for the condition variable cannot be aquired from the pool, <tt>errno</tt> will be set to <tt>EAGAIN</tt> and -1 will be returned.
+<pre>
+void
+foo(void)
+{
+    struct pool sempool;
+	svcond_t condvar;
+
+    svsem_pool_create(&amp;sempool, 250, 1, 0, NULL); /* create semaphore array */
+    svcond_create(&amp;condvar, &amp;sempool); /* initialize one condition variable */
+
+	svcond_wait(&amp;convar);
+    ...
+</pre>
+	</desc>
+	<ret>
+The <ident>svcond_create</ident> function returns 0 if the condition variable was successfully initialized or -1 if the operation failed in which case <tt>errno</tt> will be set to an appropriate value (e.g. <tt>EAGAIN</tt> if 3 semaphores cannot be obtained from the pool).
+	</ret>
+</meth>
+<meth name="destroy">
+	<pre>int svcond_destroy(svcond_t *cond);</pre>
+	<param name="cond"/>
+	<desc>
+The <ident>svcond_destroy</ident> function releases the semaphores used by the condition variable <tt>cond</tt>. It is not an error to call this function with a <ident>NULL</ident> parameter, on memory that is zero'd or repeatedly on the same <tt>cond</tt> object -- it will be ignored or destroyed only once.
+	</desc>
+	<ret>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	</ret>
+</meth>
+</group>
+
+<group>
+<title>Svcond functions</title>
+<desc>These functions should be used to manipulate <ident>svcond</ident> condition variables.</desc>
+<meth name="wait">
+	<pre>int svcond_wait(svcond_t *cond, svsem_t *lock);</pre>
+	<param name="cond"/>
+	<param name="lock"/>
+	<desc>
+The <ident>svcond_wait</ident> function will unlock the semaphore <tt>lock</tt> and then sleep until one of the following occurs;
+<ul>
+<li>the thread or process is interrupted by a signal (e.g. <tt>SIGQUIT</tt>),</li>
+<li>the <ident>svcond_broadcast</ident> function is called with the condition variable,</li>
+<li>or the <ident>svcond_signal</ident> function is called with the condition variable and that process or thread is the next in the wait queue.</li>
+</ul>
+If a <tt>SIGINT</tt> is recieved the function will set <ident>errno</ident> to <tt>EINTR</tt> and return but not before reaquiring <tt>lock</tt>.
+	</desc>
+	<ret>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	</ret>
+</meth>
+<meth name="signal">
+	<pre>int svcond_signal(svcond_t *cond);</pre>
+	<param name="cond"/>
+	<desc>
+The <ident>svcond_signal</ident> function wakes up one process or thread blocked on the condition variable <tt>cond</tt> and return from the <ident>svsem_wait</ident> call but not before reaquiring the <tt>lock</tt>.
+	</desc>
+	<ret>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	</ret>
+</meth>
+<meth name="broadcast">
+	<pre>int svcond_broadcast(svcond_t *cond);</pre>
+	<param name="cond"/>
+	<desc>
+The <ident>svcond_broadcast</ident> function wakes up all processes and threads blocked on the condition variable <tt>cond</tt> and return from the <ident>svsem_wait</ident> call but not before reaquiring the <tt>lock</tt>.
+	</desc>
+	<ret>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	</ret>
+</meth>
+</group>
+
+</interface>
+

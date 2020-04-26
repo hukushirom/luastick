@@ -1,0 +1,110 @@
+EPERM	1	Operation not permitted
+ENOENT	2	No such file or directory
+ESRCH	3	No such process
+EINTR	4	interrupted system call
+EIO	5	I/O error
+ENXIO	6	No such device or address
+E2BIG	7	Arg list too long
+ENOEXEC	8	Exec format error
+EBADF	9	Bad file descriptor
+ECHILD	10	No child processes
+EAGAIN	11	Resource temporarily unavailable
+ENOMEM	12	Not enough space
+EACCES	13	Permission denied
+EFAULT	14	Bad address
+ENOTBLK	15	Block device required
+EBUSY	16	Resource busy
+EEXIST	17	File exists
+EXDEV	18	Improper link
+ENODEV	19	No such device
+ENOTDIR	20	Not a directory
+EISDIR	21	Is a directory
+EINVAL	22	Invalid argument
+ENFILE	23	Too many open files in system
+EMFILE	24	Too many open files
+ENOTTY	25	Inappropriate I/O control operation
+ETXTBSY	26	Text file busy
+EFBIG	27	File too large
+ENOSPC	28	No space left on device
+ESPIPE	29	Invalid seek
+EROFS	30	Read only file system
+EMLINK	31	Too many links
+EPIPE	32	Broken pipe
+EDOM	33	Domain error within math function
+ERANGE	34	Result too large
+ENOMSG	35	No message of desired type
+EIDRM	36	Identifier removed
+ECHRNG	37	Channel number out of range
+EL2NSYNC	38	Level 2 not synchronized
+EL3HLT	39	Level 3 halted
+EL3RST	40	Level 3 reset
+ELNRNG	41	Link number out of range
+EUNATCH	42	Protocol driver not attached
+ENOCSI	43	No CSI structure available
+EL2HLT	44	Level 2 halted
+EDEADLK	45	Resource deadlock avoided
+ENOTREADY	46	Device not ready
+EWRPROTECT	47	Write-protected media
+EFORMAT	48	Unformatted media
+ENOLCK	49	No locks available
+ENOCONNECT	50	no connection
+ESTALE	52	no filesystem
+EDIST	53	old, currently unused AIX errno*/ 
+EWOULDBLOCK	54	Operation would block [2]
+EINPROGRESS	55	Operation now in progress
+EALREADY	56	Operation already in progress
+ENOTSOCK	57	Socket operation on non-socket
+EDESTADDRREQ	58	Destination address required
+EDESTADDREQ	58	Destination address required
+EMSGSIZE	59	Message too long
+EPROTOTYPE	60	Protocol wrong type for socket
+ENOPROTOOPT	61	Protocol not available
+EPROTONOSUPPORT	62	Protocol not supported
+ESOCKTNOSUPPORT	63	Socket type not supported
+EOPNOTSUPP	64	Operation not supported on socket
+EPFNOSUPPORT	65	Protocol family not supported
+EAFNOSUPPORT	66	Address family not supported by protocol family
+EADDRINUSE	67	Address already in use
+EADDRNOTAVAIL	68	Can't assign requested address
+ENETDOWN	69	Network is down
+ENETUNREACH	70	Network is unreachable
+ENETRESET	71	Network dropped connection on reset
+ECONNABORTED	72	Software caused connection abort
+ECONNRESET	73	Connection reset by peer
+ENOBUFS	74	No buffer space available
+EISCONN	75	Socket is already connected
+ENOTCONN	76	Socket is not connected
+ESHUTDOWN	77	Can't send after socket shutdown
+ETIMEDOUT	78	Connection timed out
+ECONNREFUSED	79	Connection refused
+EHOSTDOWN	80	Host is down
+EHOSTUNREACH	81	No route to host
+ERESTART	82	restart the system call
+EPROCLIM	83	Too many processes
+EUSERS	84	Too many users
+ELOOP	85	Too many levels of symbolic links
+ENAMETOOLONG	86	File name too long
+ENOTEMPTY	87	Directory not empty [2]
+EDQUOT	88	Disc quota exceeded
+ECORRUPT	89	Invalid file system control data
+EREMOTE	93	Item is not local to host
+ENOSYS	109	Function not implemented POSIX
+EMEDIA	110	media surface error
+ESOFT	111	I/O completed, but needs relocation
+ENOATTR	112	no attribute found
+ESAD	113	security authentication denied
+ENOTRUST	114	not a trusted program 
+ETOOMANYREFS	115	Too many references: can't splice
+EILSEQ	116	Invalid wide character
+ECANCELED	117	asynchronous i/o cancelled
+ENOSR	118	temp out of streams resources
+ETIME	119	I_STR ioctl timed out
+EBADMSG	120	wrong message type at stream head
+EPROTO	121	STREAMS protocol error
+ENODATA	122	no message ready at stream head
+ENOSTR	123	fd is not a stream
+ECLONEME	82	this is the way we clone a stream ...
+ENOTSUP	124	POSIX threads unsupported value
+EMULTIHOP	125	multihop is not allowed
+ENOLINK	126	the link has been severed
+EOVERFLOW	127	value too large to be stored in data type

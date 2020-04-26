@@ -1,0 +1,187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Eval</TITLE>
+</HEAD>
+<BODY>
+<H1>6. Eval</H1>
+The <I>eval</I>(3m) module will evaluate simple arithmentic expressions consisting of integers, symbols for which the provided <TT>symlook_fn</TT> returns an integer, and any of the operators <tt>|&amp;^+-*/()</tt>.
+<h3>Operator Precedence</h3>
+<p>
+</p>
+Operator precedence is roughly the same as the C language.
+<PRE>
+
+   ( )  higher
+   * /
+   + -
+  ^ &amp; | lower
+  </PRE>
+Prefixing integer tokens with minus <tt>'-'</tt> to indicate a negative value is currently not supported.
+
+<P>
+<B CLASS="tfc">Example 3. A Simple Calculator</B>
+<BR>
+The following example illustrates how to use the <TT>eval</TT> module with a <TT>hashmap</TT>(3m) as a symbol table to make a simple commandline calculator.
+<PRE>
+
+  #include &lt;stdlib.h&gt;
+  #include &lt;string.h&gt;
+  #include &lt;stdio.h&gt;
+  
+  #include &lt;mba/hashmap.h&gt;
+  #include &lt;mba/eval.h&gt;
+  
+  int
+  symtab_lookup(const unsigned char *key, unsigned long *val, struct hashmap *symtab)
+  {
+      const unsigned char *str;
+  
+      if ((str = hashmap_get(symtab, key))) {
+          *val = strtoul(str, NULL, 0);
+          return 0;
+      }
+  
+      return -1;
+  }
+  int
+  main(void)
+  {
+      struct hashmap symtab; 
+      unsigned char buf[1024], *bp = buf;
+      unsigned long result; 
+      struct eval *eval = eval_new((symlook_fn)symtab_lookup, &amp;symtab);
+  
+      hashmap_init(&amp;symtab, 0, hash_str, cmp_str, NULL, NULL);
+  
+      while ((*bp = fgetc(stdin)) &gt; 0) {
+          if (*bp == '\n') { 
+              *bp = '\0'; 
+              bp = strchr(buf, '=');
+              *bp++ = '\0'; 
+              eval_expression(eval, bp, bp + strlen(bp), &amp;result);
+              sprintf(bp, "%u", result);
+              printf(" %s=%ld\n", buf, result);
+              hashmap_put(&amp;symtab, strdup(buf), strdup(bp));
+              bp = buf;
+          } else {
+              bp++;
+          }
+      }
+  
+      return EXIT_SUCCESS;
+  }
+  output:
+  $ ./calc 
+  foo=0xffff
+   foo=65535
+  bar=10 * foo &amp; 0x3333
+   bar=13106
+  </PRE>
+</P>
+<H3>6.1. The Eval Functions</H3>
+<A name="new"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>eval_new</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/eval.h&gt;
+  struct eval *eval_new(symlook_fn symlook, void *context);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>eval_new</TT> function creates and returns a new context object for evaluating expressions. The <tt>symlook</tt> parameter is defined as follows:
+<PRE>
+
+  typedef int (*symlook_fn)(const tchar *name, unsigned long *val, void *context);
+  </PRE>
+The <tt>symlook_fn</tt> function will be called to resolve any non-numeric symbols and should place the value identified by <tt>name</tt> into <tt>val</tt> and return 0. If the symbol is not found -1 should be returned.
+<p>
+</p>
+The <TT>eval_new</TT> function can be used repeatedly to evaluate any number of expressions before being destroyed with the <TT>eval_del</TT> function. The <tt>context</tt> parameter is passed uninterpreted to the <tt>symlook_fn</tt> (e.g. a map perhaps).
+	<BR>
+<P>
+</P>
+<A name="del"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>eval_del</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/eval.h&gt;
+  void eval_del(void *eval);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>eval_del</TT> function deletes the context object <tt>eval</tt> freeing any memory allocated with <tt>eval_new</tt> or during the evaluation of expressions.
+	<BR>
+<P>
+</P>
+<A name="eval_expression"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>eval_eval_expression</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/eval.h&gt;
+  int eval_expression(struct eval *eval, const tchar *expr, const tchar *elim, unsigned long *result);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>eval_expression</TT> function evaluates an infix expression like <tt>'(5 + 3) * N'</tt>, converts it into a stack of tokens in postfix orientation, and reduces it with a simple translation matrix to produce a single integer value. The <tt>eval</tt> parameter is a context object created with <tt>eval_new</tt>. The expression at <tt>expr</tt> is evaluated up to, but not including, the memory at <tt>elim</tt>, and writes the resulting value in the memory at <tt>result</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>eval_expression</TT> function returns 0 if the expression was successfully reduced or -1 if an error occured in which case <tt>errno</tt> will be set appropriately (e.g. <tt>ENOENT</tt> if the <tt>symlook_fn</tt> could not resolve a symbol).
+	<P>
+</P>
+<HR NOSHADE>
+<small>
+Copyright 2003 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

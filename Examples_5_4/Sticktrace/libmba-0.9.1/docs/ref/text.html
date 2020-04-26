@@ -1,0 +1,417 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Text</TITLE>
+</HEAD>
+<BODY>
+<H1>18. Text</H1>
+The <TT>text</TT> module provides typedefs and macros to abstract the character type and all standard library functions that operate on them. The resulting source code will support extended charsets and can be used with little or no modification on a variety of popular platforms. If <tt>USE_WCHAR</tt> is defined, wide characters will be used (e.g. <tt>wchar_t</tt> is UTF-16LE on Windows). Otherwise the locale dependent encoding will be used (e.g. UTF-8 on Unix). Many functions in this library now accept <tt>tchar *</tt> strings however <tt>char *</tt> or <tt>wchar_t *</tt> strings can be used with these functions as <tt>tchar</tt> is just a typedef for <tt>unsigned char</tt> or <tt>wchar_t</tt>.
+<p>
+</p>
+Additionally, several sentinel pointer string functions are provided.
+<p>
+</p>
+See <A href="text_details.html">Tchar I18N Text Abstraction</A> for details.
+<H3>18.1. Tchar Definitions</H3>
+<A name="The tchar Type"></A>
+<P>
+<B CLASS="tfc">The <TT>tchar</TT> Type</B>
+<BR>
+To abstract what character type is used the following <tt>typedef</tt> is defined.
+<PRE>
+
+  #ifdef USE_WCHAR
+  typedef wchar_t tchar;
+  typedef wint_t tint_t;
+  #define TEOF WEOF
+  #else
+  typedef unsigned char tchar;
+  typedef int tint_t;
+  #define TEOF EOF
+  #endif
+  </PRE>
+To use this new type is a matter of substituing all instances of <tt>char</tt> or <tt>wchar_t</tt> with the new <tt>tchar</tt>. If the program is compiled on Windows, the program should be compiled with <tt>USE_WCHAR</tt> whereas other systems would use the <tt>tchar</tt> that is defined as <tt>unsigned char</tt> which is suitable for use with multibyte strings and locale dependent codepages.
+<p>
+</p>
+Of course this is not enough to abstract the character type. All string handling functions must be abstracted as well. Also, wide character string literals must be prefixed with an <tt>L</tt>.
+	<BR>
+</P>
+<A name="The TEXT Macro"></A>
+<P>
+<B CLASS="tfc">The <TT>TEXT</TT> Macro</B>
+<BR>
+The problem of prefixing wide character string literals is easily resolved with the following trivial <tt>TEXT</tt> macro (or identical shorthand <TT>_T</TT> macro).
+<PRE>
+
+  #ifdef USE_WCHAR
+  #define TEXT(s) L##s
+  #define _T(s) L##s
+  #else
+  #define TEXT(s) s
+  #define _T(s) s
+  #endif
+  </PRE>
+Depending on wheather or not the target code is compiled with <tt>USE_WCHAR</tt> the string or character literal will be properly prefixed with <tt>L</tt>. Consider the example below that is properly written using <tt>tchar</tt> and the <tt>_T</tt> macro. If this code is compiled without <tt>USE_WCHAR</tt> the <tt>_T</tt> macro is simply be removed to produce code that manages strings using the standard locale dependant behavior. If <tt>USE_WCHAR</tt> is defined however, the <tt>L</tt> will be prepended to string and character literals.
+<PRE>
+
+  const tchar *foo = _T("bar");
+  if (ch == _T('\n')) {
+  
+  /* preprocessing yields */
+  
+  const unsigned char *foo = "bar";
+  if (ch == '\n') {
+  
+  /* preprocessing with USE_WCHAR defined gives */
+  
+  const wchar_t *foo = L"bar";
+  if (ch == L'\n') {
+  </PRE>
+	<BR>
+</P>
+<A name="Function Macros"></A>
+<P>
+<B CLASS="tfc">Function Macros</B>
+<BR>
+The macros for common library functions that accept characters and strings are defined as follows. Note that wide character stream I/O cannot be mixed with non-wide I/O. Because it is difficult to write a program that performs all character I/O using entirely wide characters, currently there are no macros for wide character I/O functions such as <tt>fwprintf</tt>, <tt>fputwc</tt>, <tt>fgetws</tt>, ...etc. This may be addressed in a future version of this module.
+<PRE>
+
+  #ifdef USE_WCHAR
+  
+  #define istalnum iswalnum
+  #define istalpha iswalpha
+  #define istcntrl iswcntrl
+  #define istdigit iswdigit
+  #define istgraph iswgraph
+  #define istlower iswlower
+  #define istprint iswprint
+  #define istpunct iswpunct
+  #define istspace iswspace
+  #define istupper iswupper
+  #define istxdigit iswxdigit
+  #define istblank iswblank
+  #define totlower towlower
+  #define totupper towupper
+  #define tcscpy wcscpy
+  #define tcsncpy wcsncpy
+  #define tcscat wcscat
+  #define tcsncat wcsncat
+  #define tcscmp wcscmp
+  #define tcsncmp wcsncmp
+  #define tcscoll wcscoll
+  #define tcsxfrm wcsxfrm
+  #define tcscoll_l wcscoll_l
+  #define tcsxfrm_l wcsxfrm_l
+  #define tcsdup wcsdup
+  #define tcschr wcschr
+  #define tcsrchr wcsrchr
+  #define tcschrnul wcschrnul
+  #define tcscspn wcscspn
+  #define tcsspn wcsspn
+  #define tcspbrk wcspbrk
+  #define tcsstr wcsstr
+  #if defined(_WIN32)
+  #define tcstok(s,d,p) wcstok(s,d)
+  #else
+  #define tcstok wcstok
+  #endif
+  #define tcslen wcslen
+  #define tcsnlen wcsnlen
+  #define tmemcpy wmemcpy
+  #define tmemmove wmemmove
+  #define tmemset wmemset
+  #define tmemcmp wmemcmp
+  #define tmemchr wmemchr
+  #define tcscasecmp wcscasecmp
+  #define tcsncasecmp wcsncasecmp
+  #define tcscasecmp_l wcscasecmp_l
+  #define tcsncasecmp_l wcsncasecmp_l
+  #define tcpcpy wcpcpy
+  #define tcpncpy wcpncpy
+  #define tcstod wcstod
+  #define tcstof wcstof
+  #define tcstold wcstold
+  #define tcstol wcstol
+  #define tcstoul wcstoul
+  #define tcstoq wcstoq
+  #define tcstouq wcstouq
+  #define tcstoll wcstoll
+  #define tcstoull wcstoull
+  #define tcstol_l wcstol_l
+  #define tcstoul_l wcstoul_l
+  #define tcstoll_l wcstoll_l
+  #define tcstoull_l wcstoull_l
+  #define tcstod_l wcstod_l
+  #define tcstof_l wcstof_l
+  #define tcstold_l wcstold_l
+  #define tcsftime wcsftime
+  #define fputts _fputws
+  #if !defined(_WIN32)
+  #define stprintf swprintf
+  #define vstprintf vswprintf
+  #else
+  #define stprintf _snwprintf
+  #define vstprintf _vsnwprintf
+  #endif
+  #define stscanf swscanf
+  #define vstscanf vswscanf
+  
+  #define text_length wcs_length
+  #define text_size wcs_size
+  #define text_copy wcs_copy
+  #define text_copy_new wcs_copy_new
+  
+  #else
+  
+  #define istalnum isalnum
+  #define istalpha isalpha
+  #define istcntrl iscntrl
+  #define istdigit isdigit
+  #define istgraph isgraph
+  #define istlower islower
+  #define istprint isprint
+  #define istpunct ispunct
+  #define istspace isspace
+  #define istupper isupper
+  #define istxdigit isxdigit
+  #define istblank isblank
+  #define totlower tolower
+  #define totupper toupper
+  #define tcscpy strcpy
+  #define tcsncpy strncpy
+  #define tcscat strcat
+  #define tcsncat strncat
+  #define tcscmp strcmp
+  #define tcsncmp strncmp
+  #define tcscoll strcoll
+  #define tcsxfrm strxfrm
+  #define tcscoll_l strcoll_l
+  #define tcsxfrm_l strxfrm_l
+  #define tcsdup strdup
+  #define tcschr strchr
+  #define tcsrchr strrchr
+  #define tcschrnul strchrnul
+  #define tcscspn strcspn
+  #define tcsspn strspn
+  #define tcspbrk strpbrk
+  #define tcsstr strstr
+  #if defined(__GNUC__)
+  #define tcstok strtok_r
+  #else
+  #define tcstok(s,d,p) strtok(s,d)
+  #endif
+  #define tcslen strlen
+  #define tcsnlen strnlen
+  #define tmemcpy memcpy
+  #define tmemmove memmove
+  #define tmemset memset
+  #define tmemcmp memcmp
+  #define tmemchr memchr
+  #define tcscasecmp strcasecmp
+  #define tcsncasecmp strncasecmp
+  #define tcscasecmp_l strcasecmp_l
+  #define tcsncasecmp_l strncasecmp_l
+  #define tcpcpy stpcpy
+  #define tcpncpy stpncpy
+  #define tcstod strtod
+  #define tcstof strtof
+  #define tcstold strtold
+  #define tcstol strtol
+  #define tcstoul strtoul
+  #define tcstoq strtoq
+  #define tcstouq strtouq
+  #define tcstoll strtoll
+  #define tcstoull strtoull
+  #define tcstol_l strtol_l
+  #define tcstoul_l strtoul_l
+  #define tcstoll_l strtoll_l
+  #define tcstoull_l strtoull_l
+  #define tcstod_l strtod_l
+  #define tcstof_l strtof_l
+  #define tcstold_l strtold_l
+  #define tcsftime strftime
+  #define fputts fputs
+  #if !defined(_WIN32)
+  #define stprintf snprintf
+  #define vstprintf vsnprintf
+  #else
+  #define stprintf _snprintf
+  #define vstprintf _vsnprintf
+  #endif
+  #define stscanf sscanf
+  #define vstscanf vsscanf
+  
+  #define text_length str_length
+  #define text_size str_size
+  #define text_copy str_copy
+  #define text_copy_new str_copy_new
+  
+  #endif
+  </PRE>
+	<BR>
+</P>
+<H3>18.2. Sentinel Pointer String Functions</H3>
+In addition to the standard library string functions, the <TT>text</TT> module has some additional functions that under certain conditions are superior to their traditional counterparts. By using a limit pointer instead of a count, the limit pointer does not need to be recalculated as the target pointer is advanced during complex text processing. The limit pointer never changes which can make the resulting code simpler and inherently safer. Determining if a pointer is within the bounds of the target text is a simple conditional expression (e.g. <tt>p &lt; plim</tt>).
+<A name="text_length"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>text_length</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/text.h&gt;
+  int text_length(const tchar *src, const tchar *slim);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>text_length</TT> function returns the number of elements in the text at <tt>src</tt> up to but not including the '\0' terminator. This function returns 0 if;
+<ul>
+<li>no '\0' terminator is encountered before <tt>slim</tt>,</li>
+<li>
+<tt>src == NULL</tt>,</li>
+<li>or <tt>src &gt;= slim</tt>
+</li>
+</ul>
+The <TT>text_length</TT> function is actually a macro for either <TT>str_length</TT> or <TT>wcs_length</TT>. The <TT>wcs_length</TT> function has the same prototype but accepts <tt>wchar_t</tt> parameters whereas <TT>str_length</TT> accepts <tt>unsigned char</tt> parameters.
+	<BR>
+<P>
+</P>
+<A name="text_copy"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>text_copy</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/text.h&gt;
+  int text_copy(const tchar *src, const tchar *slim, tchar *dst, tchar *dlim, int n);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>copy</TT> function copies at most <tt>n</tt> elements of the text at <tt>src</tt> into <tt>dst</tt> up to and including the '\0' terminator. The text at <tt>dst</tt> is always '\0' terminated unless <tt>dst</tt> is a null pointer or <tt>dst &gt;= dlim</tt>.
+<p>
+</p>
+The <TT>text_copy</TT> function is actually a macro for either <TT>str_copy</TT> or <TT>wcs_copy</TT>. The <TT>wcs_copy</TT> function has the same prototype but accepts <tt>wchar_t</tt> parameters whereas <TT>str_copy</TT> accepts <tt>unsigned char</tt> parameters.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>text_copy</TT> function returns the number of elements in the text copied to <tt>dst</tt> not including the '\0' terminator. This function returns 0 if;
+<ul>
+<li>no '\0' terminator is encountered before <tt>slim</tt>,</li>
+<li>
+<tt>dst == NULL</tt>,</li>
+<li>
+<tt>dst &gt;= dlim</tt>,</li>
+<li>
+<tt>src == NULL</tt>,</li>
+<li>or <tt>src &gt;= slim</tt>
+</li>
+</ul>
+	<BR>
+<P>
+</P>
+<A name="text_copy_new"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>text_copy_new</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/text.h&gt;
+  int text_copy_new(const tchar *src,
+           const tchar *slim,
+           tchar **dst,
+           int n,
+           struct allocator *al);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>text_copy_new</TT> function copies at most <tt>n</tt> elements of the text at <tt>src</tt> up to and including the '\0' terminator into memory allocated from the <I>allocator</I> specified by the <tt>al</tt> parameter. The pointer pointed to by <tt>dst</tt> is set to point to the new memory. If the text is copied successfully it is always '\0' terminated.
+<p>
+</p>
+The <TT>text_copy_new</TT> function is actually a macro for either <TT>str_copy_new</TT> or <TT>wcs_copy_new</TT>. The <TT>wcs_copy_new</TT> function has the same prototype but accepts <tt>wchar_t</tt> parameters whereas <TT>str_copy_new</TT> accepts <tt>unsigned char</tt> parameters.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>text_copy_new</TT> function returns the number of elements in the text at <tt>*dst</tt> not including the '\0' terminator. This function sets <tt>*dst</tt> to <tt>NULL</tt> and returns 0 if;
+<ul>
+<li>no '\0' terminator is encountered before <tt>slim</tt>,</li>
+<li>
+<tt>src == NULL</tt>,</li>
+<li>or <tt>src &gt;= slim</tt>
+</li>
+</ul>
+and returns 0 if <tt>dst == NULL</tt>. If memory for the text cannot be allocated -1 will be returned and <tt>errno</tt> will be set appropriately.
+	<BR>
+<P>
+</P>
+<A name="text_size"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>text_size</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/text.h&gt;
+  size_t text_size(const tchar *src, const tchar *slim);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>size</TT> function returns the number of bytes occupied by the text at <tt>src</tt> including the '\0' terminator. This function returns 0 if;
+<ul>
+<li>no '\0' terminator is encountered before <tt>slim</tt>,</li>
+<li>
+<tt>src == NULL</tt>,</li>
+<li>or <tt>src &gt;= slim</tt>
+</li>
+</ul>
+The <TT>text_size</TT> function is actually a macro for either <TT>str_size</TT> or <TT>wcs_size</TT>. The <TT>wcs_size</TT> function has the same prototype but accepts <tt>wchar_t</tt> parameters whereas <TT>str_size</TT> accepts <tt>unsigned char</tt> parameters.
+	<BR>
+<P>
+</P>
+<HR NOSHADE>
+<small>
+Copyright 2003 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

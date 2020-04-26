@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Diff</TITLE>
+</HEAD>
+<BODY>
+<H1>5. Diff</H1>
+The <I>diff</I>(3m) module will compute the <i>shortest edit script</i> (SES) of two sequences. This algorithm is perhaps best known as the one used in GNU <I>diff</I>(1) although GNU <I>diff</I> employs additional optimizations specific to line oriented input such as source code files whereas this implementation is more generic. Formally, this implementation of the SES solution uses the dynamic programming algorithm described by Myers [1] with the Hirschberg linear space refinement. The objective is to compute the minimum set of edit operations necessary to transform a sequence A of length N into B of length M. This can be performed in O(N+M*D^2) expected time where D is the <i>edit distance</i> (number of elements deleted and inserted to transform A into B). Thus the algorithm is particularly fast and uses less space if the difference between sequences is small. The interface is generic such that sequences can be anything that can be indexed and compared with user supplied functions including arrays of structures, linked lists, arrays of pointers to strings in a file, etc.
+<p>
+</p>
+<small>
+[1] E. Myers, ``An O(ND) Difference Algorithm and Its Variations,'' Algorithmica 1, 2 (1986), 251-266. http://www.cs.arizona.edu/people/gene/PAPERS/diff.ps
+</small>
+<P>
+<B CLASS="tfc">Example 2. Printing the Edit Script</B>
+<BR>
+The below code computes and prints the edit script of two 8 bit encoded character strings <tt>a</tt> and <tt>b</tt>. Note that <tt>off</tt> and <tt>len</tt> for <tt>DIFF_INSERT</tt> operations reference sequence <tt>b</tt> whereas matches and deletes reference sequence <tt>a</tt>.
+<PRE>
+
+  int d, sn, i;
+  struct varray *ses = varray_new(sizeof(struct diff_edit), NULL);
+  
+  d = diff(a, 0, n, b, 0, m, NULL, NULL, NULL, 0, ses, &amp;sn, NULL);
+  
+  for (i = 0; i &lt; sn; i++) {
+  	struct diff_edit *e = varray_get(ses, i);
+  
+  	switch (e-&gt;op) {
+  		case DIFF_MATCH:
+  			printf("MAT: ");
+  			fwrite(a + e-&gt;off, 1, e-&gt;len, stdout);
+  			break;
+  		case DIFF_DELETE:
+  			printf("DEL: ");
+  			fwrite(a + e-&gt;off, 1, e-&gt;len, stdout);
+  			break;
+  		case DIFF_INSERT:
+  			printf("INS: ");
+  			fwrite(b + e-&gt;off, 1, e-&gt;len, stdout);
+  			break;
+  	}
+  	printf("\n");
+  }
+  varray_del(ses);
+  </PRE>
+</P>
+<H3>5.1. </H3>
+<A name="Diff definitions"></A>
+<P>
+<B CLASS="tfc">Diff definitions</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/diff.h&gt;
+	
+  typedef const void *(*idx_fn)(const void *s, int idx, void *context);
+  typedef int (*cmp_fn)(const void *e1, const void *e2, void *context);
+  
+  typedef enum {
+  	DIFF_MATCH = 1,
+  	DIFF_DELETE,
+  	DIFF_INSERT
+  } diff_op;
+  
+  struct diff_edit {
+  	short op;    /* DIFF_MATCH, DIFF_DELETE or DIFF_INSERT */
+  	int off; /* off into a if MATCH or DELETE, b if INSERT */
+  	int len;
+  };
+  </PRE>
+<B>Description</B>
+<BR>
+The <tt>idx_fn</tt> is a pointer to a function that returns the element the numeric index specified by <tt>idx</tt> in the sequence <tt>s</tt>. The <tt>cmp_fn</tt> (actually defined in <TT>hashmap</TT>(3m)) is a pointer to a function that returns zero if the sequence elements <tt>e1</tt> and <tt>e2</tt> are equal and non-zero otherwise. The <tt>context</tt> parameter specified with the <tt>diff</tt> call is always supplied to both callbacks.
+<p>
+</p>
+Each element in the <tt>ses</tt> <TT>varray</TT> is a <tt>struct diff_edit</tt> structure and represents an individual match, delete, or insert operation in the edit script. The <tt>op</tt> member is <tt>DIFF_MATCH</tt>, <tt>DIFF_DELETE</tt> or <tt>DIFF_INSERT</tt>. The <tt>off</tt> and <tt>len</tt> members indicate the offset and length of the subsequence that matches or should be deleted from sequence <tt>a</tt> or inserted from sequence <tt>b</tt>.
+<BR>
+</P>
+<A name="diff"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>diff</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/diff.h&gt;
+  int diff(const void *a,
+           int aoff,
+           int n,
+           const void *b,
+           int boff,
+           int m,
+           idx_fn idx,
+           cmp_fn cmp,
+           void *context,
+           int dmax,
+           struct varray *ses,
+           int *sn,
+           struct varray *buf);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>diff</TT>(3m) function computes the minimum <i>edit distance</i> between the sequences <tt>a</tt> (from <tt>aoff</tt> for length <tt>n</tt>) and <tt>b</tt> (from <tt>boff</tt> for length <tt>m</tt>) and optionally collects the <i>edit script</i> necessary to transform <tt>a</tt> into <tt>b</tt> storing the result in the <TT>varray</TT> identified by the <tt>ses</tt> parameter. The <tt>idx</tt> paremeter is a pointer to an <TT>idx_fn</TT> that returns the element at the numeric index in a sequence. The <tt>cmp</tt> parameter is a pointer to a <TT>cmp_fn</TT> function that returns zero if the two elements <tt>e1</tt> and <tt>e2</tt> are equal and non-zero otherwise. The supplied <tt>context</tt> parameter will be passed directly to both functions with each invokation. If <tt>idx</tt> and <tt>cmp</tt> are <TT>NULL</TT> <tt>a</tt> and <tt>b</tt> will be compared as continuous sequences of <tt>unsigned char</tt> (i.e. raw memory diff).
+<p>
+</p>
+If the <tt>ses</tt> parameter is not <TT>NULL</TT> it must be a <TT>varray</TT>(3m) with a <tt>membsize</tt> of <tt>sizeof(struct diff_edit)</tt>. Each <tt>struct diff_edit</tt> element in the <TT>varray</TT>(3m) starting from 0 will be populated with the <tt>op</tt>, <tt>off</tt>, and <tt>len</tt> that together constitute the edit script. The number of <tt>struct diff_edit</tt> elements in the edit script is written to the integer pointed to by the <tt>sn</tt> parameter. If the <tt>ses</tt> or <tt>sn</tt> parameter is <TT>NULL</TT>, the edit script will not be collected.
+<p>
+</p>
+If the <tt>dmax</tt> parameter is not 0, the calculation will stop as soon as it is determined that the edit distance of the two sequences equals or exceeds the specified value. A value of 0 indicates that there is no limit.
+<p>
+</p>
+If the <tt>buf</tt> parameter is not <TT>NULL</TT> it must be a <TT>varray</TT>(3m) with <tt>membsize</tt> of <tt>sizeof(int)</tt> and will be used as temporary storage for the dynamic programming tables. If <tt>buf</tt> is <TT>NULL</TT> storage will be temporarily allocated and freed with <TT>malloc</TT>(3) and <TT>free</TT>(3).
+<BR>
+<B>Returns</B>
+<BR>
+The <TT>diff</TT>(3m) function returns the edit distance between the two sequences <tt>a</tt> and <tt>b</tt> or <tt>dmax</tt> if the edit distance has been determined to meet or exceed the specified <tt>dmax</tt> value. If an error occurs -1 is returned and <TT>errno</TT> is set to indicate the error.
+<BR>
+<P>
+</P>
+<HR NOSHADE>
+<small>
+	Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

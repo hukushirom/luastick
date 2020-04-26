@@ -1,0 +1,261 @@
+<interface name="domnode"
+	short="a DOM-like api for manipulating XML as a tree of nodes">
+
+<comments>
+	Copyright 2002 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/domnode.h</include>
+
+<title>Domnode</title>
+<desc>The <def>domnode</def>(3m) module provides a lightweight DOM-like interface for manipulating XML documents as a tree of nodes in memory.  Functions are provided to load and store XML sources to and from trees of <ident>domnode</ident> structures.  It follows the "everything is a node philosophy".  Four different node types are supported; element, attribute, text, and comment. The <def href="../linkedlist.html">linkedlist</def>(3m) functions are used to modify the children and attributes of a node. All locale dependant character encodings as well as wide character encodings are supported with the <ident>tchar</ident> abstraction. The Expat XML parser is used by default which supports UTF-8, UTF-16, ISO-8859-1, or US-ASCII. This module will generate XML files in the locale dependant encoding.
+
+<example id="xml config">
+<title>An XML configuration file</title>
+<desc>
+Consider the following XML fragment from an imaginary networking application. The root node in this example is <tt>zsvr</tt>. It has children <tt>#comment</tt>, <tt>net</tt>, and <tt>users</tt>. The <tt>net</tt> element has attributes <tt>laddr</tt>, <tt>timeout</tt>, and <tt>port</tt>. See the <ident>domnode_create</ident> function for a complete description of the four different node types.
+<pre>
+&lt;zsvr mode="server"&gt;
+    &lt;!-- This is a comment --&gt;
+    &lt;net laddr="192.168.1.15" timeout="15000" port="1444"/&gt;
+    &lt;users&gt;
+        This is some text
+        &lt;user id="mba" auth="nis.o"&gt;nis.foo.net:9812:fretos&lt;/user&gt;
+        &lt;user id="gchan"
+</pre>
+The values of these configuration parameters should be manipulated by iterating over elements and attributes with <ident>linkedlist_iterate</ident> and <ident>linkedlist_next</ident> and then getting or setting individual values through the <tt>value</tt> member of the <ident>domnode</ident> structure.
+<p/>
+Please be aware that the space between elements is included in the list of children as <tt>#text</tt> nodes. This is consistent with a real DOM and is necessary if indentation and spacing in the original document is to be preserved. If your program is not interested in this space then be prepared to ignore those <tt>#text</tt> nodes.
+<p>
+As a convienience there is also a search function to retrieve a particular element or attribute provided it's name is unique among all elements and attributes. The following code sets the port value of a <ident>sockaddr_in</ident> structure to the port value "1444".
+</p>
+<pre>
+if ((attr = domnode_search(cfg, "port")) != NULL) {
+    inet.sin_port = htons(atoi(attr-&gt;value));
+}
+</pre>
+</desc>
+</example>
+</desc>
+
+<group>
+<title>The <ident>domnode</ident> structure</title>
+<code>
+	<title>The <ident>domnode</ident> structure</title>
+	<pre>
+#include &lt;mba/linkedlist.h&gt;
+
+struct domnode {
+	const tchar *name;
+	const tchar *value; 
+	struct linkedlist *children;
+	struct linkedlist *attrs; 
+};
+	</pre>
+	<desc>
+		<table id="domnode members">
+		<title>Values of <ident>struct domnode</ident> members by node type</title>
+		<tr>
+			<th>Type</th>
+			<th colspan="4">Members</th>
+		</tr><tr>
+			<th>&#160;</th>
+			<th><tt>name</tt></th>
+			<th><tt>value</tt></th>
+			<th><tt>children</tt></th>
+			<th><tt>attrs</tt></th>
+		</tr><tr>
+			<td>Element</td>
+			<td>tag name</td>
+			<td><tt>NULL</tt></td>
+			<td><def>linkedlist</def></td>
+			<td><def>linkedlist</def></td>
+		</tr><tr>
+			<td>Attribute</td>
+			<td>name of the attribute</td>
+			<td>value of the attribute</td>
+			<td><tt>NULL</tt></td>
+			<td><tt>NULL</tt></td>
+		</tr><tr>
+			<td>Text</td>
+			<td>"<tt>#text</tt>"</td>
+			<td>content of text node</td>
+			<td><tt>NULL</tt></td>
+			<td><tt>NULL</tt></td>
+		</tr><tr>
+			<td>Comment</td>
+			<td>"<tt>#comment</tt>"</td>
+			<td>content of comment</td>
+			<td><tt>NULL</tt></td>
+			<td><tt>NULL</tt></td>
+		</tr>
+		</table>
+The <ident>domnode</ident> structure represents one of four possible node types; element, attribute, text, or comment. Table <tablenum id="domnode members"/> shows what the <ident>domnode</ident> structure members may be for each node type. This table should be considered when creating new nodes with the <ident>domnode_new</ident> function.
+<br clear="all"/>
+	</desc>
+</code>
+</group>
+
+<group>
+<title>Memory management functions</title>
+<desc>These functions should be used to create and destroy <def>domnode</def> objects.</desc>
+<meth name="create" wrap="true">
+	<pre>int domnode_create(struct domnode *dn, const tchar *name, const tchar *value, struct allocator *al);</pre>
+	<param name="dn"/>
+	<param name="name"/>
+	<param name="value"/>
+	<param name="al"/>
+	<desc>
+The <ident>domnode_create</ident> function initializes the <ident>domnode</ident> object <tt>dn</tt> with the specified <tt>name</tt> and <tt>value</tt>. The allocator <tt>al</tt> will be used to allocate memory for this object. The <ident>domnode_destroy</ident> function must be called to free all memory associated with this object and it's children back to the allocator <tt>al</tt>.
+<p/>
+The type of the node created depends on the parameters specified. If the <tt>name</tt> parameter is the string <tt>'#text'</tt> a text node is created. If the <tt>name</tt> parameter is the string <tt>'#comment'</tt> a comment node is created. If the <tt>value</tt> parameter is <ident>NULL</ident> an element is created. If both <tt>name</tt> and <tt>value</tt> are <ident>NULL</ident> an "empty" node is created suitable for creating a new <def>domnode</def> tree from an XML source file with the functions <ident>domnode_load</ident> or <ident>domnode_fread</ident>.
+	</desc>
+	<ret>
+The <ident>domnode_create</ident> function returns 0 if the <ident>domnode</ident> was created successfully or -1 if the operation failed in which case <tt>errno</tt> will be set appropriately.
+	</ret>
+</meth>
+<meth name="destroy">
+	<pre>int domnode_destroy(struct domnode *dn);</pre>
+	<param name="dn"/>
+	<desc>
+The <ident>domnode_destroy</ident> function recursively releases resources associated with the <ident>domnode</ident> object <tt>dn</tt> as well as its children and attributes.
+	</desc>
+	<ret>
+The <ident>domnode_destroy</ident> function returns 0 if the <ident>domnode</ident> and it's children were successfully destroyed or -1 if the operation failed in which case <tt>errno</tt> will be set appropriately. If the <tt>dn</tt> parameter is <ident>NULL</ident>, no action is taken.
+	</ret>
+</meth>
+<meth name="new" wrap="true">
+	<pre>struct domnode *domnode_new(const tchar *name, const tchar *value, struct allocator *al);</pre>
+	<param name="name"/>
+	<param name="value"/>
+	<param name="al"/>
+	<desc>
+The <ident>domnode_new</ident> function allocates memory for a new <ident>domnode</ident> object an initializes it with the <ident>domnode_create</ident> function.
+	</desc>
+</meth>
+<meth name="del">
+	<pre>void domnode_del(void *dn);</pre>
+	<param name="dn"/>
+	<desc>
+The <ident>domnode_del</ident> function destroys the object <tt>dn</tt> with the <ident>domnode_destroy</ident> function and then frees <tt>dn</tt> itself.
+	</desc>
+</meth>
+</group>
+
+<group>
+<title>Node functions</title>
+<meth name="load">
+	<pre>int domnode_load(struct domnode *dn, const char *filename);</pre>
+	<param name="dn"/>
+	<param name="filename"/>
+	<desc>
+The <ident>domnode_load</ident> function loads an XML source file from the file specified by the <tt>filename</tt> parameter and populates the node <tt>dn</tt> with the corresponding <def>domnode</def> tree. Any existing members of the <tt>dn</tt> object will be deallocated. The XML source file must be a complete well-formed XML document.
+<p/>
+The following code illustrates how to create an initially empty root node and load an XML source document into it.
+<pre>
+dn = domnode_new(NULL, NULL, NULL);
+if (dn == NULL || domnode_load(dn, argv[1]) == 0) { 
+    fprintf(stderr, "Failed to load XML file: %s", argv[1]);
+    return 0;
+}
+</pre>
+	</desc>
+	<ret>
+The <ident>domnode_load</ident> function returns 0 if the operation was successful. Otherwise, -1 is returned and <tt>errno</tt> is set to indicate that the operation failed.
+	</ret>
+</meth>
+<meth name="store">
+	<pre>int domnode_store(struct domnode *dn, const char *filename);</pre>
+	<param name="dn"/>
+	<param name="filename"/>
+	<desc>
+The <ident>domnode_store</ident> function serializes the <def>domnode</def> tree identified by <tt>dn</tt> as XML source and writes the output to the file specified by the <tt>filename</tt> parameter using the locale dependent character encoding (e.g. UTF-8).
+	</desc>
+	<ret>
+The <ident>domnode_store</ident> function returns 0 if the operation was successful. Otherwise, -1 is returned and <tt>errno</tt> is set to indicate that the operation failed.
+	</ret>
+</meth>
+<meth name="fread">
+	<pre>size_t domnode_fread(struct domnode *dn, FILE *stream);</pre>
+	<param name="dn"/>
+	<param name="stream"/>
+	<desc>
+The <ident>domnode_fread</ident> function reads an XML source file from <tt>stream</tt> and populates the element node <tt>dn</tt> with the corresponding <def>domnode</def> tree. Any existing members of the <tt>dn</tt> object will be deallocated. The XML source file must be a complete well-formed XML document.
+	</desc>
+	<ret>
+The <ident>domnode_fread</ident> function returns the number of bytes read from <tt>stream</tt> or <tt>(size_t)(-1)</tt> if the operation failed in which case <tt>errno</tt> will be set appropriately.
+	</ret>
+</meth>
+<meth name="fwrite">
+	<pre>size_t domnode_fwrite(struct domnode *dn, FILE *stream);</pre>
+	<param name="dn"/>
+	<param name="stream"/>
+	<desc>
+The <ident>domnode_fwrite</ident> function serializes <tt>dn</tt> <def>domnode</def> tree as XML source and writes the output to <tt>stream</tt> using the locale dependent character encoding (e.g. UTF-8).
+	</desc>
+	<ret>
+The <ident>domnode_fwrite</ident> function returns the number of bytes written to <tt>stream</tt> or <tt>(size_t)(-1)</tt> if the operation failed in which case <tt>errno</tt> will be set appropriately.
+	</ret>
+</meth>
+<meth name="search">
+	<pre>struct domnode *domnode_search(struct domnode *dn, const tchar *name);</pre>
+	<param name="dn"/>
+	<param name="name"/>
+	<desc>
+The <ident>domnode_search</ident> function performs a breadth-first-search on the entire tree for a named element or attribute node starting from <tt>dn</tt> node. The first node with a name matching the <tt>name</tt> parameter is returned. If no such node is found, a null pointer is returned.
+<p/>
+In general this function should not be used because it is common for the name of an element or attribute to be repeated several times throughout the tree in which case the user cannot always be certain which node will be found.
+	</desc>
+	<ret>
+The <ident>domnode_search</ident> function returns the matching element or attribute or a null pointer if no such node exists in the tree.
+	</ret>
+</meth>
+</group>
+<group>
+<title>Attribute functions</title>
+<desc>
+The <def>domnode</def> attribute functions provide a map interface for manipulating attributes of an element.
+</desc>
+<meth name="attrs_put">
+	<pre>int domnode_attrs_put(struct linkedlist *attrs, struct domnode *attr);</pre>
+	<param name="attrs"/>
+	<param name="attr"/>
+	<desc>
+The <ident>domnode_attrs_put</ident> function puts an attribute into a list of attributes of an element. The <tt>attrs</tt> parameter is the <tt>attrs</tt> member of the target element. The <tt>attr</tt> parameter is the attribute that should be placed into this list of attributes. If an attribute with the same name already exists in the list, it will be freed and then replaced with the new attribute.
+The below code illustrates how to create a new attribute and add it to the attributes of the <tt>net</tt> element from Example <examplenum id="xml config"/>
+<pre>
+if ((attr = domnode_new("baddr", "192.168.1.255")) == NULL ||
+            domnode_attr_put(net->attrs, attr) == -1) {
+    domnode_del(attr);
+    return -1;
+}
+</pre>
+	</desc>
+	<ret>
+The <ident>domnode_attrs_put</ident> function returns 0 if the operation was successful. Otherwise, -1 is returned and <tt>errno</tt> is set to indicate that the operation failed.
+	</ret>
+</meth>
+<meth name="attrs_get">
+	<pre>struct domnode *domnode_attrs_get(struct linkedlist *attrs, const tchar *name);</pre>
+	<param name="attrs"/>
+	<param name="name"/>
+	<desc>
+The <ident>domnode_attrs_get</ident> function retrieves an attribute from the attributes of an element by it's name. The <tt>attrs</tt> parameter is the <tt>attrs</tt> member of the target element. The <tt>name</tt> parameter is the name of the attribute that should be retrieved from the list of attributes.
+	</desc>
+	<ret>
+The <ident>domnode_attrs_get</ident> function returns the attribute that is being retrieved. If no attribute with the specified name exists in the <tt>attrs</tt> list, a null pointer is returned.
+	</ret>
+</meth>
+<meth name="attrs_remove">
+	<pre>struct domnode *domnode_attrs_remove(struct linkedlist *attrs, const tchar *name);</pre>
+	<param name="attrs"/>
+	<param name="name"/>
+	<desc>
+The <ident>domnode_attrs_remove</ident> function removes an attribute from the attibutes of an element by it's name. The <tt>attrs</tt> parameter is the <tt>attrs</tt> member of the target element. The <tt>name</tt> parameter is the name of the attribute that should be removed from the list of attributes.
+	</desc>
+	<ret>
+The <ident>domnode_attrs_remove</ident> function returns the attribute node removed. If the named attibute is not found a null pointer is returned.
+	</ret>
+</meth>
+</group>
+</interface>

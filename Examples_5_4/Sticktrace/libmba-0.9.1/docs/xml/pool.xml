@@ -1,0 +1,157 @@
+<interface name="pool"
+	short="A container for recycleable objects.">
+
+<comments>
+	Copyright 2002 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/pool.h</include>
+
+<title>Pool</title>
+<desc>
+	The <def>pool</def>(3m) module provides a container that will manage a reuseable pool of data objects. If the data objects are costly to create and can be reused in a different context the object can be released back to the pool for retrival at a later point without creating and destroying objects frequently. The number of data objects in a pool is limited to <tt>POOL_SIZE_MAX</tt> defined in the <def>pool</def>(3m) header file. This limit is 2040 by default which will create a bitmap of 256 bytes. Memory to store data pointers will increase dynamically as more space is required.
+
+<example id="bufferpool">
+<title>A Pool of Buffers</title>
+<desc>
+The following example illustrates how to use <def>pool</def>(3m) and <def>allocator</def>(3m) to create a pool of reusable buffers.
+<pre>
+struct pool bufferpool;
+
+if (pool_create(&amp;bufferpool, 100,
+		(new_fn)allocator_new, (del_fn)allocator_free, NULL,
+		al, 4096, 0, NULL) == -1) {
+	perror("failed to create buffer pool");
+	return -1;
+}
+</pre>
+The pool will create at most 100 buffers of 4096 bytes each allocated from the allocator identified by the <tt>al</tt> parameter.
+</desc>
+</example>
+</desc>
+
+<group>
+<title>Memory management functions</title>
+<desc>These functions should be used to create and destroy <def>pool</def> objects.</desc>
+<meth name="create" wrap="true">
+	<pre>int pool_create(struct pool *p, unsigned int max_size, new_fn object_new, del_fn object_del, rst_fn object_rst, void *context, size_t size, int flags, struct allocator *al);</pre>
+	<param name="p"/>
+	<param name="max_size"/>
+	<param name="object_new"/>
+	<param name="object_del"/>
+	<param name="object_rst"/>
+	<param name="context"/>
+	<param name="size"/>
+	<param name="flags"/>
+	<param name="al"/>
+	<desc>
+The <ident>pool_create</ident> function initializes the pool object <tt>p</tt>. The pool will limit the number of objects created through the pool to <tt>max_size</tt>. If <tt>max_size</tt> is 0 or greater than <tt>POOL_SIZE_MAX</tt> the pool will accept no more than <tt>POOL_SIZE_MAX</tt> elements. The allocator <tt>al</tt> will be used to allocate all memory for the pool itself (but not objects created by the pool).
+<p/>
+The remaining parameters are used to create and destroy objects managed by the pool. The <tt>object_new</tt> function will be called with the <tt>context</tt>, <tt>size</tt>, and <tt>flags</tt> parameters to create new objects for the pool. The <tt>object_del</tt> function will called with the <tt>context</tt> parameter to delete objects when the pool is destroyed, cleaned, and possibly if an error occurs attempting to allocate storage for an object. The <tt>object_rst</tt> function will be called with the <tt>context</tt> parameter and a target object to reset it before being returned from the <ident>pool_get</ident> function <i>but only if it was previously retrieved and released</i>. Unlike the <tt>object_new</tt> and <tt>object_del</tt> parameters, <tt>object_rst</tt> may be <ident>NULL</ident> to indicate that it is not necessary to reset objects.
+	</desc>
+	<ret>
+The <ident>pool_create</ident> function returns -1 and sets <tt>errno</tt> to an approriate value if the operation failed or 0 if the pool was successfully initialized.
+	</ret>
+</meth>
+<meth name="destroy">
+	<pre>int pool_destroy(struct pool *p);</pre>
+	<param name="p"/>
+	<desc>
+The <ident>pool_destroy</ident> function deletes all unused objects in the pool and frees the bitmap backing the pool.
+	</desc>
+	<ret>
+The <ident>pool_destroy</ident> function returns -1 and sets <tt>errno</tt> to an approriate value if the operation failed or 0 if the pool was successfully destroyed.
+	</ret>
+</meth>
+<meth name="new" wrap="true">
+	<pre>struct pool *pool_new(unsigned int max_size, new_fn object_new, del_fn object_del, rst_fn object_rst, void *context, size_t size, int flags, struct allocator *al);</pre>
+	<param name="max_size"/>
+	<param name="object_new"/>
+	<param name="object_del"/>
+	<param name="object_rst"/>
+	<param name="context"/>
+	<param name="size"/>
+	<param name="flags"/>
+	<param name="al"/>
+	<desc>
+The <ident>pool_new</ident> function allocates memory and initializes it with the <ident>pool_create</ident> function.
+	</desc>
+	<ret>
+The <ident>pool_new</ident> function returns a new <ident>pool</ident> object with no objects.
+	</ret>
+</meth>
+<meth name="del">
+	<pre>int pool_del(struct pool *p);</pre>
+	<param name="p"/>
+	<desc>
+The <ident>pool_del</ident> function destroys the <ident>pool</ident> <tt>p</tt> with the <ident>pool_destroy</ident> function and frees <tt>p</tt> itself.
+	</desc>
+</meth>
+<meth name="clean">
+	<pre>int pool_clean(struct pool *p);</pre>
+	<param name="p"/>
+	<desc>
+The <ident>pool_clean</ident> function destroys all unused data items in the pool with the <tt>data_del</tt> function specified with <ident>pool_create</ident>.
+	</desc>
+	<ret>
+The <ident>pool_clean</ident> function returns -1 and sets <tt>errno</tt> to an approriate value if the operation failed or 0 if all unused data objects were successfully destroyed.
+	</ret>
+</meth>
+</group>
+<group>
+<title>Pool management functions</title>
+<meth name="get">
+	<pre>void *pool_get(struct pool *p);</pre>
+	<param name="p"/>
+	<desc>
+The <ident>pool_get</ident> function searches the pool <tt>p</tt> for an unused data object or creates a new data object if necessary. In either case, the data object is returned. More specifically, if there are no data objects in the pool or if all data objects in the pool are currently being used the <tt>new_data_fn</tt> function is called to create a new data object which is then added to the pool. If an existing element in the pool is being reused and the <ident>rst_fn</ident> was provided when the pool was constructed the object will first be reset with this function.
+	</desc>
+	<ret>
+The <ident>pool_get</ident> function returns a data object from the pool. If the <tt>max_size</tt> limit is reached, <tt>errno</tt> is set to <ident>ERANGE</ident> and <tt>NULL</tt> is returned. If the <tt>new_data_fn</tt> returns <tt>NULL</tt> or if an error occurs <tt>errno</tt> will be set to an approriate value and <tt>NULL</tt> will be returned.
+	</ret>
+</meth>
+<meth name="release">
+	<pre>int pool_release(struct pool *p, void *data);</pre>
+	<param name="p"/>
+	<param name="data"/>
+	<desc>
+The <ident>pool_release</ident> function releases the data pointer <tt>data</tt> back into the pool <tt>p</tt>.
+If the <tt>data</tt> pointer is <ident>NULL</ident> or was not derived from <tt>p</tt> the pool is not modified.
+	</desc>
+	<ret>
+The <ident>pool_release</ident> function returns -1 and sets <tt>errno</tt> to an approriate value if the <tt>p</tt> parameter is <ident>NULL</ident> or if the <tt>data</tt> pointer was not derived from this pool. If the <tt>data</tt> object was successfully released back into the pool or if it is <tt>NULL</tt>, 0 is returned to indicate success.
+	</ret>
+</meth>
+<meth name="size">
+	<pre>unsigned int pool_size(struct pool *p);</pre>
+	<param name="p"/>
+	<desc>
+The <ident>pool_size</ident> function returns the total number of data objects that consititute the pool regardless of how many object are being used or not being unused. This number is equal to the number of times <tt>new_data_fn</tt> has been called (barring memory allocation failures).
+	</desc>
+</meth>
+<meth name="unused">
+	<pre>unsigned int pool_unused(struct pool *p);</pre>
+	<param name="p"/>
+	<desc>
+The <ident>pool_unused</ident> function returns the number of data objects that are currently not being used. The number of objects currently in use is <tt>pool_size</tt> minus <tt>pool_unused</tt>.
+	</desc>
+</meth>
+<meth name="iterate">
+	<pre>void pool_iterate(void *p, iter_t *iter);</pre>
+	<param name="p"/>
+	<param name="iter"/>
+	<desc combine="next">
+Enumerate each data object in the pool. The <tt>pool_iterate</tt> function initializes the <tt>iter</tt> object to the beginning of the pool. With each subsequent call to <tt>pool_next</tt> a pointer to each element is returned or <tt>NULL</tt> is returned to indicate all elements have been enumerated. All elements are enumerated regardless of wheather or not they are currently attributed as being used or unused. If data objects are added to the pool during one enumeration cycle they may or may not be included in the current set. Elements are not returned in any particular order.
+	</desc>
+</meth>
+<meth name="next">
+	<pre>void *pool_next(void *p, iter_t *iter);</pre>
+	<param name="p"/>
+	<param name="iter"/>
+	<ret>
+The <ident>pool_next</ident> function returns the next member in the pool or <tt>NULL</tt> if all members have been enumerated.
+	</ret>
+</meth>
+</group>
+
+</interface>

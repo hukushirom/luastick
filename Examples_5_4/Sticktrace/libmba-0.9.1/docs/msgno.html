@@ -1,0 +1,322 @@
+<html><head><title>msgno</title></head><body>
+
+<center>
+<font size="+5"><b><code>&lt;msgno.h&gt;</code></b></font>
+<h2>Managing Error Codes and Associated Messages Across Separate C Libraries</h2>
+
+<h3><b><a href="src/">The Source</a></b></h3>
+
+</center>
+
+<p>Dealing with error conditions in C can be a cumbersome process. The standard C library provides minimal support for error handling and is fraught with deficiencies. If libraries are involved, extracting useful information is often neglected alltogether and is at the heart of users dismay over error messages like:
+
+<blockquote><pre>
+Error 3
+</pre></blockquote>
+
+What is <code>Error 3</code>? This message is perfectly useless!
+
+<p>The <code>msgno</code> package is a refinement on the popular <code>com_err(3)</code>, <code>errno(3)</code>, <code>perror(3)</code>, and similar functionality that performs two independantly useful tasks. One task of <code>msgno</code> is to dynamically generate error codes that are globally unique. This allows one set of message handling functions to be used regardless of where error codes may have come from. The other task is provided by a variety of non-intrusive output macros that dispatch informative formatted messages. If the <code>msgno</code> macros and conventions are used throughout a project, stack traces (not <i>real</i> stack traces) like the below output can be generated even from deep within libraries. Messages collected within library code are not dispatched unless one of the top-level output macros are called:
+
+<blockquote><pre>
+[miallen@nano c]$ ./sql moo
+sock.c:21:sock_open: Failed to bind interface: host=moo,port=900
+  db.c:45:db_open: Cannot establish network connection with database: host=moo
+  sql.c:36:main: Failed to open database: name=moo
+</pre></blockquote>
+
+On the contrary, in the steady state a high degree of message handling is not necessary. A properly functioning program should probably not be actively spewing debugging information. However, most libraries and programs are not static works. A good program deserves to be rewritten or refactored a few times. Enabling diagnostic information is extremely useful for maintainance, helping troubled users, and particularly for debugging purposes.
+
+<h3>Two Problems with <code>msgno</code></h3>
+
+<p>There are two problems with this package that should be explained before going any further. One problem with <code>msgno</code> is that error code macros are not constants. They are defined by referencing a member in a struct.
+
+<blockquote><pre>
+#define DB_CONN_FAILED  db_codes[1].msgno
+</pre></blockquote>
+
+This means that <i>error code macros for use with <code>msgno</code> cannot be used with <code>switch</code> statements</i>:
+
+<blockquote><pre>
+switch (dberrno) {
+   case DB_CONN_FAILED: /* COMPILER ERROR
+                         * case label does not reduce to an integer constant
+                         */
+   ...
+</pre></blockquote>
+
+This is a price paid for easy generalized cross library error codes. Looking forward, it is possible that a way to designate a message list, and thus error codes that <i>are</i> constants, at compile time will be developed however the burden of being forced to use the alternative <code>if, else if, else</code> statements has not been compelling enough.
+
+<p>The other problem with <code>msgno</code> is that <i>some of the output macros use the gcc variatic macro extension</i>. C99 supports variatic macros, however I do not know if many mainstream compilers support them. In a few years, this should not be an issue.
+
+<h2>Existing Support for Error Handling in C</h2>
+
+The <code>errno</code> package uses a global shared integer to communicate an error code to a caller. The possible <code>errno</code> codes have a limited number of meanings predefined by the local C implementation (the standard C library provides for only <code>EDOM</code> and <code>ERANGE</code>). Using the <code>errno</code> mechanism (really more of a convention) is simply a matter of setting it to zero before a function call and testing to see if it is something other than zero after the call completes.
+
+<blockquote><pre>
+#include &lt;errno.h&gt;
+#include &lt;math.h&gt;
+...
+   errno = 0;
+   y = sqrt(x);
+   if (errno)
+      fprintf(stderr, "sqrt failed: %e\n", x);
+</pre></blockquote>
+
+In practice there are a few more permutations of this. A function may communicate to the caller that the operation failed with a return value such as <code>NULL</code> or <code>-1</code> at which point a message may be printed like above or the <code>strerror</code> and <code>perror</code> functions might be used to extract something more informative:
+
+<blockquote><pre>
+#include &lt;string.h&gt;
+#include &lt;stdio.h&gt;
+...
+   fd = fopen(argv[1], "r");
+   if (fd == NULL)
+      perror(argv[1]);
+</pre></blockquote>
+
+This last example might print:
+
+<blockquote><pre>
+[miallen@nano c]$ ./etest yoyo.txt
+No such file or directory: yoyo.txt
+</pre></blockquote>
+
+<h3>The Deficiencies with <code>errno</code>, <code>strerror</code> and <code>perror</code></h3>
+
+These are measly offerings from the standard C library. They may be adequate for small programs but there are a few serious issues.
+
+<p>The <code>perror</code> and <code>strerror</code> functions are useless for shared libraries. It would be considered poor practice to write a library that unexpectedly wrote error messages to <code>stderr</code> or similar. Instead, the library should communicate an error to the caller just as the function that failed did for the library. This will allow error codes to propogate up to a higher level part of the program that knows what to do about the error condition. In this situation it is common to see a shared global variable like <code>errno</code> to communicate an error code indicating the reason for the error specifically for use by that library and it's users. This technique is quite common however it fails to communicate useful context. Instead you get a message like <code>Error 3</code> which is all but useless.
+<p>The error messages associted with <code>errno</code> or other shared globals used by libraries are not extensible. There is no facility to add error codes with associated messages in a way that works across libraries. Certainly a library can define some simple constants with an array of associated messages, however the library user must know how to extract these messages for each library (e.g. <code>strerror</code>, <code>ldap_err2string</code>, ssl's <code>ERR_reason_error_string</code>, <code>pam_strerror</code>, <code>dlerror</code>, <code>regerror</code>, ... the list is long).
+<p>Error codes and associated messages alone do not provide enough information. A text message that is simply mapped to an error code does not provide any more context than the error code itself. It is much more useful to get specific data such as the errant hostname or the SQL statement that failed.
+
+<h3>Error Handling with the <code>com_err</code> Package</h3>
+
+The <code>com_err</code> package provides for both error code handling accross libraries as well as the means to deliver associated text messages to a user defined hook (stderr by default). The mechanism works by defining an error table which is then preprocessed by another program into C source for inclusion into your program or library. It hashes a 4 letter id to generate unique error codes. The <code>com_err</code> function is then used to dispatch an error code's message along with a context specific message:
+
+<blockquote><pre>
+#include &lt;et/com_err.h&gt;
+...
+   if (retval && retval != KRB5_SENDAUTH_REJECTED) {
+      com_err(argv[0], retval, "while using sendauth");
+</pre></blockquote>
+
+This example would generate a message such as:
+
+<blockquote><pre>
+[miallen@nano c]$ ./krbtest
+krbtest: Authentication failed while using sendauth
+</pre></blockquote>
+
+The package is widely available and is used by Kerberos and the BSDs. If it provides the functionality you seek, I highly recommend it. On the surface <code>msgno</code> appears to be very similar to <code>com_err</code>. Indeed they are very similar in purpose. However the implementation is very different which is reflected in it's usage in subtle ways. One not so subtle way is that <code>msgno</code> error codes are registered at runtime; it is not necessary to preprocess an error table definition file with the <code>compile_et</code> program. There are quite a few other differences that will be discussed in the next section.
+
+<p><i>com_err was written in 1987 by Ken Raeburn and MIT's Student Information Processing Board (SIBP)<br>
+http://www.mit.edu/afs/sipb/project/discuss/dist/source/et/</i>
+
+<h2>Managing Error Codes and Associated Messages Across Separate C Libraries with the <code>msgno</code> Package</h2>
+
+The <code>msgno</code> package is very similar in purpose to <code>com_err</code> in that they provide both for unique message numbers (traditionally error codes) and their associated messages across C libraries and modules as well as means to deliver those messages to a stream or user defined hook. The message macros are simple and non-intrusive. Both message code management and output macros are independantly useful but most effective when used together. If <code>errno</code> values are used in place of the <code>msgno</code> parameter, the messages returned by <code>strerror</code> will be generated.
+
+<h3>A "Hello, World" Example</h3>
+
+This example is so trivial it defeats the purpose of using <code>msgno</code> however it will quickly illustrate how to use the package. A more elaborate example with multiple modules of code is explored later. The code of interest is bold.
+
+<p>
+<table width="800"><tr><td bgcolor="#efefef">
+<blockquote><pre>
+<i>/* hello.c - a trivial example that uses msgno
+ */</i>
+
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+<b>#include &lt;msgno.h&gt;
+
+struct msgno_entry hello_codes[3] = {
+    { 1, "That world is too busy at the moment" },
+    { 0, "That planet has no atmosphere" },
+    { 0, NULL }
+};</b>
+
+int hello_errno;
+
+int
+say_hello(const char *planet)
+{
+	<b>msgno_add_codes(hello_codes);</b>
+
+	if (!(*planet & 1)) {
+		<b>hello_errno = HELLO_WORLD_BUSY;</b>
+		return -1;
+	}
+	if (*planet != 'e') {
+		<b>hello_errno = HELLO_NO_ATMOSPHERE;</b>
+		return -1;
+	}
+	return printf("hello, %s\n", planet);
+}
+
+</pre></blockquote>
+</td><td valign="top">
+
+In the C file of the module or library, initialize an array of <code>msgno_entry</code> structures to define a list of message numbers (error codes) and their associated text messages. This <code>msgno_entry</code> structure is just:
+
+<pre>
+struct msgno_entry {
+    unsigned int msgno; /* message number */
+    const char *msg;    /* message */
+}
+</pre>
+
+The last message must be <code>NULL</code> and the list must contain at least one entry (not including the <code>NULL</code> message). The 1 for the first error code instructs <code>msgno</code> to generate error codes starting with 1 rather than 0.
+<p>Error code macros such as <code>HELLO_WORLD_BUSY</code> are defined in the header file (see hello.h directly below). Before they can be used, the <code>msgno_add_codes</code> function must be called with the message list. In practice there is usually only one or a few places withing a library or module, such as an initialization routine, where this needs to be performed. Redundant calls to the msgno_add_codes function will be ignored.
+
+</td></tr><tr><td bgcolor="#efefef">
+<blockquote><pre>
+
+<i>/* hello.h - a trivial example that uses msgno
+ */</i>
+
+#ifndef HELLO_H
+#define HELLO_H
+
+<b>#define MSGNO
+
+#include &lt;msgno.h&gt;
+
+extern struct msgno_entry hello_codes[];
+
+#define HELLO_WORLD_BUSY    hello_codes[0].msgno
+#define HELLO_NO_ATMOSPHERE hello_codes[1].msgno</b>
+
+extern int hello_errno;
+
+int say_hello(const char *planet);
+
+#endif <i>/* HELLO_H */</i>
+
+</pre></blockquote>
+</td><td valign="top">
+
+Before compiling a program that uses <code>msgno</code> the macro <code>MSGNO</code> must be defined or all output macros will be ignored and the resulting code will not generate any output. This is to ensure that libraries and modules are shipped with a default behavior that users unfamilar with <code>msgno</code> would expect which is not to inadvertantly generate output to <code>stderr</code> or elsewhere. In this example the <code>MSGNO</code> macro is hard coded before the <code>msgno.h</code> file is included to perminately enable the <code>msgno</code> output macros. Alternatively one might have just as easily used a compiler flag such as perhaps:
+
+<pre>
+[miallen@nano c]$ gcc -Wall <b>-DMSGNO</b> -lmsgno hello.c -o run_hello run_hello.c
+</pre>
+
+To define the error code macros, simply reference the <code>msgno</code> member in each <code>msgno_entry</code> structure. Notice the <code>hello_codes</code> list is referenced by the code in these macros so an <code>extern</code> declaration is required.
+
+</td></tr><tr><td bgcolor="#efefef">
+<blockquote><pre>
+
+/* run_hello.c - run the hello.c example
+ */
+
+#include &lt;stdlib.h&gt;
+#include "hello.h"
+
+int
+main(int argc, char *argv[])
+{
+	if (argc &lt; 2) {
+		<b>MSG("Must provide the name of a planet");</b>
+		return EXIT_FAILURE;
+	}
+	if (say_hello(argv[1]) == -1) {
+		<b>MNF(hello_errno, ": planet=%s", argv[1]);</b>
+	}
+	return EXIT_SUCCESS;
+}
+
+</pre></blockquote>
+</td><td valign="top">
+
+In the upper level, non-library code area of a program, generate messages with the <code>msgno</code> ouput macros. These will call the user definable <code>msgno_hdlr</code> function which is by default set to <code>msgno_hdlr_stderr</code>.
+<p>Use the <code>MSG</code> macro to generate a simple text message. Notice this macro does not reference any error codes here so we can safely use it even though <code>msgno_add_codes</code> has not yet been called.
+<p>The <code>MNF</code> macro takes a message number and generates the associated message followed by an additional context string.
+<p> There is also an <code>MNO</code> macro that takes only a message number and generates the associated message.
+
+
+</td></tr></table>
+
+<p>The output of this "Hello, World" example might look like:
+
+<blockquote><pre>
+[miallen@nano c]$ ./run_hello pluto
+<b>hello.c:15:main: That world is too busy at the moment: planet=pluto</b>
+[miallen@nano c]$ ./run_hello mars 
+<b>hello.c:15:main: That planet has no atmosphere: planet=mars</b>
+[miallen@nano c]$ ./run_hello earth
+<b>hello, earth</b>
+</pre></blockquote>
+
+<h2>Output Macros</h2>
+
+The <code>msgno</code> output macros dispatch a message to the <code>msgno</code> message handler. The <code>msgno_hdlr_stderr</code> handler is used by default but this can be specified to any function matching the <code>msgno_hdlr</code> prototype. There are three main macros used in the top-level glue of a program. There descriptions follow.
+
+<p><table><tr><td colspan="2">
+<b>The Main Output Macros</b>
+</td></tr><tr><td bgcolor="#efefef">
+
+<code>MSG(fmt, args...)</code>
+</td><td>
+Generates a simple formatted <i>message</i>.
+</td></tr><tr><td bgcolor="#efefef">
+<code>MNO(msgno)</code>
+</td><td>
+Generates the message associated with the <i>message number</i> <code>msgno</code>.
+</td></tr><tr><td bgcolor="#efefef">
+<code>MNF(msgno, fmt, args...)</code>
+</td><td>
+Generates both the message associated with the <i>message number</i> <code>msgno</code> followed by a <i>formatted</i> context message.
+</td></tr></table>
+
+<p>The above macros will be dispatched as soon as they are invoked. Naturally, should not be used within shared libraries because libraries generally do not generate output other than that associated with it's function. Instead, the <code>msgno</code> package provides separate macros for placing within libraries that will <i>not</i> dispatch messages to the <code>msgno_hdlr</code> unless one of the main output macros are called. So output will not be generated unless triggered by the library user.
+
+<p>These macros build a deferred sequence of messages. There are two sets of macros that are identical to the main three however one set is for initiating a primary message whereas the other set appends additional messages to a sequence. Use the macros that start with <code>P</code> when initiating an error condition and use the macros that begin with <code>A</code> when you know a deferred sequence is being constructed. These macros are what generate the stack trace like output:
+
+<blockquote><pre>
+[miallen@nano c]$ ./sql moo
+sock.c:21:sock_open: Failed to bind interface: host=moo,port=900
+  db.c:45:db_open: Cannot establish network connection with database: host=moo
+  sql.c:36:main: Failed to open database: name=moo
+</pre></blockquote>
+
+<p>There may be situations where this is not obvious. In this case it safer to simply call the <code>P</code> macros and initiate a new message. This process is not analygous to exception handling; the macros only expand to trivial <code>sprintf</code> statements that append stings into a shared global buffer.
+
+<p><table><tr><td colspan="2">
+<b>The Primary Output Macros for Deferred Sequences in Libraries</b>
+</td></tr><tr><td bgcolor="#efefef">
+
+<code>PMSG(fmt, args...)</code>
+</td><td>
+Sets the <i>primary</i> message in a deferred sequence to a simple formatted <i>message</i>.
+</td></tr><tr><td bgcolor="#efefef">
+<code>PMNO(msgno)</code>
+</td><td>
+Sets the <i>primary</i> message in a deferred sequence to the message associated with the <i>message number</i> <code>msgno</code>.
+</td></tr><tr><td bgcolor="#efefef">
+<code>PMNF(msgno, fmt, args...)</code>
+</td><td>
+Sets the <i>primary</i> message in a deferred sequence to both the message associated with the <i>message number</i> <code>msgno</code> followed by a <i>formatted</i> context message.
+
+</td></tr><tr><td colspan="2">
+<b>The Appending Macros for Deferred Sequences in Libraries</b>
+</td></tr><tr><td bgcolor="#efefef">
+
+<code>AMSG(fmt, args...)</code>
+</td><td>
+<i>Appends</i> a simple formatted <i>message</i> to a deferred sequence of messages.
+</td></tr><tr><td bgcolor="#efefef">
+<code>AMNO(msgno)</code>
+</td><td>
+<i>Appends</i> the message associated with the <i>message number</i> <code>msgno</code> to a deferred sequence of messages.
+</td></tr><tr><td bgcolor="#efefef">
+<code>AMNF(msgno, fmt, args...)</code>
+</td><td>
+<i>Appends</i> both the message associated with the <i>message number</i> <code>msgno</code> followed by a <i>formatted</i> context message to a deferred sequence of messages.
+</td></tr></table>
+
+<p>To be continued ...
+
+<p>Sun Dec  2 03:04:17 EST 2001
+
+</body></html>

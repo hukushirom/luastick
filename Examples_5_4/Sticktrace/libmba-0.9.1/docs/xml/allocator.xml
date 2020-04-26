@@ -1,0 +1,85 @@
+<interface name="allocator"
+	short="Allocate and free memory.">
+
+<comments>
+	Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/allocator.h</include>
+
+<title>Allocator</title>
+<desc>
+The <def>allocator</def>(3m) module defines an interface for allocating and freeing memory without defining the implementation.
+Modules that implement this interface such as <def>suba</def>(3m) provide a <tt>struct allocator *</tt> that can be used with these functions. Modules that utilize this interface such as <def>varray</def>(3m) accept the specification of an allocator. This abstraction permits changing the memory management behavior of a program by switching allocators.
+</desc>
+
+<group>
+<code>
+<title>Definitions</title>
+<pre>
+struct allocator *stdlib_allocator;
+
+typedef int (*reclaim_fn)(struct allocator *al, void *arg, int attempt);
+typedef void *(*new_fn)(void *context, size_t size, int flags); 
+typedef int (*del_fn)(void *context, void *object);
+</pre>
+<desc>
+The global <ident>stdlib_allocator</ident> provides an allocator that uses the <def>malloc</def>(3), <def>calloc</def>(3), and <def>free</def>(3) functions from the standard C library.
+<p/>
+The <tt>reclaim_fn</tt> definition is to be used with the <tt>allocator_set_reclaim</tt> function. The <tt>new_fn</tt> and <tt>del_fn</tt> functions are used with other modules like <ident>pool</ident>(3m). With a cast it is reasonable to use the <tt>allocator_alloc</tt> and <tt>allocator_free</tt> functions where <tt>new_fn</tt> and <tt>del_fn</tt> functions might be used.
+</desc>
+</code>
+</group>
+
+<group>
+<title>Allocator functions</title>
+<desc>
+These functions should be used to allocate and free memory using an <def>allocator</def>(3m).
+</desc>
+<meth name="alloc">
+	<pre>void *allocator_alloc(struct allocator *al, size_t size, int flags);</pre>
+	<param name="al"/>
+	<param name="size"/>
+	<param name="flags"/>
+	<desc>
+The <ident>allocator_alloc</ident> function allocates and returns at least <tt>size</tt> bytes of memory from the allocator <tt>al</tt>. The memory will be aligned appropriately for the platform. The <tt>flags</tt> parameter permits additional allocator specific information to be specified. The <tt>stdlib_allocator</tt> and <def>suba</def>(3m) allocator support the value 1 for this flag to indicate that the memory should be set to zero (like <tt>calloc</tt>). If <tt>al</tt> is <ident>NULL</ident> memory is allocated from the <tt>stdlib_allocator</tt>.
+	</desc>
+	<ret>
+The <ident>allocator_alloc</ident> function returns the allocated memory or <ident>NULL</ident> if an error occured in which case <ident>errno</ident> will be set appropriately. If <tt>al</tt> is <ident>NULL</ident> the memory will be freed from the <tt>stdlib_allocator</tt>.
+	</ret>
+</meth>
+<meth name="free">
+	<pre>int allocator_free(struct allocator *al, void *obj);</pre>
+	<param name="al"/>
+	<param name="obj"/>
+	<desc>
+The <ident>allocator_free</ident> function releases the memory pointed to by <tt>obj</tt> back to the allocator <tt>al</tt>.
+	</desc>
+	<ret>
+The <ident>allocator_free</ident> function returns zero upon success or -1 if an error occured in which case <ident>errno</ident> is set appropriately.
+	</ret>
+</meth>
+<meth name="realloc">
+	<pre>void *allocator_realloc(struct allocator *al, void *obj, size_t size);</pre>
+	<param name="al"/>
+	<param name="obj"/>
+	<param name="size"/>
+	<desc>
+The <ident>allocator_realloc</ident> function resizes the memory pointed to by <tt>ptr</tt> using the allocator <tt>al</tt>. The old portion of the memory will be unchanged up to <tt>size</tt> bytes. If <tt>obj</tt> is <ident>NULL</ident>, <tt>size</tt> bytes of memory will be allocated. If <tt>size</tt> is 0, <tt>obj</tt> will be freed. The pointer to <tt>obj</tt> must have been allocated previously from the allocator <tt>al</tt>.
+	</desc>
+	<ret>
+The <ident>allocator_realloc</ident> function returns a pointer to the resized memory which may not equal <tt>obj</tt>. If an error occurs, <ident>NULL</ident> is returned and <ident>errno</ident> is set appropriately.
+	</ret>
+</meth>
+<meth name="set_reclaim">
+	<pre>void allocator_set_reclaim(struct allocator *al, reclaim_fn recl, void *arg);</pre>
+	<param name="al"/>
+	<param name="recl"/>
+	<param name="arg"/>
+	<desc>
+The <ident>allocator_set_reclaim</ident> function sets the function that will be called to reclaim memory when it becomes scarce. The reclaim function will be called with the provided <tt>arg</tt> parameter and may be called more than once indicating memory should be freed more agressively with each call. The <tt>attempt</tt> parameter indicates how may times the reclaim function has been called without satisfying the allocators current need. The reclaim function should return a positive value to indicate that progress in freeing memory has occured. If the reclaim function returns 0 it will not be called again and the allocation that created the memory pressure will return failure. Currently only the <ident>suba</ident>(3m) module will take advantage of this feedback mechanism. See also the <tt>clean</tt> functions of other modules in this package.
+	</desc>
+</meth>
+</group>
+
+</interface>

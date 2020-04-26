@@ -1,0 +1,350 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Svsem</TITLE>
+</HEAD>
+<BODY>
+<H1>17. Svsem</H1>
+Semaphores provide a mechanism to coordinate multiple processes or threads accessing shared resources. The <I>svsem</I>(3m) module provides a POSIX-like semaphore interface implemented using the more common System V semaphore interface.
+<p>
+</p>
+The <I>svsem</I>(3m) module is not available in the Win32 environment.
+<H3>17.1. Words of Caution</H3>
+There are some tricky aspects to using System V semaphores that <I>svsem</I>(3m) attempts to deal with but some words of caution are in order. Both problems described here are attributed to the persistance of semaphores after a program has terminated. The robustness of an application using System V semaphores depends greatly on the diligence of the programmer to destroy or remove semaphores that should no longer be used. If a program terminiates without destroying or properly removing the semaphore it will be left open in the kernel. Open semaphores can be viewed with the <tt>ipcs</tt> command;
+<PRE>
+
+  shell$ ipcs -s 
+  ------ Semaphore Arrays --------
+  key        semid      owner     perms      nsems      status      
+  0x0105b9cf 3080192    miallen   600        50
+  </PRE>
+The <I>svsem</I>(3m) module is designed specifically to be robust and not to fail to create a semaphore if another semaphore with the same key already exists on the system. However, if <tt>O_EXCL</tt> is specified, it is possible that an old semphore will block the creation of a new semaphore. For robustness, it is recommended that the <TT>svsem_create</TT> function be used in favor of <TT>svsem_open</TT> because <TT>svsem_create</TT> uses <I>mkstemp</I>(3) to create a uniqe filename. Regardless, it may still be necessary to remove old semaphores with a command such as;
+<PRE>
+
+  shell$ ipcrm sem 3080192
+  </PRE>
+A similar problem with System V semaphores occurs if a process terminiates abnormally while accessing semaphore protected resources shared by other processes. This can leave the application in an undesireable state such as leaving the resource perminantly locked. The <tt>SEM_UNDO</tt> flag of <I>semop</I>(2) is designed to assist with this problem. If <tt>SEM_UNDO</tt> is specified, when the program terminates, the semaphore value will be reset by reversing all effects of previous operations. This is a notoriously clumsy mechanism and it fails completely in one important case; if processes do not make symmetric calls to <I>semop</I>(2) the <tt>SEM_UNDO</tt> state will overflow and cause further calls to fail. For this reason the <tt>SEM_UNDO</tt> flag can only be used with symmetric calls (e.g. binary semaphores) such as;
+<PRE>
+
+  wait(sem)
+  // SEM_UNDO is ok for sem because the calls are symmetric
+  post(sem)
+  </PRE>
+If the calls are asymmetric where one process calls <tt>wait</tt> and a different process calls <tt>post</tt> on the same semaphore (e.g. counting semaphores) eventually errors will ensue. The <I>svsem</I>(3m) module can do nothing to resolve this issue directly but does permit the user to specify if <tt>SEM_UNDO</tt> is to be used.
+<H3>17.2. Memory management functions</H3>These functions should be used to create and destroy <TT>svsem</TT> semaphores and pools.<A name="create"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_create</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_create(svsem_t *sem, int value, int undo);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_create</TT> function will created a file using <I>mkstemp</I>(3) with a template of <tt>/tmp/svsemXXXXXX</tt> to generate a semaphore key, create and initialize a semaphore <tt>sem</tt> and set it's initial value to <tt>value</tt>. If <tt>undo</tt> is non-zero, the <tt>SEM_UNDO</tt> flag for <I>semop</I> calls will be used. The <tt>undo</tt> parameter should be non-zero for semaphores for which wait and post will be called symmetrically in any process such as binary semaphores. The <tt>undo</tt> flag must be zero if a process will call wait and post an un-equal number of times such as with counting semaphores.
+<p>
+</p>
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<A name="destroy"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_destroy</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_destroy(svsem_t *sem);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_destroy</TT> function destroys the semaphore <tt>sem</tt> by removing the semaphore set identifier and unlinking the associated file.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately. Errors that occur attempting to unlink(3m) the associated file are ignored.
+	<P>
+</P>
+<A name="open"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_open</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_open(svsem_t *sem, const char *path, int oflag, ... /* mode_t mode, int value */);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_open</TT> function creates a new named semaphore or opens an existing semaphore. The <tt>path</tt> parameter is a path (which must refer to an existing, accessible file) that identifies the target semaphore. The <tt>oflag</tt> paremeter can be any combination of 0, <tt>O_CREAT</tt>, <tt>O_EXCL</tt>, and <tt>O_UNDO</tt> or'd together although <tt>O_EXCL</tt> is only meaningful when used with <tt>O_CREAT</tt>. If <tt>O_CREAT</tt> is specified two additional parameters are required;
+
+<ul>
+<li>a <tt>mode_t</tt> parameter specifying the open mode (e.g. 0600) and</li>
+<li>an <tt>int</tt> parameter specifying the initial value of the semaphore (e.g. 1 for a binary semaphore).</li>
+</ul>
+If <tt>O_CREAT</tt> is specified without <tt>O_EXCL</tt> the semaphore is created and initialized with the specified value if it does not already exist. If the semaphore already exists it is simply opened. Use the <tt>O_UNDO</tt> flag to specify that <tt>SEM_UNDO</tt> behavior should be used (recommended unless calls to wait/post are not symetric per process).
+<p>
+</p>
+<i>Note: It appears that trying to open an existing semaphore on Mac OS X will deadlock because Darwin is not initializing <tt>sem_otime</tt> properly. This requires futher investigation.</i>
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>svsem_open</TT> function returns 0 if the new semaphore was created successfully or <TT>NULL</TT> if an error occurs in which case <tt>errno</tt> will be set appropriately. If <tt>O_EXCL</tt> is specified and the semaphore already exists, <TT>NULL</TT> is returned and <tt>errno</tt> is set to <tt>EEXIST</tt>.
+	<P>
+</P>
+<A name="close"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_close</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_close(svsem_t *sem);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_close</TT> function does nothing but release the memory attributed to <tt>sem</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<A name="remove"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_remove</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_remove(svsem_t *sem);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_remove</TT> function removes the semaphore identified by <tt>sem</tt>. Any attempt to access this semaphore after it has been remove will result in all operations returning an error of <tt>EIDRM</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>svsem_remove</TT> function returns 0 if the operation was successful or -1 if an error occured in which case <tt>errno</tt> will be set appropriately.
+	<P>
+</P>
+<A name="pool_create"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_pool_create</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_pool_create(struct pool *p,
+           unsigned int max_size,
+           unsigned int value,
+           int undo,
+           struct allocator *al);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_pool_create</TT> function will create a pool of semaphores. A file will be created using <I>mkstemp</I>(3) with a template of <tt>/tmp/svsemXXXXXX</tt>, a semaphore array of <tt>max_size</tt> will be created and all semaphores will be initialized to the specified <tt>value</tt>. No initial <I>svsem</I>(3m) objects are created. The <I>pool</I>(3m) functions are used to manage the pool. The <TT>pool_get</TT> function will return a semaphore initialized to <tt>value</tt> (reused semaphores will be explicitly reset). The <TT>svsem_pool_destroy</TT> function must be used to destroy an <I>svsem</I>(3m) pool.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<A name="pool_destroy"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_pool_destroy</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_pool_destroy(struct pool *p);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_pool_destroy</TT> function releases memory associated with the pool, removes the pool semaphore array and unlinks the file backing the array.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<H3>17.3. Svsem functions</H3>These functions should be used to manipulate <I>svsem</I>(3m) semaphores.<A name="wait"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_wait</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_wait(svsem_t *sem);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_wait</TT> function tests the value of the semaphore identified by <tt>sem</tt> and does one of two things;
+<ul>
+<li>If the value is greater than 0, the value is decremented by 1 and the function returns immediately.</li>
+<li>If the value is 0 the calling thread will sleep until <ident>svsem_post</ident> is called on the semaphore at which point the value will be tested again.</li>
+</ul>
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<A name="trywait"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_trywait</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_trywait(svsem_t *sem);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_trywait</TT> function tests the value of the semaphore identified by <tt>sem</tt> and does one of two things;
+<ul>
+<li>If the value is greater than 0, the value is decremented by 1 and the function returns immediately.</li>
+<li>If the value is 0 the call will return -1 and set <tt>errno</tt> to <tt>EAGAIN</tt>.</li>
+</ul>
+This mechanism can be used to test if a thread will wait.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<A name="post"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_post</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_post(svsem_t *sem);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_post</TT> function increments the value of the semaphore identified by <tt>sem</tt> by 1 and wakes up a thread blocked in <TT>svsem_wait</TT> if there is one.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<A name="post_multiple"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_post_multiple</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_post_multiple(svsem_t *sem, int count);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_post_multiple</TT> function performs the equivalent of multiple distinct <TT>svsem_post</TT> operations. The <tt>count</tt> parameter specifies how many post operations are performed.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<A name="getvalue"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_getvalue</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_getvalue(svsem_t *sem, int *value);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_getvalue</TT> function stores the value of the semaphore <tt>sem</tt> into <tt>value</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<A name="setvalue"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svsem_setvalue</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svsem.h&gt;
+  int svsem_setvalue(svsem_t *sem, int value);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svsem_setvalue</TT> function sets the current value of the semaphore to the specified <tt>value</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<HR NOSHADE>
+<small>
+	Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

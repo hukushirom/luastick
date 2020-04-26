@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE library [
+	<!ENTITY allocator SYSTEM "allocator.xml">
+	<!ENTITY bitset SYSTEM "bitset.xml">
+	<!ENTITY cfg SYSTEM "cfg.xml">
+	<!ENTITY csv SYSTEM "csv.xml">
+	<!ENTITY diff SYSTEM "diff.xml">
+	<!ENTITY domnode SYSTEM "domnode.xml">
+	<!ENTITY eval SYSTEM "eval.xml">
+	<!ENTITY hashmap SYSTEM "hashmap.xml">
+	<!ENTITY hexdump SYSTEM "hexdump.xml">
+	<!ENTITY linkedlist SYSTEM "linkedlist.xml">
+	<!ENTITY mbs SYSTEM "mbs.xml">
+	<!ENTITY msgno SYSTEM "msgno.xml">
+	<!ENTITY path SYSTEM "path.xml">
+	<!ENTITY pool SYSTEM "pool.xml">
+	<!ENTITY shellout SYSTEM "shellout.xml">
+	<!ENTITY stack SYSTEM "stack.xml">
+	<!ENTITY suba SYSTEM "suba.xml">
+	<!ENTITY svcond SYSTEM "svcond.xml">
+	<!ENTITY svsem SYSTEM "svsem.xml">
+	<!ENTITY text SYSTEM "text.xml">
+	<!ENTITY text_details SYSTEM "text_details.xml">
+	<!ENTITY time SYSTEM "time.xml">
+	<!ENTITY varray SYSTEM "varray.xml">
+]>
+
+<library name="libmba">
+	<title>libmba &lt;mba/*.h&gt;</title>
+	<desc>
+The libmba package is a collection of mostly independent C modules potentially useful to any project. There are hashmap, linkedlist, pool, and stack ADTs, a CSV parser, a DOM-like interface for simple XML processing, a module for managing error codes and associated messages across separate C libraries, and more.
+	</desc>
+	&allocator;
+	&bitset;
+	&cfg;
+	&csv;
+	&diff;
+<!--	&domnode; DEPRECATED -->
+	&eval;
+	&hashmap;
+	&hexdump;
+	&linkedlist;
+<!--	&mbs; DEPRECATED -->
+	&msgno;
+	&path;
+	&pool;
+	&shellout;
+	&stack;
+	&suba;
+	&svcond;
+	&svsem;
+	&text;
+	&time;
+	&varray;
+	<!-- subtopics -->
+	&text_details;
+</library>
+

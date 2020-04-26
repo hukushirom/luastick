@@ -1,0 +1,122 @@
+<interface name="eval" short="evaluate simple arithmetic expressions">
+
+<comments>
+Copyright 2003 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/eval.h</include>
+
+<title>Eval</title>
+<desc>
+The <def>eval</def>(3m) module will evaluate simple arithmentic expressions consisting of integers, symbols for which the provided <ident>symlook_fn</ident> returns an integer, and any of the operators <tt>|&amp;^+-*/()</tt>.
+<h3>Operator Precedence</h3>
+<p/>
+Operator precedence is roughly the same as the C language.
+<pre>
+ ( )  higher
+ * /
+ + -
+^ &amp; | lower
+</pre>
+Prefixing integer tokens with minus <tt>'-'</tt> to indicate a negative value is currently not supported.
+
+<example id="symlook">
+<title>A Simple Calculator</title>
+<desc>
+The following example illustrates how to use the <ident>eval</ident> module with a <ident>hashmap</ident>(3m) as a symbol table to make a simple commandline calculator.
+<pre>
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdio.h&gt;
+
+#include &lt;mba/hashmap.h&gt;
+#include &lt;mba/eval.h&gt;
+
+int
+symtab_lookup(const unsigned char *key, unsigned long *val, struct hashmap *symtab)
+{
+    const unsigned char *str;
+
+    if ((str = hashmap_get(symtab, key))) {
+        *val = strtoul(str, NULL, 0);
+        return 0;
+    }
+
+    return -1;
+}
+int
+main(void)
+{
+    struct hashmap symtab; 
+    unsigned char buf[1024], *bp = buf;
+    unsigned long result; 
+    struct eval *eval = eval_new((symlook_fn)symtab_lookup, &amp;symtab);
+
+    hashmap_init(&amp;symtab, 0, hash_str, cmp_str, NULL, NULL);
+
+    while ((*bp = fgetc(stdin)) &gt; 0) {
+        if (*bp == '\n') { 
+            *bp = '\0'; 
+            bp = strchr(buf, '=');
+            *bp++ = '\0'; 
+            eval_expression(eval, bp, bp + strlen(bp), &amp;result);
+            sprintf(bp, "%u", result);
+            printf(" %s=%ld\n", buf, result);
+            hashmap_put(&amp;symtab, strdup(buf), strdup(bp));
+            bp = buf;
+        } else {
+            bp++;
+        }
+    }
+
+    return EXIT_SUCCESS;
+}
+output:
+$ ./calc 
+foo=0xffff
+ foo=65535
+bar=10 * foo &amp; 0x3333
+ bar=13106
+</pre>
+</desc>
+</example>
+</desc>
+
+<group>
+<title>The Eval Functions</title>
+<meth name="new">
+	<pre>struct eval *eval_new(symlook_fn symlook, void *context);</pre>
+	<param name="symlook"/>
+	<desc>
+The <ident>eval_new</ident> function creates and returns a new context object for evaluating expressions. The <tt>symlook</tt> parameter is defined as follows:
+<pre>
+typedef int (*symlook_fn)(const tchar *name, unsigned long *val, void *context);
+</pre>
+The <tt>symlook_fn</tt> function will be called to resolve any non-numeric symbols and should place the value identified by <tt>name</tt> into <tt>val</tt> and return 0. If the symbol is not found -1 should be returned.
+<p/>
+The <ident>eval_new</ident> function can be used repeatedly to evaluate any number of expressions before being destroyed with the <ident>eval_del</ident> function. The <tt>context</tt> parameter is passed uninterpreted to the <tt>symlook_fn</tt> (e.g. a map perhaps).
+	</desc>
+</meth>
+<meth name="del">
+	<pre>void eval_del(void *eval);</pre>
+	<param name="eval"/>
+	<desc>
+The <ident>eval_del</ident> function deletes the context object <tt>eval</tt> freeing any memory allocated with <tt>eval_new</tt> or during the evaluation of expressions.
+	</desc>
+</meth>
+<meth name="eval_expression">
+	<pre>int eval_expression(struct eval *eval, const tchar *expr, const tchar *elim, unsigned long *result);</pre>
+	<param name="eval"/>
+	<param name="expr"/>
+	<param name="elim"/>
+	<param name="result"/>
+	<desc>
+The <ident>eval_expression</ident> function evaluates an infix expression like <tt>'(5 + 3) * N'</tt>, converts it into a stack of tokens in postfix orientation, and reduces it with a simple translation matrix to produce a single integer value. The <tt>eval</tt> parameter is a context object created with <tt>eval_new</tt>. The expression at <tt>expr</tt> is evaluated up to, but not including, the memory at <tt>elim</tt>, and writes the resulting value in the memory at <tt>result</tt>.
+	</desc>
+	<ret>
+The <ident>eval_expression</ident> function returns 0 if the expression was successfully reduced or -1 if an error occured in which case <tt>errno</tt> will be set appropriately (e.g. <tt>ENOENT</tt> if the <tt>symlook_fn</tt> could not resolve a symbol).
+	</ret>
+</meth>
+</group>
+
+</interface>

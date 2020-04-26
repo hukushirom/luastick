@@ -1,0 +1,269 @@
+<subtopic name="text_details">
+<title>Tchar I18N Text Abstraction</title>
+<desc>
+
+This documention describes how to write C software that will support international charsets and compile and run the resulting programs on different platforms such as Linux, Microsoft Windows, BSD, or MacOS/X with little or no modification. In short, macros and typedefs are used to abstract the character type and all functions that operate on it. This will permit the software to be compiled using plain 8 bit, multi-byte, or wide character encodings. Very little extra work is necessary to benifit from this technique although there are pitfalls that will be described in detail.
+<p/>
+Like most modules in Libmba, the ideas and code can be extracted or adapted to meet the needs of your application and do not bind you to a particular &quot;environment&quot; or library. Although the <tt>text.h</tt> typedefs and macros are used throughout the libmba package, users can simply choose to ignore them and pass <tt>char *</tt> to functions that accept <tt>tchar *</tt> (or <tt>wchar_t *</tt> if libmba has been compiled with <tt>-DUSE_WCHAR</tt>). 
+</desc>
+
+<group>
+<title>Unicode, Charsets, and Character Encodings</title>
+<desc>
+To use this technique successfully it is essential to understand that each non-ASCII character may occupy a variable number of bytes in memory. Examples will be given below that illustrate why this is important but first some background information about Unicode, charsets, and character encodings might be useful.
+<p/>
+Consider the Russian character called <tt>CYRILLIC CAPITAL LETTER GHE</tt> which looks like an upside down 'L' has a Unicode value of U+0413. This character's value will be different depending on which charset is being discussed but Unicode is the international standard superset of virtually all charsets so unless otherwise specified Unicode will be used to describe characters throughout this documentation. The number of bytes that the U+0413 character occupies depends on the character encoding being used. Notice that a charset and a character encoding are different things.
+<p/>
+<b>Charsets</b> A charset (or characterset) is a map that defines which numeric value represents a particular character. In the Unicode charset <tt>CYRILLIC CAPITAL LETTER GHE</tt> is the numeric value <tt>0x0413</tt> (written U+0413 in the Unicode standard convention). Some example charsets are ISO-8859-1, CP1251, and GB2312.
+<p/>
+<b>Character Encodings</b> A character encoding defines how the numeric values representing characters are serialized into a sequence of bytes so that it can be operated on in memory, stored on a disk, or transmitted over a network. For example, at least two bytes of memory would be required to hold the value <tt>0x0413</tt>. If this value were simply stored as the byte <tt>0x04</tt> followed by the byte <tt>0x13</tt> this encoding would be UCS-2BE meaning Unicode Character Set, 2 bytes, and big-endian. The following are examples of some other Unicode character encodings:
+<ul>
+<li>
+<b>UCS-4</b> simply serializes each Unicode value into a sequence of 4 bytes. The largest possible Unicode value can be encoded in 32 bits. This is not a variable width encoding. If the string "hello", which is 6 characters if the '\0' terminator is included, was encoded in UCS-4 it would occupy 6 * 4 or 24 bytes of memory. Glibc encodes wide characters (<tt>wchar_t</tt>) using this encoding.
+</li>
+<li>
+<b>UCS-2</b> is like UCS-4 but only 2 bytes are used to encode each character. This is a much more reasonable use of memory but it cannot encode every value of the Unicode charset. This is not a variable width encoding. If the string "hello" including a '\0' terminator was encoded in UCS-2 it would occupy 6 * 2 or 12 bytes of memory.
+</li>
+<li>
+<b>UTF-16</b> is like UCS-2 but it uses certain bits to indicate that an additional pair of bytes follows which permits values of more 16 bits to be encoded. So most characters are encoded in 2 bytes but 4 bytes may be used if necessary. Therefore, UTF-16 is a variable width encoding. The Microsoft Windows platform uses UTF-16LE (the LE means little-endian) almost exclusively to represent Unicode strings. For a description of UTF-16 read <a target="_top" href="http://czyborra.com/utf/index.html#UTF-16">the description of UTF-16 at czyborra.com</a>.
+</li>
+<li>
+<b>UTF-8</b> is like UTF-16 because it uses certain bits (actually just the highest bit) to indicate that additional bytes follow which permits values of more than 8 bits to be encoded. The number of additional bytes varies and may be as many as 6. This is called a "multi-byte sequence". Therefore UTF-8 is also a variable width encoding. It cannot be assumed that non-ASCII characters will occupy one byte of memory. <i>It is not correct to calculate the number of characters in the string by subtracting a pointer to the beginning of the string from a pointer to the end</i>.
+<p/>
+For example the sequence of bytes representing the Unicode character U+0413 in UTF-8 are 0xD0 followed by 0x93. This multi-byte sequence was determined by using a <tt>hexedit</tt> program to create a file called ucs2.bin containing 2 bytes; 0x04 followed by 0x13. As described before, this encoding is UCS-2BE. To convert the file from UCS-2BE to UTF-8 the command <tt>$ iconv -f UCS-2BE -t UTF-8 ucs2.bin &gt; utf8.bin</tt> was used followed by <tt>hexedit</tt> again to view the results.
+<p/>
+UTF-8 is the premier character encoding used on Unix and Unix-like platforms. For a complete description of UTF-8 read the <a target="_top" href="http://www.cl.cam.ac.uk/~mgk25/unicode.html">UTF-8 and Unicode FAQ for Unix/Linux</a>.
+</li>
+</ul>
+</desc>
+</group>
+
+<group>
+<title>I18N Text Handling</title>
+<desc>
+There are primarily three techniques for managing I18N strings in a C program.
+<ul>
+<li>
+<b>Plain C Strings</b> Traditionally C strings used the plain <tt>char</tt> type with an 8 bit charset which does not require a variable width encoding. Charactersets other than ASCII or ISO-8859-1 (a.k.a. Latin1) can be used if a different codepage is set but the program is then largely committed to that one charset. The Microsoft Windows codepage for Russian is called CP1251 or WinCryllic. The hexcode for <tt>CYRILLIC CAPITAL LETTER GHE</tt> in CP1251 is <tt>0xC3</tt>.
+</li>
+<li>
+<b>Wide Character Strings</b> To permit multiple international charsets to be used within the same program, wide character strings were introduced that defined the larger <tt>wchar_t</tt> type. This character type does not define the charset or encoding used by the host C library however all of the platforms mentioned previosly use the Unicode charset.
+</li>
+<li>
+<b>Multi-Byte Strings</b> Because <tt>wchar_t</tt> is larger than one byte, many programs would require significant modification to be converted to use wide characters. The UTF-8 encoding was devised specifically to permit the traditional <tt>char</tt> pointer strings to be used which reduces the complexity of internationalizing existing programs and kernel structures.
+</li>
+</ul>
+</desc>
+</group>
+
+<group>
+<title>The Tchar Text Abstraction</title>
+<desc>
+To write a program that will compile and run without modification on Linux, Windows, and a variety of other platforms is a matter of abstracting the techniques listed above used by each platform. Linux uses both multi-byte and wide character encodings. Windows uses wide characters however it is important to note that Windows does not support a UTF-8 locale so if Unicode is desired wide character strings are the only option. Most other Unix and Unix-like systems support multi-byte strings as well as possibly wide character strings to different degrees. Programs written using the technique described here will still premit using runtime defined codepages using the standard <tt>setlocale</tt>(3) mechanism.
+
+<h2>The Tchar Type</h2>
+
+The idea behind this technique is to use a typedef for the character type that resolves to either plain <tt>char</tt> or <tt>wchar_t</tt>. In this way the character type identifier does not change in the source code.
+
+<pre>
+#ifdef USE_WCHAR
+typedef wchar_t tchar;
+#else
+typedef unsigned char tchar;
+#endif
+</pre>
+
+<h2>Abstracting String Functions</h2>
+
+In addition to the character type, all functions that operate on it will need to be abstracted with macros that reference <tt>tchar</tt> rather than <tt>char</tt> or <tt>wchar_t</tt>. Consider the <tt>strncpy</tt> function. It uses the plain <tt>char</tt> type. Fortunately the major string functions have a wide character equivalent that <i>usually</i> has the same signature but accepts the <tt>wchar_t</tt> type.
+
+<pre>
+char *strncpy(char *dest, const char *src, size_t n);
+wchar_t *wcsncpy(wchar_t *dest, const wchar_t *src, size_t n);
+</pre>
+
+From the above signatures it can be seen that the only difference is the character type. The number, order, and meaning of the parameters are the same. This permits the function to be abstracted with macros as follows:
+
+<pre>
+#ifdef USE_WCHAR
+#define tcsncpy wcsncpy
+#else
+#define tcsncpy strncpy
+#endif
+</pre>
+
+To use this function is now a matter of substituting all instances of <tt>strncpy</tt> or <tt>wcsncpy</tt> with <tt>tcsncpy</tt>. Depending on how the program is compiled, code that uses these functions will support wide character or multi-byte strings (but not both at the same time). See the <a href="text.html">Text Module API Documentation</a> for a complete list of macros in <a href="../../src/mba/text.h">text.h</a>.
+<p/>
+There are of course many other functions that operate on strings. Fortunately most standard C library function have wide character versions that are reasonably consistent about identifier names. An identifier that begins with <tt>str</tt> will likey have a wide character version that begins with <tt>wcs</tt>. Other functions like <tt>vswprintf</tt> are not so obvious and depending the the system being used there will certainly be omissions or incompatablities (e.g. the <tt>vsnprintf</tt> counterpart wide character function is <tt>vswprintf</tt> without the <tt>n</tt> even though it accepts an <tt>n</tt> parameter). If a function does not have a man page or if the compiler issues a warning it does not necessarily mean the function does not exist on your system. For example, with the GNU C library it may be necessary to specify C99 or define <tt>_XOPEN_SOURCE=500</tt> to indicate a UNIX98 environment is desired. Check your C library documentation (e.g. /usr/include/features.h). Check the <a target="_top" href="http://www.opengroup.org/onlinepubs/007904975/toc.htm">POSIX documentation on the OpenGroup website</a>. On my RedHat Linux 7.3 system the <tt>wcstol</tt> and several other conversion functions are not documented. It is necessary to specify <tt>-std=c99</tt> or define <tt>-D_ISOC99_SOURCE</tt> with gcc to trigger it to export that symbol.
+
+<h2>Variable Width Encodings</h2>
+
+Unicode on Unix and Unix-like systems is supported using UTF-8. On Microsoft Windows UTF-16LE is used. As explained previously these are variable width encodings. Each character can occupy a variable number of bytes in memory. The question is; when does this require special processing in your code?
+<p/>
+A good example of when UTF-8 string handling requires special hanlding is when each character needs to be examined individually. Consider the example of caseless comparison of two strings. They cannot simply be compared element by element. Each character must be decoded to their wide character value and converted to upper or lowercase for the comparison to be valid. Below is just such a function:
+
+<pre>
+/* Case insensitive comparison of two UTF-8 strings
+ */
+int
+utf8casecmp(const unsigned char *str1, const unsigned char *str1lim,
+		const unsigned char *str2, const unsigned char *str2lim)
+{
+	int n1, n2;
+	wchar_t ucs1, ucs2;
+	int ch1, ch2;
+	mbstate_t ps1, ps2;
+
+	memset(&amp;ps1, 0, sizeof(ps1));
+	memset(&amp;ps2, 0, sizeof(ps2));
+	while (str1 &lt; str1lim &amp;&amp; str2 &lt; str2lim) {
+		if ((*str1 &amp; 0x80) &amp;&amp; (*str2 &amp; 0x80)) {           /* both multibyte */
+			if ((n1 = mbrtowc(&amp;ucs1, str1, str1lim - str1, &amp;ps1)) &lt; 0 ||
+					(n2 = mbrtowc(&amp;ucs2, str2, str2lim - str2, &amp;ps2)) &lt; 0) {
+				PMNO(errno);
+				return -1;
+			}
+			if (ucs1 != ucs2 &amp;&amp; (ucs1 = towupper(ucs1)) != (ucs2 = towupper(ucs2))) {
+				return ucs1 &lt; ucs2 ? -1 : 1;
+			}
+			str1 += n1;
+			str2 += n2;
+		} else {                                /* neither or one multibyte */
+			ch1 = *str1;
+			ch2 = *str2;
+
+			if (ch1 != ch2 &amp;&amp; (ch1 = toupper(ch1)) != (ch2 = toupper(ch2))) {
+				return ch1 &lt; ch2 ? -1 : 1;
+			} else if (ch1 == '\0') {
+				return 0;
+			}
+			str1++;
+			str2++;
+		}
+	}
+
+	return 0;
+}
+</pre>
+
+This is a fairly pathological example. In practice this is probably as difficult as it gets. For example, if the objective is to search for a certain ASCII character such as a space or '\0' termniator, it is not necessary to decode a Unicode value at all. It might even be reasonable to use <ident>isspace</ident> and similar functions (but probably not <ident>ispunct</ident> for example). This will require some experimenting and research.
+<p/>
+Another example of when using a variable width encoding requires special handling in your code is when calculating the number of bytes from the string required to occupy at most a certin number of dispay positions in a terminal window. In this case it is necessary to convert each character to it's Unicode value and then use the <tt>wcwidth</tt>(3) function. When the total of values returned by <ident>wcwidth</ident>(3) equals or exceeds the desired number of columns the number of bytes traversed in the substring is known.
+
+</desc>
+</group>
+
+<group>
+<title>Potential Problems</title>
+<desc>
+This technique is not perfect. The wide character functions were not designed with this technique in mind. The prototypes are largely the same only for the sake of consistency. It is important to understand where problems can occur and understand how to correctly fix or avoid them.
+
+<ul>
+<li>
+<b>Wide Character I/O</b>
+
+It is not possible to mix wide character I/O functions like <tt>wprintf</tt>, <tt>fgetwc</tt>, and <tt>fputws</tt> with regular I/O functions. If a wide character I/O function is used the associated stream will switch into wide mode. Attempting to use both will result in erroneous behaviour (e.g. ESPIPE Illegal seek). All I/O could be performed in wide mode but on non-Microsoft platforms it can be awkward to performa all I/O <i>entirely</i> in wide character mode. Note however this restriction only applies to functions that cause I/O on a stream. For example, the <tt>swprintf</tt> function is ok with non-wide I/O. For non-Microsoft platforms is recommended that the wide character I/O functions simply be avoided. They ultimately just convert wide characters to multi-byte sequences and if an unexpected encoding is encountered it will be more difficult to detect and perform corrective action.
+<p/>
+Ultimately if the target code is reading and writing plain text to sockets or files on the filesystem the text will probably need to be converted to and from a well defined encoding like the locale dependant encoding with <tt>wcsrtombs</tt>(3) and <tt>mbsrtowcs</tt>(3). Currently the libmba text module does not define macros for the wide character I/O functions but that may changed in the future. See <a href="../../src/cfg.c">src/cfg.c</a> for a good example of converting between wide character strings and the multi-byte encoding in files and the environment.
+<p/>
+</li>
+<li>
+<b>The File System</b>
+
+Another form of wide character I/O pertains to the handling of file and directory names. The encoding used to read and write path names depends on the operating system and filesystem. On Linux for example, wide character strings cannot be used as filenames. Linux requires that the multi-byte encoding be used. This means that any wide character pathname must be converted to the locale dependant encoding using <tt>wcsrtombs</tt>(3) and any pathname read from the operating system may need to be converted to the wide character encoding using <tt>mbsrtowcs</tt>(3).
+<p/>
+The below source illustrates how a wide character pathname could be converted to the multi-byte encoding for passing to <tt>fopen</tt>(3).
+<pre>
+
+    /* Open a file using a wide character path name.
+     */
+    FILE *
+    wcsfopen(const wchar_t *path, const char *mode)
+    {
+        char dst[PATH_MAX + 1];
+        size_t n;
+        mbstate_t mb;
+    
+        memset(&amp;mb, 0, sizeof(mbstate_t));
+        if ((n = wcsrtombs(dst, &amp;path, PATH_MAX, &amp;mb)) == (size_t)-1) {
+            return NULL;
+        }
+        if (n &gt;= PATH_MAX) {
+            errno = E2BIG;
+            return NULL;
+        }
+    
+        return fopen(dst, mode);
+    }
+
+</pre>
+<p/>
+Currently, libmba modules that support the <tt>tchar</tt> abstraction do not accept wide character pathnames but that may change in the future.
+<p/>
+Note that Unicode pathnames are supported by Unix and Unix-like systems that support the <a target="_top" href="http://www.cl.cam.ac.uk/~mgk25/unicode.html">UTF-8</a> multi-byte encoding. Just call <tt>setlocale(LC_CTYPE, &quot;en_US.UTF-8&quot;)</tt> first. Or export <tt>LCTYPE=en_US.UTF-8</tt> in the environment and call <tt>setlocale(LC_CTYPE, &quot;&quot;)</tt>. To test such a program it will be necessary to see I18N text printed somewhere. The following is a worthwhile exercise:
+<pre>
+
+    $ wget http://www.columbia.edu/kermit/utf8.html
+    $ xterm -u8 -fn '-misc-fixed-*-*-*-*-20-*-*-*-*-*-iso10646-*'
+    $ LANG=en_US.UTF-8 cat utf8.html
+
+</pre>
+This downloads a file with a wide range of UTF-8 encoded text in it, launches an xterm in UTF-8 mode with a Unicode font, and runs cat in the UTF-8 locale to print the contents of utf8.html to the terminal window. Some newer Linux systems use the UTF-8 locale by default now so the above setup may not be necessary.
+<p/>
+</li>
+<li>
+<b>Format Specifiers</b>
+
+To format a string with <tt>snprintf</tt> the format specifier <tt>%s</tt> is used. For this text abstraction to work completely the equivalent wide character function <tt>swprintf</tt> would have to use <tt>%s</tt> as well for the format specifier for wide character strings. It does not. Both <tt>snprintf</tt> and <tt>swprintf</tt> use <tt>%s</tt> to specify regular strings and <tt>%ls</tt> to specify wide character strings. This means that even though <tt>stprint</tt> resolves to either <tt>snprintf</tt> or <tt>swprintf</tt> the format specifiers need to be different depending on the arguments to <tt>stprintf</tt>. This will require some conditional preprocesing such as the following example.
+<pre>
+
+    #if defined(USE_WCHAR)
+        if ((n = swprintf(path, L"/var/spool/mail/%ls", username)) == -1) {
+    #else
+        if ((n = snprintf(path, "/var/spool/mail/%s", username)) == -1) {
+    #endif
+
+</pre>
+</li>
+<li>
+<b>Prototype Mistatch</b>
+
+It is not uncommon for prototype mismatches to occur. Some examples are:
+<ul>
+<li>If non-wide characters are used <tt>tchar</tt> is unsigned which mismatches with functions that take signed <tt>char **</tt>. With gcc these generate warnings like:
+<pre>
+
+    tests/TcharAll.c:100: warning: comparison of distinct pointer types lacks a cast
+    tests/TcharAll.c:161: warning: passing arg 2 of `strtod' from incompatible pointer type
+
+</pre>
+</li>
+<li>The constant <tt>TEOF</tt> is defined as either <tt>EOF</tt> which is signed or <tt>WEOF</tt> which is unsigned. This can provoke the compiler to emit type mismatch warnings.</li>
+<li>Some wide character functions exibit behavior different from that of their counterpart. For example <tt>swprintf</tt> will return -1 if the <tt>n</tt> parameter is not large enough to accomodate the result. However the <tt>snprint</tt> function will return the length of the result regardless of whether or not the <tt>n</tt> parameter was large enough (although I believe the later behavor was introduced with C99 which is quite bazaar).</li>
+</ul>
+</li>
+<li>
+<b>Simple Errors</b>
+
+Be dilligent when manipulating text directly now that characters occupy more than 1 byte. Frequently this just means multiplying some value by the size of an element such as when calulating the number of bytes occupied by a run of text (or use tmemcpy):
+<pre>
+
+    siz = (src - start + 1) * sizeof *src;
+
+</pre>
+
+</li>
+</ul>
+
+<i>There are most certainly other problems and incompatabilies that I have omitted here. If you encounter any such example, please drop me a mail.</i>
+
+</desc>
+</group>
+<group>
+<title>TCHAR in Microsoft Windows</title>
+<desc>
+For programmers that have used the variety of string handling functions on the Microsoft Windows platform this character abstraction technique should look familar. It is indeed the same. The abstract character type in the Win32 environment is named <tt>TCHAR</tt> in uppercase rather than lower and the string functions are prefixed with <tt>_tcs</tt> like <tt>_tcsncpy</tt> rather than <tt>tcsncpy</tt> but after macro processing the resulting code is the same. The identifier names where chosen to be the same as those found on Windows (minus a few Windows coding conventions that clash with Unix/Linux conventions) simply becuase the Windows platform is very popular and there was no practical reason to use different names. The exception is that <tt>USE_WCHAR</tt> is used to signal that wide characters should be used rather than <tt>_UNICODE</tt> because on Unix and Unix-like systems multi-byte strings support Unicode in the UTF-8 locale which would make the <tt>_UNICODE</tt> macro somewhat inaccurate.
+</desc>
+</group>
+</subtopic>
+

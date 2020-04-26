@@ -1,0 +1,272 @@
+@charset "UTF-8";
+
+
+/* 
+html5doctor.com Reset Stylesheet
+v1.6.1
+Last Updated: 2010-09-17
+Author: Richard Clark - http://richclarkdesign.com 
+Twitter: @rich_clark
+*/
+
+html, body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+abbr, address, cite, code,
+del, dfn, em, img, ins, kbd, q, samp,
+small, strong, sub, sup, var,
+b, i,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section, summary,
+time, mark, audio, video {
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  font-size:100%;
+  vertical-align:baseline;
+  background:transparent;
+}
+
+body {
+  line-height:1;
+}
+
+article,aside,details,figcaption,figure,
+footer,header,hgroup,menu,nav,section { 
+  display:block;
+}
+
+nav ul {
+  list-style:none;
+}
+
+blockquote, q {
+  quotes:none;
+}
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content:'';
+  content:none;
+}
+
+a {
+  margin:0;
+  padding:0;
+  font-size:100%;
+  vertical-align:baseline;
+  background:transparent;
+}
+
+/* change colours to suit your needs */
+ins {
+  background-color:#ff9;
+  color:#000;
+  text-decoration:none;
+}
+
+/* change colours to suit your needs */
+mark {
+  background-color:#ff9;
+  color:#000; 
+  font-style:italic;
+   font-weight:bold;
+}
+
+del {
+  text-decoration: line-through;
+}
+
+abbr[title], dfn[title] {
+  border-bottom:1px dotted;
+  cursor:help;
+}
+
+table {
+  border-collapse:collapse;
+  border-spacing:0;
+}
+
+/* change border colour to suit your needs */
+hr {
+  display:block;
+  height:1px;
+  border:0;   
+  border-top:1px solid #cccccc;
+  margin:1em 0;
+  padding:0;
+}
+
+input, select {
+  vertical-align:middle;
+}
+
+/***************************************************/
+
+body{
+    font-size : 4mm;
+    padding : 5mm;
+}
+
+p{
+    font-size : 100%;
+    line-height : 1;
+}
+
+.manual-title{
+    font-size : 175%;
+    font-weight : bold;
+    border-bottom-width : 1px;
+    border-bottom-style : solid;
+    border-bottom-color : gray;
+    margin : 0mm;
+    padding-bottom : 3mm;
+}
+
+.structure1{
+    margin : 0mm;
+    padding-bottom : 0mm;
+}
+
+.structure2{
+    margin : 0mm;
+    padding-top : 6mm;
+    padding-bottom : 6mm;
+}
+
+.module-functions{
+    margin : 0mm;
+    padding-bottom : 0mm;
+}
+
+.module-function{
+    margin : 0mm;
+    padding-top : 6mm;
+    padding-bottom : 6mm;
+}
+
+.module-variables{
+    margin : 0mm;
+    padding-bottom : 4mm;
+}
+
+.module-variable{
+    margin : 0mm;
+    padding-top : 6mm;
+    padding-bottom : 6mm;
+}
+
+.class-methods{
+    margin : 0mm;
+    padding-bottom : 4mm;
+}
+
+.class-method{
+    margin : 0mm;
+    padding-top : 6mm;
+    padding-bottom : 6mm;
+}
+
+.elements-title{
+    font-size : 150%;
+    color : blue;
+    font-weight : bold;
+    margin : 0mm;
+    padding-top : 9mm;
+    padding-bottom : 3mm;
+}
+
+.summary{
+    line-height : 1.5em;
+    margin : 0mm;
+    padding-top : 0mm;
+    padding-bottom : 0mm;
+}
+
+.element-name{
+    font-size : 125%;
+    font-weight : bold;
+    margin : 0mm;
+    padding-top : 5mm;
+    padding-bottom : 3mm;
+}
+
+.element-name-additional{
+    font-size : 85%;
+    font-weight : bold;
+    color : gray;
+    margin : 0mm;
+    padding-left : 2mm;
+}
+
+.element-member-title{
+    font-weight : bold;
+    font-size : 100%;
+    color : gray;
+    margin : 0mm;
+    padding-top : 5mm;
+    padding-bottom : 1mm;
+}
+
+.element-cpp-title{
+    font-weight : bold;
+    font-size : 100%;
+    color : gray;
+    margin : 0mm;
+    padding-top : 5mm;
+    padding-bottom : 1mm;
+}
+
+.element-cpp-form{
+    border-width : 1px;
+    border-color : silver;
+    border-style : solid;
+    font-size : 115%;
+    white-space : pre-wrap;
+    line-height : 1.25em;
+    margin : 0mm;
+    padding-left : 3mm;
+    padding-right : 3mm;
+    padding-top : 2mm;
+    padding-bottom : 2mm;
+}
+
+.element-lua-title{
+    font-weight : bold;
+    font-size : 100%;
+    color : gray;
+    margin : 0mm;
+    padding-top : 5mm;
+    padding-bottom : 1mm;
+}
+
+.element-lua-form{
+    border-width : 1px;
+    border-color : silver;
+    border-style : solid;
+    font-size : 115%;
+    white-space : pre-wrap;
+    line-height : 1.25em;
+    margin : 0mm;
+    padding-left : 3mm;
+    padding-right : 3mm;
+    padding-top : 2mm;
+    padding-bottom : 2mm;
+}
+
+.element-member dt{
+    font-weight : bold;
+    font-size : 100%;
+    padding-left : 2mm;
+    padding-top : 1mm;
+    padding-bottom : 1mm;
+}
+
+.element-member dd{
+    padding-left : 8mm;
+    padding-top : 1mm;
+    padding-bottom : 2mm;
+}

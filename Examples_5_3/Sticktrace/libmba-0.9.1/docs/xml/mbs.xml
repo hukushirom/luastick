@@ -1,0 +1,137 @@
+<interface name="mbs"
+	short="multibyte string functions">
+
+<comments>
+	Copyright 2002 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/mbs.h</include>
+
+<title>Mbs</title>
+<desc>
+The <def>mbs</def>(3m) module provides extended string functions that will work with the locale dependant encoding such as UTF-8 or any 8 bit encoding. They are useful for determining complete substrings of UTF-8 sequences such as when terminal output must consider the number of display positions that a sequence of characters will occupy. More generally, the objective of this function is to emulate the behavior of non-multibyte Unicode string manipulation like that of UTF-16 and JAVA encodings although such behavior has not been verified.
+<p/>
+<i>Please note some of these functions are not actively used by the author. They have been tested but should be considered experimental and may be subject to change or removal.</i>
+</desc>
+
+<group>
+<title>Multibute string functions</title>
+<desc>
+These functions convert multibyte sequences into UCS codes to determine the number of characters (read number of display positions provided you're strings are not polluted with control characters) in a string, the size of a complete valid sequence of characters, create a copy of a complete valid sequence of characters, return the substring starting at an offset number of characters, etc.
+<p/>
+Which encoding is used is dependant on locale. Programs that use these functions can write programs that will exibit the same behavior in many different locales. Developers can test the success of their work by running their program in the UTF-8 locale provided they have a capable terminal, a Unicode font, supporting <def>mbtowc</def>(3) and <def>wctomb</def>(3) functions, and a <tt>__STDC_ISO_10646__</tt> environment. Although this may not be obvious the Linux glibc 2.2 and Solaris with dtterm environments appear to meet these requirements.
+<p/>
+To execute a program in the UTF-8 locale on a glibc 2.2+ Linux system try:
+<pre>
+plain$ xterm -u8 -fn '-*-fixed-*-*-*-*-12-*-*-*-*-*-iso10646-1'
+xterm$ LANG=en_US.UTF-8 ./someprogram
+</pre>
+For more information on UTF-8 and i18n particularly on Linux read the <a href="http://www.cl.cam.ac.uk/~mgk25/unicode.html">UTF-8 and Unicode FAQ for Unix/Linux</a>.
+</desc>
+
+<func name="mbslen">
+	<pre>int mbslen(const char *src);</pre>
+	<param name="src"/>
+	<desc>
+The <ident>mbslen</ident> function will return the number of characters in the multibyte string pointed to by <tt>src</tt>. Characters in this context are contol characters and complete multibyte sequences. Combining characters are not reduced. See <def>mbswidth</def>(3m) for calculating display positions.
+	</desc>
+</func>
+<func name="mbsnlen">
+	<pre>int mbsnlen(const char *src, size_t sn, int cn);</pre>
+	<param name="src"/>
+	<param name="sn"/>
+	<param name="cn"/>
+	<desc>
+The <ident>mbsnlen</ident> function will return the number of characters in the multibyte string pointed to by <tt>src</tt>. Characters in this context are contol characters and complete multibyte sequences. Combining characters are not reduced. See <def>mbswidth</def>(3m) for calculating display positions. No more than <tt>sn</tt> bytes of <tt>src</tt> will be examined and no more than <tt>cn</tt> characters will be converted to make the determination. Either or both <tt>sn</tt> and <tt>cn</tt> can be -1 indicating that the constraint should be ignored (no limit).
+	</desc>
+</func>
+<func name="mbssize">
+	<pre>size_t mbssize(const char *src);</pre>
+	<param name="src"/>
+	<desc>
+The <ident>mbssize</ident> function returns the number of bytes in a complete character sequence. Note this will not be the same as <def>strlen</def>(3) if there is an incomplete multibyte sequence at the end of the string.
+	</desc>
+</func>
+<func name="mbsnsize">
+	<pre>size_t mbsnsize(const char *src, size_t sn, int cn);</pre>
+	<param name="src"/>
+	<param name="sn"/>
+	<param name="cn"/>
+	<desc>
+The <ident>mbsnsize</ident> function returns the number of bytes in a complete character sequence. No more than <tt>sn</tt> bytes of <tt>src</tt> will be examined and no more than <tt>cn</tt> characters will be converted. Note this will not be the same as <def>strnlen</def>(3) if the <tt>sn</tt> or <tt>cn</tt> constraints end on an incomplete multibyte sequence or if the '\0' is encountered in the middle of an incomplete multibyte sequence.
+	</desc>
+</func>
+<func name="mbsdup">
+	<pre>char *mbsdup(const char *src);</pre>
+	<param name="src"/>
+	<desc>
+The <tt>mbsdup</tt> function will return a copy of the multibyte string at <tt>src</tt>. An incomplete multibyte sequence at the end of the string will not be copied. Only a complete valid multibyte string will be returned.
+	</desc>
+</func>
+<func name="mbsndup">
+	<pre>char *mbsndup(const char *src, size_t n, int cn);</pre>
+	<param name="src"/>
+	<param name="n"/>
+	<param name="cn"/>
+	<desc>
+The <tt>mbsndup</tt> function will return a copy of the multibyte string at <tt>src</tt>.
+No more than <tt>sn</tt> bytes of <tt>src</tt> will be examined and no more than <tt>cn</tt> characters will be converted.
+If the <tt>sn</tt> or <tt>cn</tt> constraints end on an incomplete multibyte sequence or if the '\0' is encountered in the middle of an incomplete multibyte sequence those extra bytes will not be copied. Only a complete multibyte string will be returned.
+	</desc>
+</func>
+<func name="mbsoff">
+	<pre>char *mbsoff(char *src, int off);</pre>
+	<param name="src"/>
+	<param name="off"/>
+	<desc>
+The <tt>mbsoff</tt> function will return the substring of <tt>src</tt> that starts at <tt>off</tt>. The <tt>off</tt> parameter is measured in characters where characters are display positions and control character however it is not common that strings contain control characters (should not from an ADT perspective).
+	</desc>
+</func>
+<func name="mbsnoff">
+	<pre>char *mbsnoff(char *src, int off, size_t sn);</pre>
+	<param name="src"/>
+	<param name="off"/>
+	<param name="sn"/>
+	<desc>
+The <tt>mbsnoff</tt> function will return the substring of <tt>src</tt> that starts at <tt>off</tt> number of characters. No more than <tt>sn</tt> number of bytes of <tt>src</tt> will be examined. If the <tt>sn</tt> parameter is exhausted, a pointer to the next valid multibyte character sequence following the <tt>sn</tt> position is returned.
+	</desc>
+</func>
+<func name="mbschr">
+	<pre>char *mbschr(char *src, wchar_t wc);</pre>
+	<param name="src"/>
+	<param name="wc"/>
+	<desc>
+The <tt>mbschr</tt> function will return a substring pointing to the first occurrence of the character <tt>wc</tt> in the mutibyte string represented by <tt>src</tt>.
+	</desc>
+</func>
+<func name="mbsnchr">
+	<pre>char *mbsnchr(char *src, size_t sn, int cn, wchar_t wc);</pre>
+	<param name="src"/>
+	<param name="sn"/>
+	<param name="cn"/>
+	<param name="wc"/>
+	<desc>
+The <tt>mbschr</tt> function will return a substring pointing to the first occurrence of the character <tt>wc</tt> in the mutibyte string represented by <tt>src</tt>. No more than <tt>sn</tt> bytes of <tt>src</tt> will be examined and no more than <tt>cn</tt> characters will be converted. Either or both <tt>sn</tt> and <tt>cn</tt> may be -1 indicating the constraint should be ignored (no limit).
+	</desc>
+</func>
+<func name="mbswidth">
+	<pre>int mbswidth(const char *src, size_t sn, int wn);</pre>
+	<param name="src"/>
+	<param name="sn"/>
+	<param name="wn"/>
+	<desc>
+The <tt>mbswidth</tt> function will return the number of display positions a multibyte sequence will occupy. No more than <tt>sn</tt> bytes of <tt>src</tt> will be examined and no more than <tt>wn</tt> display positions will be considered. Control characters are considered to occupy 1 display position (so there should be no control characters in the <tt>src</tt> string).
+	</desc>
+</func>
+<func name="mbssub">
+	<pre>char *mbssub(char *src, size_t sn, int wn);</pre>
+	<param name="src"/>
+	<param name="sn"/>
+	<param name="wn"/>
+	<desc>
+The <ident>mbssub</ident> function will return a substring of the multibyte sequence <tt>src</tt> that is no larger in size than <tt>sn</tt> and will occupy no more than <tt>wn</tt> display positions should it be printed on a mutilbyte (UTF-8) capable display.
+	</desc>
+</func>
+
+</group>
+</interface>

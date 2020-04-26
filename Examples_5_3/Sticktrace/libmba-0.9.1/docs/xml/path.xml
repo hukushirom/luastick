@@ -1,0 +1,56 @@
+<interface name="path" short="manipulate file path names">
+
+<comments>
+Copyright 2003 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/path.h</include>
+
+<title>Path</title>
+<desc>
+	The <def>path</def>(3m) module provides functions for some common path manipulations.
+</desc>
+
+<group>
+<title>Path functions</title>
+<meth name="canon" wrap="true">
+	<pre>int path_canon(const unsigned char *src, const unsigned char *slim, unsigned char *dst, unsigned char *dlim, int srcsep, int dstsep);</pre>
+	<param name="src"/>
+	<param name="slim"/>
+	<param name="dst"/>
+	<param name="dlim"/>
+	<param name="srcsep"/>
+	<param name="dstsep"/>
+<desc>
+The <tt>path_canon</tt> function canonicalizes the path at <tt>src</tt> up to but not including the memory at <tt>slim</tt> into the memory at <tt>dst</tt> up to but not including <tt>dlim</tt>. The character that separates path components in the <tt>src</tt> path is specified with the <tt>srcsep</tt> parameter whereas <tt>dstsep</tt> specifies the separator with which the <tt>dst</tt> path is constructed.
+<p/>
+Specifically, canonicalization will eliminate '.' and '..' components in paths in the conventional way as well as normalize redundant separators. The presence or lack of an initial and/or trailing separator is preserved. The following lists some examples of paths before and after canonicalization:
+<pre>
+before      after
+.
+..
+/           /
+/.          /
+./
+../
+.../        .../
+a/..        
+abc/../
+a/b/c       a/b/c
+/a/b/c      /a/b/c 
+/./a/b/c    /a/b/c
+/../a/b/c   /a/b/c
+..a/b/c     ..a/b/c
+a/b/c/      a/b/c/
+a/b/c/..    a/b/
+a/b/c/../   a/b/
+a/b/c/./    a/b/c/
+</pre>
+</desc>
+<ret>
+The <tt>path_canon</tt> function returns the number of bytes written to <tt>dst</tt> not including the zero terminator or -1 if <tt>slim</tt> or <tt>dlim</tt> has been reached in which case <ident>errno</ident> is set to <ident>ERANGE</ident>.
+</ret>
+</meth>
+</group>
+
+</interface>

@@ -1,0 +1,143 @@
+<interface name="stack"
+	short="a dynamically resizing stack">
+
+<comments>
+	Copyright 2002 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/stack.h</include>
+
+<title>Stack</title>
+<desc>
+The stack functions manipulate a simple LIFO stack of pointers to objects but the underlying array will grow and shrink as storage requirements change.
+</desc>
+
+<group>
+<title>Memory management functions</title>
+<desc>These functions should be used to create and destroy <def>stack</def> objects.</desc>
+<meth name="init">
+	<pre>int stack_init(struct stack *s, unsigned int max_size, struct allocator *al);</pre>
+	<param name="s"/>
+	<param name="max_size"/>
+	<param name="al"/>
+	<desc>
+The <ident>stack_init</ident> function initializes the stack <tt>s</tt> and saving a pointer to the <def>allocator</def>(3m) <tt>al</tt> which will be used to allocate memory for susequent stack operations. The stack will accept no more than <tt>max</tt> data pointers. If <tt>max</tt> is 0, <ident>INT_MAX</ident> elements may be pushed onto the stack.
+	</desc>
+	<ret>
+The <ident>stack_init</ident> function returns -1 if <tt>s</tt> is a null pointer. Otherwise 0 is returned.
+	</ret>
+</meth>
+<meth name="deinit">
+	<pre>int stack_deinit(struct stack *s, del_fn data_del, void *context)</pre>
+	<param name="s"/>
+	<param name="data_del"/>
+	<param name="context"/>
+	<desc>
+The <ident>stack_deinit</ident> function deinitializes the stack <tt>s</tt>. If the <tt>data_del</tt> function is not <ident>NULL</ident>, it will be called with the <tt>context</tt> parameter and each element on the stack.
+	</desc>
+	<ret>
+The <ident>stack_deinit</ident> function returns 0 if the stack was successfully deinitialized or -1 if the <tt>data_del</tt> function returned anything other than 0 or if an error occured attempting to free the memory backing the stack.
+	</ret>
+</meth>
+<meth name="new">
+	<pre>struct stack *stack_new(unsigned int max_size, struct allocator *al);</pre>
+	<param name="max_size"/>
+	<param name="al"/>
+	<desc>
+Create a new <def>stack</def>(3) object that will accept no more than <tt>max_size</tt> data pointers. If <tt>max_size</tt> is 0, the stack will accept at most <ident>INT_MAX</ident> elements.
+	</desc>
+	<ret>
+The <ident>stack_new</ident> function returns a new <ident>stack</ident> object or <ident>NULL</ident> of memory could not be allocated in which case <tt>errno</tt> will be set to <ident>ENOMEM</ident>.
+	</ret>
+</meth>
+<meth name="del">
+	<pre>int stack_del(struct stack *s, del_fn data_del, void *context);</pre>
+	<param name="s"/>
+	<param name="data_del"/>
+	<param name="context"/>
+	<desc>
+The <ident>stack_del</ident> function deletes the stack object <tt>s</tt>. If the <tt>data_del</tt> function is not <ident>NULL</ident>, it will be called with each remaining element before deallocating the stack <tt>s</tt> itself.
+	</desc>
+</meth>
+<meth name="clear">
+	<pre>int stack_clear(struct stack *s, del_fn data_del, void *context)</pre>
+	<param name="s"/>
+	<param name="data_del"/>
+	<param name="context"/>
+	<desc>
+The <ident>stack_clear</ident> function will remove all elements on the stack. If the <tt>data_del</tt> function is not <ident>NULL</ident> it will be called with each remaining element.
+	</desc>
+</meth>
+<meth name="clean">
+	<pre>int stack_clean(struct stack *s)</pre>
+	<param name="s"/>
+	<desc>
+The <ident>stack_clean</ident> function reallocates the array backing the stack to be exactly the number of elements necessary. A <def>stack</def>(3m) will automatically shrink at an appropriate point but this function might be called by an <def>allocator</def>(3m) <ident>reclaim_fn</ident> function.
+	</desc>
+</meth>
+</group>
+
+<group>
+<title>Stack functions</title>
+
+<meth name="push">
+	<pre>int stack_push(struct stack *s, void *data);</pre>
+	<param name="s"/>
+	<param name="data"/>
+	<desc>
+The <ident>stack_push</ident> function pushes the element <tt>data</tt> onto the stack identified by <tt>s</tt>;
+	</desc>
+	<ret>
+The <ident>stack_push</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the data pointer was successfully pushed onto the stack (e.g. <ident>ERANGE</ident> if the stack is full).
+	</ret>
+</meth>
+<meth name="pop">
+	<pre>void *stack_pop(struct stack *s);</pre>
+	<param name="s"/>
+	<desc>
+The <ident>stack_pop</ident> function removes the last element pushed onto the stack <tt>s</tt>.
+	</desc>
+	<ret>
+The <ident>stack_pop</ident> function returns the data pointer popped off the stack.
+	</ret>
+</meth>
+<meth name="is_empty">
+	<pre>int stack_is_empty(const struct stack *s);</pre>
+	<param name="s"/>
+	<desc>
+Returns non-zero if the stack <tt>s</tt> has no elements and 0 otherwise.
+	</desc>
+</meth>
+<meth name="size">
+	<pre>unsigned int stack_size(const struct stack *s);</pre>
+	<param name="s"/>
+	<desc>
+The <ident>stack_size</ident> function returns the number of elements currently on the stack.
+	</desc>
+</meth>
+<meth name="iterate">
+	<pre>void stack_iterate(void *s, iter_t *iter);</pre>
+	<param name="s"/>
+	<param name="iter"/>
+	<desc combine="next">
+Enumerate each element on the stack. Call <ident>stack_iterate</ident> to initialize the <tt>iter</tt> object to point to the bottom of the stack (the first element pushed onto the stack) and call <ident>stack_next</ident> to retrieve each data pointer. When the top of the stack has been reached, <ident>stack_next</ident> will return <ident>NULL</ident>.
+	</desc>
+</meth>
+<meth name="next">
+	<pre>void *stack_next(void *s, iter_t *iter);</pre>
+	<param name="s"/>
+	<param name="iter"/>
+	<ret>
+The <ident>stack_next</ident> function returns the next data pointer on the stack or <ident>NULL</ident> if the top of the stack has been exceeded.
+	</ret>
+</meth>
+<meth name="peek">
+	<pre>void *stack_peek(struct stack *s);</pre>
+	<param name="s"/>
+	<desc>
+The <ident>stack_peek</ident> function returns the element at the top of the stack <tt>s</tt> or <ident>NULL</ident> of the stack is empty. The data pointer is not removed.
+	</desc>
+</meth>
+</group>
+
+</interface>

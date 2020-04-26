@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Svcond</TITLE>
+</HEAD>
+<BODY>
+<H1>16. Svcond</H1>
+Condition variables are similar to semaphores however a lock can be specified with the wait function that will be unlocked just before blocking. When the blocked process or thread is subsequently signalled the lock will be reaquired. In practice this is frequently a superior coordination mechanism to semaphores alone. The <I>svcond</I>(3m) module provides a POSIX-like condition variables interface implemented using only System V semaphores.
+<p>
+</p>
+The <I>svcond</I>(3m) module is not available in the Win32 environment.
+<H3>16.1. Memry management functions</H3>These functions should be used to create and destroy <TT>svcond</TT> condition variables.<A name="create"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svcond_create</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svcond.h&gt;
+  int svcond_create(svcond_t *cond, struct pool *sempool);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svcond_create</TT> function initializes the condition variable <tt>cond</tt>. The <tt>sempool</tt> parameter is an <I>svsem</I>(3m) pool created with the <TT>svsem_pool_create</TT> function as illustrated below. The <tt>value</tt> parameter must be 1 and the <tt>max_size</tt> parameter must be 3 times the number of condition variables that will be in use at any moment. If semaphores for the condition variable cannot be aquired from the pool, <tt>errno</tt> will be set to <tt>EAGAIN</tt> and -1 will be returned.
+<PRE>
+
+  void
+  foo(void)
+  {
+      struct pool sempool;
+  	svcond_t condvar;
+  
+      svsem_pool_create(&amp;sempool, 250, 1, 0, NULL); /* create semaphore array */
+      svcond_create(&amp;condvar, &amp;sempool); /* initialize one condition variable */
+  
+  	svcond_wait(&amp;convar);
+      ...
+  </PRE>
+	<B>Returns</B>
+<BR>
+The <TT>svcond_create</TT> function returns 0 if the condition variable was successfully initialized or -1 if the operation failed in which case <tt>errno</tt> will be set to an appropriate value (e.g. <tt>EAGAIN</tt> if 3 semaphores cannot be obtained from the pool).
+	<P>
+</P>
+<A name="destroy"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svcond_destroy</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svcond.h&gt;
+  int svcond_destroy(svcond_t *cond);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svcond_destroy</TT> function releases the semaphores used by the condition variable <tt>cond</tt>. It is not an error to call this function with a <TT>NULL</TT> parameter, on memory that is zero'd or repeatedly on the same <tt>cond</tt> object -- it will be ignored or destroyed only once.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<H3>16.2. Svcond functions</H3>These functions should be used to manipulate <TT>svcond</TT> condition variables.<A name="wait"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svcond_wait</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svcond.h&gt;
+  int svcond_wait(svcond_t *cond, svsem_t *lock);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svcond_wait</TT> function will unlock the semaphore <tt>lock</tt> and then sleep until one of the following occurs;
+<ul>
+<li>the thread or process is interrupted by a signal (e.g. <tt>SIGQUIT</tt>),</li>
+<li>the <ident>svcond_broadcast</ident> function is called with the condition variable,</li>
+<li>or the <ident>svcond_signal</ident> function is called with the condition variable and that process or thread is the next in the wait queue.</li>
+</ul>
+If a <tt>SIGINT</tt> is recieved the function will set <TT>errno</TT> to <tt>EINTR</tt> and return but not before reaquiring <tt>lock</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<A name="signal"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svcond_signal</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svcond.h&gt;
+  int svcond_signal(svcond_t *cond);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svcond_signal</TT> function wakes up one process or thread blocked on the condition variable <tt>cond</tt> and return from the <TT>svsem_wait</TT> call but not before reaquiring the <tt>lock</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<A name="broadcast"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>svcond_broadcast</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/svcond.h&gt;
+  int svcond_broadcast(svcond_t *cond);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>svcond_broadcast</TT> function wakes up all processes and threads blocked on the condition variable <tt>cond</tt> and return from the <TT>svsem_wait</TT> call but not before reaquiring the <tt>lock</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+If the operation is successful 0 is returned. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<HR NOSHADE>
+<small>
+	Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

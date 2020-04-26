@@ -1,0 +1,245 @@
+<interface name="linkedlist"
+	short="a sigularly linked list">
+
+<comments>
+	Copyright 2002 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/linkedlist.h</include>
+
+<title>Linkedlist</title>
+<desc>
+The <def>linkedlist</def> functions manipulate a sigularly linked list of data pointers.
+<example id="listinsert">
+<title>Inserting and Enumerating Elements in a List</title>
+<desc>
+The following example illustrates how to insert and iterate over elements in a <def>linkedlist</def>(3m):
+<pre>
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;mba/linkedlist.h&gt;
+
+int
+main(int argc, char *argv[])
+{
+    struct linkedlist list;
+    int i;
+    iter_t iter;
+    const char *elem;
+
+    linkedlist_init(&amp;list,
+                  0,                               /* no size limit */
+                  NULL); /* use standard library allocator (malloc) */
+
+    for (i = 1; i &lt; argc; i++) {
+        linkedlist_insert_sorted(&amp;list,
+                  cmp_text,               /* simple text comparison */
+                  NULL,   /* cmp_text does not use a context object */
+                  NULL,            /* do not replace equal elements */
+                  argv[i]);
+    }
+
+    linkedlist_iterate(&amp;list, &amp;iter);
+    while ((elem = linkedlist_next(&amp;list, &amp;iter))) {
+        printf("%s\n", elem);
+    }
+
+    linkedlist_deinit(&amp;list, NULL, NULL);
+
+    return EXIT_SUCCESS;
+}
+
+$ ./t carbon silicon germanium carbon
+carbon
+carbon
+germanium
+silicon
+</pre>
+</desc>
+</example>
+</desc>
+
+<group>
+<title>Memory management functions</title>
+<desc>These functions should be used to manage <def>linkedlist</def> objects.</desc>
+<meth name="init">
+	<pre>int linkedlist_init(struct linkedlist *l, unsigned int max_size, struct allocator *al);</pre>
+	<param name="l"/>
+	<param name="max_size"/>
+	<param name="al"/>
+	<desc>
+The <ident>linkedlist_init</ident> function initializes a <def>linkedlist</def> object. The <ident>linkedlist</ident> will accepts no more than <tt>max_size</tt> items. If <ident>max_size</ident> is zero the list will accept no more than <ident>MAX_INT</ident> items. Memory for list elements will be allocated from the allocator <tt>al</tt>. It may be necessary to call <ident>linkedlist_deinit</ident> to release memory from the allocator <tt>al</tt>.
+	</desc>
+	<ret>
+The <ident>linkedlist_init</ident> function returns -1 if sets <ident>errno</ident> to an appropriate value if the operation failed or 0 if the list was successfully initialized.
+	</ret>
+</meth>
+<meth name="deinit">
+	<pre>int linkedlist_deinit(struct linkedlist *l, del_fn data_del, void *context);</pre>
+	<param name="l"/>
+	<param name="data_del"/>
+	<param name="context"/>
+	<desc>
+The <ident>linkedlist_deinit</ident> function calls the <tt>data_del</tt> function if it is not <ident>NULL</ident> with each data pointer in the list and the context parameter <tt>context</tt> and then releases memory allocated for list elements.
+	</desc>
+	<ret>
+The <ident>linkedlist_deinit</ident> function returns -1 and sets <ident>errno</ident> to an appropriate value if the operation failed or 0 if the list was successfully deinitialized.
+	</ret>
+</meth>
+<meth name="new">
+	<pre>struct linkedlist *linkedlist_new(unsigned int max_size, struct allocator *al);</pre>
+	<param name="max_size"/>
+	<param name="al"/>
+	<desc>
+	</desc>
+	<ret>
+The <ident>linkedlist_new</ident> function allocates memory from the allocator <tt>al</tt>, initializes it with the <ident>linkedlist_init</ident> function and returns a pointer to the a new <def>linkedlist</def> object. If memory for the <def>linkedlist</def> cannot be allocated a null pointer is returned and <ident>errno</ident> is set appropriately.
+	</ret>
+</meth>
+<meth name="del">
+	<pre>int linkedlist_del(struct linkedlist *l, del_fn data_del, void *context);</pre>
+	<param name="l"/>
+	<param name="data_del"/>
+	<param name="context"/>
+	<desc>
+The <ident>linkedlist_del</ident> function deinitializes the list <tt>l</tt> with the <ident>linkedlist_deinit</ident> function before freeing <tt>l</tt> itself.
+	</desc>
+</meth>
+<meth name="clear">
+	<pre>int linkedlist_clear(struct linkedlist *l, del_fn data_del, void *context);</pre>
+	<param name="l"/>
+	<param name="data_del"/>
+	<param name="context"/>
+	<desc>
+The <ident>linkedlist_clear</ident> function clears the list of all elements. If the <tt>data_del</tt> function is not <ident>NULL</ident> it will be called with the <tt>context</tt> argument and each data pointer in the list before releasing memory for list elements.
+	</desc>
+</meth>
+</group>
+
+<group>
+<title>List functions</title>
+
+<meth name="add">
+	<pre>int linkedlist_add(struct linkedlist *l, void *data);</pre>
+	<param name="l"/>
+	<param name="data"/>
+	<desc>The <ident>linkedlist_add</ident> function appends a data pointer to the end of the list. If the list has <tt>max_size</tt> elements, -1 is returned and <ident>errno</ident> is set to <ident>ERANGE</ident>.</desc>
+	<ret>The <ident>linkedlist_insert</ident> function returns 0 if the operation was successful and -1 if an error occurred in which case <ident>errno</ident> will be set appropriately.</ret>
+</meth>
+<meth name="insert">
+	<pre>int linkedlist_insert(struct linkedlist *l, unsigned int idx, void *data);</pre>
+	<param name="l"/>
+	<param name="idx"/>
+	<param name="data"/>
+	<desc>inserts a data pointer before the item at <ident>idx</ident>. If
+		<param>idx</param> equals the size of the list, the data pointer will
+		be appended to the list.</desc>
+	<ret>The <ident>linkedlist_insert</ident> function returns 0 if the operation was successful and -1 if an error occurred in which case <ident>errno</ident> will be set appropriately.</ret>
+</meth>
+<meth name="insert_sorted" wrap="true">
+<pre>int linkedlist_insert_sorted(struct linkedlist *l, cmp_fn cmp, void *context, void **replaced, const void *data);</pre>
+	<param name="l"/>
+	<param name="cmp"/>
+	<param name="context"/>
+	<param name="replaced"/>
+	<param name="data"/>
+	<desc>
+The <ident>linkedlist_insert_sorted</ident> function inserts the data pointer <tt>data</tt> into the linked list <tt>l</tt> in a position determined by the comparison function <tt>cmp</tt> which is defined as follows:
+<pre>
+typedef int (*cmp_fn)(const void *object1, const void *object2, void *context);
+</pre>
+This function will be called repeatedly with the new data pointer and each data pointer in the list until the insertion is complete or an error occurs. The context parameter is passed as-is. The following describes the outcome of the insertion based on the return value of the <ident>cmp_fn</ident>:
+<ul>
+<li>&gt; 0 - No operation is performed. The next data element in the list is compared.</li>
+<li>== 0 - If the <tt>replaced</tt> parameter is not <ident>NULL</ident> the replaced data pointer is assigned to it, removed from the list, and the new pointer is inserted in it's place. If the <tt>replaced</tt> parameter is <ident>NULL</ident> the new data pointer is inserted before the equal element.</li>
+<li>&lt; 0 - The new data pointer is inserted before the compared element.</li>
+</ul>
+</desc>
+	<ret>The <ident>linkedlist_insert_sorted</ident> function returns 0 if the operation was successful and -1 if an error occurred in which case <ident>errno</ident> will be set appropriately.</ret>
+</meth>
+<meth name="is_empty">
+	<pre>int linkedlist_is_empty(const struct linkedlist *l);</pre>
+	<param name="l"/>
+	<desc>
+The <ident>linkedlist_is_empty</ident> function returns non-zero if the list is empty and zero if it is not empty.
+	</desc>
+</meth>
+<meth name="size">
+	<pre>unsigned int linkedlist_size(const struct linkedlist *l);</pre>
+	<param name="l"/>
+	<desc>The <ident>linkedlist_size</ident> function returns the number of items in the list.</desc>
+</meth>
+<meth name="get">
+	<pre>void *linkedlist_get(const struct linkedlist *l, unsigned int idx);</pre>
+	<param name="l"/>
+	<param name="idx"/>
+	<desc>
+The <ident>linkedlist_get</ident> function retrieves an item from the list by index. If elements are accessed forward-sequentially each call is an O(1) operation.
+	</desc>
+	<ret>
+The <ident>linkedlist_get</ident> function returns the data pointer being retrieved. If the specified <ident>idx</ident> was out of range, a null pointer is returned and <ident>errno</ident> is set to <tt>ERANGE</tt>.
+	</ret>
+</meth>
+<meth name="get_last">
+	<pre>void *linkedlist_get_last(const struct linkedlist *l);</pre>
+	<param name="l"/>
+	<desc>The <ident>linkedlist_get_last</ident> function returns the last data pointer int the list or a null pointer if the list is empty.</desc>
+</meth>
+<meth name="iterate">
+	<pre>void linkedlist_iterate(void *l, iter_t *iter);</pre>
+	<param name="l"/>
+	<param name="iter"/>
+	<desc combine="next">
+Enumerate each element in the list. The <ident>linkedlist_iterate</ident> function initializes the <tt>iter</tt> object to point to the first item in the list. Each subsequent call to <ident>linkedlist_next</ident> returns the next element in the list or <ident>NULL</ident> if all elements have been enumerated. The elements are returned in order.
+<p/>
+Because linkedlist uses an element index for the state of an interator, after a <tt>data</tt> object returned by <ident>linkedlist_next</ident> is removed a subsequent call to <ident>linkedlist_next</ident> will skip an element. Therefore, to remove elements during iteration, <ident>linkedlist_get</ident> should be used instead. This will have no performance impact as sequential access is O(1) optimized.
+<p/>
+To enumerate each element in a list the following code might be used:
+<pre>
+iter_t iter;
+linkedlist_iterate(lst, &amp;iter);
+while ((el = linkedlist_next(lst, &amp;iter))) {
+    /* use el */
+}
+</pre>
+	</desc>
+</meth>
+<meth name="next">
+	<pre>void *linkedlist_next(void *l, iter_t *iter);</pre>
+	<param name="l"/>
+	<param name="iter"/>
+	<ret>
+The <ident>linkedlist_next</ident> function returns the next data pointer in the list or <ident>NULL</ident> if all elements have been enumerated.
+	</ret>
+</meth>
+<meth name="remove">
+	<pre>void *linkedlist_remove(struct linkedlist *l, unsigned int idx);</pre>
+	<param name="l"/>
+	<param name="idx"/>
+<desc>
+The <ident>linkedlist_remove</ident> function removes the data pointer at <ident>idx</ident> from the list. Please refer to the description of <ident>linkedlist_iterate</ident> for important information regarding the removal of elements during an iteration.
+</desc>
+	<ret>The <ident>linkedlist_remove</ident> function returns the data pointer removed from the list.</ret>
+</meth>
+<meth name="remove_data">
+	<pre>void *linkedlist_remove_data(struct linkedlist *l, const void *data);</pre>
+	<param name="l"/>
+	<param name="data"/>
+<desc>
+The <ident>linkedlist_remove_data</ident> function removes the data pointer <tt>data</tt> from the list <tt>l</tt>. Note that if the key is not returned or freed -- that operation must be performed independantly if necessary. Also, please refer to the description of <ident>linkedlist_iterate</ident> for important information regarding the removal of elements during an iteration.
+</desc>
+	<ret>The <ident>linkedlist_remove_data</ident> function returns the data pointer removed from the list.</ret>
+</meth>
+<meth name="remove_last">
+	<pre>void *linkedlist_remove_last(struct linkedlist *l);</pre>
+	<param name="l"/>
+	<desc>
+The <ident>linkedlist_remove_last</ident> function removes the last data pointer in the list.
+	</desc>
+	<ret>
+The <ident>linkedlist_remove_last</ident> function returns the data pointer removed from the list.
+	</ret>
+</meth>
+</group>
+
+</interface>

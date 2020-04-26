@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Suba</TITLE>
+</HEAD>
+<BODY>
+<H1>15. Suba</H1>
+The <I>suba</I>(3m) module provides a "sub-allocator" that can allocate and free memory from a larger fixed size chunk of memory. This allocator is lock-less but reentrant meaning it will be faster but more consideration is necessary for coordinating multiple threads as opposed to the standard C library allocator.
+<p>
+</p>
+All objects within the allocator are tracked using offsets relative to the beginning of the sub-allocator and all offsets and state are stored as part of the memory being sub-allocated. Thus the memory backing the allocator can be copied and deleted without being deinitialized to achive a variety of useful effects. The memory of an allocator can be copied temporarily to implement transaction control or checkpoints. Complex data structures can be manipulated by multiple processes in shared memory. When used with the POSIX <I>mmap</I>(2) function (or Windows equivalent), sophisticated (but non-portable) data archives can be created easily.
+<p>
+</p>
+A very simple and effective use for <I>suba</I>(3m) is as a sub-allocator of stack memory that is implicitly freed when the function returns as the follow code example illustrates:
+<PRE>
+
+  int
+  myfn(void)
+  {
+      unsigned char chunk[0x3FFF]; /* 16K */
+      struct allocator *al = suba_init(chunk, 0x3FFF, 1, 0);
+      struct hashmap map;
+  
+      hashmap_init(&amp;map, 0, hash_text, cmp_text, NULL, al);
+  
+      /* use hashmap and allocator ... */
+  
+      return 0; /* no cleanup necessary; all memory on stack. */
+  }
+  </PRE>
+<H3>15.1. Suba functions</H3>
+These functions should be used to initialize a new or existing <TT>suba</TT> allocator as well as to allocate and free objects from the allocator.
+<p>
+</p>
+<i>Important:</i> When sharing objects between multiple processes it is important to note that it is not possible to share pointers between processes[1]. However, if the pointer points to an object allocated from a <TT>suba</TT> allocator it is possible to convert the pointer to an offset relative to the beginning of the sub-allocator using the <TT>suba_ref</TT> function. The <tt>ref_t</tt> returned can be passed between processes or stored in a file and later converted back to a valid pointer using the analygous <TT>suba_addr</TT> function.
+<p>
+</p>
+<small>[1] Actually, it is possible to share pointers between multiple processes if the pointer points to shared memory and it can be guaranteed that that memory is mapped at the same address in each process. The <def>mmap</def>(2) function accepts a parameter specifying the address at which the memory should be mapped but this is only a hint and use of that option is discouraged. Memory mapped in a parent process, however, will be inherited by children which does meet this guarantee. Pointers to constant data inherited by child processes may also be referenced even though it may not be shared.
+</small>
+<A name="init"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>suba_init</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/suba.h&gt;
+  struct allocator *suba_init(void *mem, size_t size, int rst, size_t mincell);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>suba_init</TT> function initializes a new sub-allocator or attaches to an existing allocator. The memory pointed to by the <tt>mem</tt> parameter must be at least <tt>size</tt> bytes. When the <tt>rst</tt> parameter is non-zero, the beginning of this memory is "reset" meaning it is initialized with the <tt>struct allocator</tt> structure (discarding any existing allocation state). The remaining memory, which is <tt>size</tt> bytes minus the header, constitutes the "heap" from which memory will be allocated and freed. If the <tt>rst</tt> parameter is zero, the existing header is used which presumably came from shared memory or a disk file. If the <tt>mincell</tt> parameter is non-zero, no memory "cell" will be less than this value (i.e. if <tt>mincell</tt> is 32 alloc-ing 5 bytes results in a 32 byte cell to back it). The <tt>mincell</tt> parameter will be increased to accomodate memory alignment requirements if necessary. Larger values for <tt>mincell</tt> can be faster but results in poorer memory utilization.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>suba_init</TT> function returns a sub-allocator that can be used directly with the other suba(3m) functions or with the more general allocator(3m) functions used by other modules in this package. If an error occurs a null pointer is returned and <tt>errno</tt> is set accordingly.
+	<P>
+</P>
+<A name="alloc"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>suba_alloc</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/suba.h&gt;
+  void *suba_alloc(struct allocator *suba, size_t size, int zero);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>suba_alloc</TT> function returns a pointer to memory of <tt>size</tt> bytes from the sub-allocator identified by the <tt>suba</tt> parameter. If the <tt>zero</tt> parameter is non-zero, the memory will be set to zero.
+	<BR>
+<P>
+</P>
+<A name="free"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>suba_free</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/suba.h&gt;
+  int suba_free(struct allocator *suba, void *ptr);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>suba_free</TT> function frees the memory pointed to by <tt>ptr</tt> back into the allocator identified by <TT>suba</TT> parameter.
+	<BR>
+<B>Returns</B>
+<BR>
+On success, 0 is returned. On error, -1 is returned, and <tt>errno</tt> is set appropriately.
+	<P>
+</P>
+<A name="addr"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>suba_addr</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/suba.h&gt;
+  void *suba_addr(const struct allocator *suba, const ref_t ref);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>suba_addr</TT> function converts an offset, relative to the beginning of the sub-allocator, of the object idenfied by the <tt>ref</tt> parameter to a pointer in the current processes address space. This function is equivalent to the expression <tt>(char *)suba + ref</tt> but with bounds checking.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>suba_addr</TT> function returns a pointer to the object referenced by <tt>ref</tt> or <tt>NULL</tt> if the reference was invalid.
+	<P>
+</P>
+<A name="ref"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>suba_ref</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/suba.h&gt;
+  ref_t suba_ref(const struct allocator *suba, const void *ptr);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>suba_ref</TT> function converts a pointer <tt>ptr</tt> that points to an object allocated from the sub-allocator identified by the <tt>suba</tt> parameter to an offset relative to the beginning of the sub-allocator. This function is equivalent to the expression <tt>(char *)ptr - (char *)suba</tt> but with bounds checking.
+See the <i>Suba functions</i> section for a description of when it is necessary to convert pointer to a reference.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>suba_ref</TT> function returns an offset to the object pointed to by <tt>ptr</tt> or 0 if the pointer was invalid.
+	<P>
+</P>
+<HR NOSHADE>
+<small>
+	Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

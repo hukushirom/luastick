@@ -1,0 +1,153 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Allocator</TITLE>
+</HEAD>
+<BODY>
+<H1>1. Allocator</H1>
+The <I>allocator</I>(3m) module defines an interface for allocating and freeing memory without defining the implementation.
+Modules that implement this interface such as <I>suba</I>(3m) provide a <tt>struct allocator *</tt> that can be used with these functions. Modules that utilize this interface such as <I>varray</I>(3m) accept the specification of an allocator. This abstraction permits changing the memory management behavior of a program by switching allocators.
+<H3>1.1. </H3>
+<A name="Definitions"></A>
+<P>
+<B CLASS="tfc">Definitions</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/allocator.h&gt;
+	
+  struct allocator *stdlib_allocator;
+  
+  typedef int (*reclaim_fn)(struct allocator *al, void *arg, int attempt);
+  typedef void *(*new_fn)(void *context, size_t size, int flags); 
+  typedef int (*del_fn)(void *context, void *object);
+  </PRE>
+<B>Description</B>
+<BR>
+The global <TT>stdlib_allocator</TT> provides an allocator that uses the <I>malloc</I>(3), <I>calloc</I>(3), and <I>free</I>(3) functions from the standard C library.
+<p>
+</p>
+The <tt>reclaim_fn</tt> definition is to be used with the <tt>allocator_set_reclaim</tt> function. The <tt>new_fn</tt> and <tt>del_fn</tt> functions are used with other modules like <TT>pool</TT>(3m). With a cast it is reasonable to use the <tt>allocator_alloc</tt> and <tt>allocator_free</tt> functions where <tt>new_fn</tt> and <tt>del_fn</tt> functions might be used.
+<BR>
+</P>
+<H3>1.2. Allocator functions</H3>
+These functions should be used to allocate and free memory using an <I>allocator</I>(3m).
+<A name="alloc"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>allocator_alloc</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/allocator.h&gt;
+  void *allocator_alloc(struct allocator *al, size_t size, int flags);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>allocator_alloc</TT> function allocates and returns at least <tt>size</tt> bytes of memory from the allocator <tt>al</tt>. The memory will be aligned appropriately for the platform. The <tt>flags</tt> parameter permits additional allocator specific information to be specified. The <tt>stdlib_allocator</tt> and <I>suba</I>(3m) allocator support the value 1 for this flag to indicate that the memory should be set to zero (like <tt>calloc</tt>). If <tt>al</tt> is <TT>NULL</TT> memory is allocated from the <tt>stdlib_allocator</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>allocator_alloc</TT> function returns the allocated memory or <TT>NULL</TT> if an error occured in which case <TT>errno</TT> will be set appropriately. If <tt>al</tt> is <TT>NULL</TT> the memory will be freed from the <tt>stdlib_allocator</tt>.
+	<P>
+</P>
+<A name="free"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>allocator_free</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/allocator.h&gt;
+  int allocator_free(struct allocator *al, void *obj);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>allocator_free</TT> function releases the memory pointed to by <tt>obj</tt> back to the allocator <tt>al</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>allocator_free</TT> function returns zero upon success or -1 if an error occured in which case <TT>errno</TT> is set appropriately.
+	<P>
+</P>
+<A name="realloc"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>allocator_realloc</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/allocator.h&gt;
+  void *allocator_realloc(struct allocator *al, void *obj, size_t size);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>allocator_realloc</TT> function resizes the memory pointed to by <tt>ptr</tt> using the allocator <tt>al</tt>. The old portion of the memory will be unchanged up to <tt>size</tt> bytes. If <tt>obj</tt> is <TT>NULL</TT>, <tt>size</tt> bytes of memory will be allocated. If <tt>size</tt> is 0, <tt>obj</tt> will be freed. The pointer to <tt>obj</tt> must have been allocated previously from the allocator <tt>al</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>allocator_realloc</TT> function returns a pointer to the resized memory which may not equal <tt>obj</tt>. If an error occurs, <TT>NULL</TT> is returned and <TT>errno</TT> is set appropriately.
+	<P>
+</P>
+<A name="set_reclaim"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>allocator_set_reclaim</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/allocator.h&gt;
+  void allocator_set_reclaim(struct allocator *al, reclaim_fn recl, void *arg);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>allocator_set_reclaim</TT> function sets the function that will be called to reclaim memory when it becomes scarce. The reclaim function will be called with the provided <tt>arg</tt> parameter and may be called more than once indicating memory should be freed more agressively with each call. The <tt>attempt</tt> parameter indicates how may times the reclaim function has been called without satisfying the allocators current need. The reclaim function should return a positive value to indicate that progress in freeing memory has occured. If the reclaim function returns 0 it will not be called again and the allocation that created the memory pressure will return failure. Currently only the <TT>suba</TT>(3m) module will take advantage of this feedback mechanism. See also the <tt>clean</tt> functions of other modules in this package.
+	<BR>
+<P>
+</P>
+<HR NOSHADE>
+<small>
+	Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

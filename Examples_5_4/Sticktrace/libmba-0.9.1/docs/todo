@@ -1,0 +1,8 @@
+$ ../midlc -t c -o lsarpc ../idl/lsarpc.idl 
+src/hashmap.c:362:hashmap_put: File exists
+  src/emit_svr_stub_c.c:138:collect_imported_protos: 
+  src/emit_svr_stub_c.c:160:emit_imported_protos: 
+  src/emit_svr_stub_c.c:192:emit_svr_stub_c: 
+  src/midlc.c:202:run_one: 
+  src/midlc.c:307:run: 
+  src/midlc.c:423:main:

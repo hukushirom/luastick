@@ -1,0 +1,7 @@
+err:
+	@echo This Makefile should not be invoked directly. Just run make. It will call this Makefile where necessary.
+
+platform_specific_install:
+	-/sbin/ldconfig $(libdir)
+
+platform_specific_uninstall:

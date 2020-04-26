@@ -1,0 +1,277 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Stack</TITLE>
+</HEAD>
+<BODY>
+<H1>14. Stack</H1>
+The stack functions manipulate a simple LIFO stack of pointers to objects but the underlying array will grow and shrink as storage requirements change.
+<H3>14.1. Memory management functions</H3>These functions should be used to create and destroy <I>stack</I> objects.<A name="init"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_init</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  int stack_init(struct stack *s, unsigned int max_size, struct allocator *al);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>stack_init</TT> function initializes the stack <tt>s</tt> and saving a pointer to the <I>allocator</I>(3m) <tt>al</tt> which will be used to allocate memory for susequent stack operations. The stack will accept no more than <tt>max</tt> data pointers. If <tt>max</tt> is 0, <TT>INT_MAX</TT> elements may be pushed onto the stack.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>stack_init</TT> function returns -1 if <tt>s</tt> is a null pointer. Otherwise 0 is returned.
+	<P>
+</P>
+<A name="deinit"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_deinit</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  int stack_deinit(struct stack *s, del_fn data_del, void *context)<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>stack_deinit</TT> function deinitializes the stack <tt>s</tt>. If the <tt>data_del</tt> function is not <TT>NULL</TT>, it will be called with the <tt>context</tt> parameter and each element on the stack.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>stack_deinit</TT> function returns 0 if the stack was successfully deinitialized or -1 if the <tt>data_del</tt> function returned anything other than 0 or if an error occured attempting to free the memory backing the stack.
+	<P>
+</P>
+<A name="new"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_new</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  struct stack *stack_new(unsigned int max_size, struct allocator *al);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+Create a new <I>stack</I>(3) object that will accept no more than <tt>max_size</tt> data pointers. If <tt>max_size</tt> is 0, the stack will accept at most <TT>INT_MAX</TT> elements.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>stack_new</TT> function returns a new <TT>stack</TT> object or <TT>NULL</TT> of memory could not be allocated in which case <tt>errno</tt> will be set to <TT>ENOMEM</TT>.
+	<P>
+</P>
+<A name="del"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_del</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  int stack_del(struct stack *s, del_fn data_del, void *context);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>stack_del</TT> function deletes the stack object <tt>s</tt>. If the <tt>data_del</tt> function is not <TT>NULL</TT>, it will be called with each remaining element before deallocating the stack <tt>s</tt> itself.
+	<BR>
+<P>
+</P>
+<A name="clear"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_clear</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  int stack_clear(struct stack *s, del_fn data_del, void *context)<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>stack_clear</TT> function will remove all elements on the stack. If the <tt>data_del</tt> function is not <TT>NULL</TT> it will be called with each remaining element.
+	<BR>
+<P>
+</P>
+<A name="clean"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_clean</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  int stack_clean(struct stack *s)<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>stack_clean</TT> function reallocates the array backing the stack to be exactly the number of elements necessary. A <I>stack</I>(3m) will automatically shrink at an appropriate point but this function might be called by an <I>allocator</I>(3m) <TT>reclaim_fn</TT> function.
+	<BR>
+<P>
+</P>
+<H3>14.2. Stack functions</H3>
+<A name="push"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_push</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  int stack_push(struct stack *s, void *data);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>stack_push</TT> function pushes the element <tt>data</tt> onto the stack identified by <tt>s</tt>;
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>stack_push</TT> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the data pointer was successfully pushed onto the stack (e.g. <TT>ERANGE</TT> if the stack is full).
+	<P>
+</P>
+<A name="pop"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_pop</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  void *stack_pop(struct stack *s);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>stack_pop</TT> function removes the last element pushed onto the stack <tt>s</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>stack_pop</TT> function returns the data pointer popped off the stack.
+	<P>
+</P>
+<A name="is_empty"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_is_empty</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  int stack_is_empty(const struct stack *s);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+Returns non-zero if the stack <tt>s</tt> has no elements and 0 otherwise.
+	<BR>
+<P>
+</P>
+<A name="size"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_size</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  unsigned int stack_size(const struct stack *s);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>stack_size</TT> function returns the number of elements currently on the stack.
+	<BR>
+<P>
+</P>
+<A name="iterate"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_iterate</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  void stack_iterate(void *s, iter_t *iter);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+Enumerate each element on the stack. Call <TT>stack_iterate</TT> to initialize the <tt>iter</tt> object to point to the bottom of the stack (the first element pushed onto the stack) and call <TT>stack_next</TT> to retrieve each data pointer. When the top of the stack has been reached, <TT>stack_next</TT> will return <TT>NULL</TT>.
+	<BR>
+<P>
+</P>
+<A name="next"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_next</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  void *stack_next(void *s, iter_t *iter);<BR>
+</PRE>
+<B>Returns</B>
+<BR>
+The <TT>stack_next</TT> function returns the next data pointer on the stack or <TT>NULL</TT> if the top of the stack has been exceeded.
+	<P>
+</P>
+<A name="peek"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>stack_peek</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/stack.h&gt;
+  void *stack_peek(struct stack *s);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>stack_peek</TT> function returns the element at the top of the stack <tt>s</tt> or <TT>NULL</TT> of the stack is empty. The data pointer is not removed.
+	<BR>
+<P>
+</P>
+<HR NOSHADE>
+<small>
+	Copyright 2002 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

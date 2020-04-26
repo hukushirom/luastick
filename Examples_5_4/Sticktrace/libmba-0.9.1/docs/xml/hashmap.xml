@@ -1,0 +1,226 @@
+<interface name="hashmap" short="a rehashing hashmap">
+
+<comments>
+Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/hashmap.h</include>
+
+<title>Hashmap</title>
+<desc>
+A  <def>hashmap</def>(3m)  object  associates  keys  with data pointers. Large numbers of elements may be stored and retrieved efficiently.
+<p/>
+Memory management of keys and data pointers is the resposibility of the user although <ident>del_fn</ident> function pointers (defined in <ident>allocator</ident>(3m)) may be specified with some <ident>hashmap</ident> functions to assist the user with this task.
+</desc>
+
+<group>
+<title>Definitions</title>
+<code>
+<title>Hashmap Definitions</title>
+<desc>
+<pre>
+typedef unsigned long (*hash_fn)(const void *object, void *context);
+typedef int (*cmp_fn)(const void *object1, const void *object2, void *context);
+
+unsigned long hash_text(const void *text, void *context);
+unsigned long cmp_text(const void *text1, const void *text2, void *context);
+</pre>
+The <ident>hash_text</ident> function is a suitable <ident>hash_fn</ident> for character strings. This function is actually a macro for either <ident>hash_str</ident> or <ident>hash_wcs</ident> that accept multi-byte or wide character strings depending on wheather or not <tt>USE_WCHAR</tt> is defined.
+<p/>
+The <ident>cmp_text</ident> function is a suitable <ident>cmp_fn</ident> for character strings. This function is actually a macro for either <ident>cmp_str</ident> or <ident>cmp_wcs</ident> that accept multi-byte or wide character strings depending on wheather or not <tt>USE_WCHAR</tt> is defined.
+</desc>
+</code>
+</group>
+
+<group>
+<title>Memory management functions</title>
+<desc>These functions should be used to create and destroy <def>hashmap</def> objects.</desc>
+<meth name="init" wrap="true">
+	<pre>int hashmap_init(struct hashmap *h, unsigned int load_factor, hash_fn hash, cmp_fn cmp, void *context, struct allocator *al);</pre>
+	<param name="h"/>
+	<param name="load_factor"/>
+	<param name="hash"/>
+	<param name="cmp"/>
+	<param name="context"/>
+	<param name="al"/>
+	<desc>
+The <ident>hashmap_init</ident> function initializes the memory at <tt>h</tt> as a <ident>hashmap</ident> with no elements. The <tt>load_factor</tt> parameter must be an integer between 1 and 100 indicating when the map should be resized. If a value of 0 is specified, the default value of 75 will be used meaning the map will be increased when 75 of every 100 spaces for elements are occupied.
+<p/>
+If the <tt>hash</tt> parameter is not <ident>NULL</ident> it will be used to generate a hash value given a key and the specified <tt>context</tt> object. Given a set of keys the <tt>hash</tt> function should generate an even distribution of values. If the <tt>hash</tt> parameter is <ident>NULL</ident> a key's memory address will be used as it's hash value.
+<p/>
+If the <tt>cmp</tt> parameter is not <ident>NULL</ident> it will used to compare two keys for equality. This function should return 0 if two keys are equal and non-zero if they are not. If the <tt>cmp</tt> parameter is <ident>NULL</ident> the memory addresses of the two keys will be compared.
+<p/>
+The <tt>al</tt> parameter is an <ident>allocator</ident>(3m) from which all memory associated with this <ident>hashmap</ident> should be allocated. As with the <ident>allocator</ident> functions, a <ident>NULL</ident> allocator indicates the <ident>stdlib_allocator</ident> should be used.
+<p/>
+The following example illustrates how to initialize a <ident>hashmap</ident> and use it to store the object <tt>data</tt> associated with the character string &quot;name&quot;.
+<pre>
+struct hashmap hm;
+struct foo data, *out;
+hashmap_init(&amp;hm,
+	0,                             /* default load factor of 75 */
+	hash_text,                    /* default text hash function */
+	cmp_text,                  /* default text compare function */
+	NULL, /* hash_fn and cmp_fn function do not require context */
+	NULL);                          /* use the stdlib_allocator */
+hashmap_put(&amp;hm, "name", &amp;data);
+out = hashmap_get(&amp;hm, "name");
+/* out now points to data */
+</pre>
+	</desc>
+	<ret>
+The <ident>hashmap_init</ident> function returns 0 on success or -1 for failure in which case <tt>errno</tt> will be set to an appropriate value.
+	</ret>
+</meth>
+<meth name="deinit" wrap="true">
+	<pre>int hashmap_deinit(struct hashmap *h, del_fn key_del, del_fn data_del, void *context);</pre>
+	<param name="h"/>
+	<param name="key_del"/>
+	<param name="data_del"/>
+	<param name="context"/>
+	<desc>
+The <ident>hashmap_deinit</ident> function deinitializes the <ident>hashmap</ident> <tt>h</tt>. If the <tt>key_del</tt> or <tt>data_del</tt> functions are not <ident>NULL</ident> they will be called with the <tt>context</tt> object and each key and/or data object in the map. Any memory associated with the <ident>hashmap</ident> will be released.
+	</desc>
+	<ret>
+The <ident>hashmap_deinit</ident> function returns 0 on success or -1 for failure in which case <tt>errno</tt> will be set to an appropriate value.
+	</ret>
+</meth>
+<meth name="new">
+	<pre>struct hashmap *hashmap_new(hash_fn hash, cmp_fn cmp, void *context, struct allocator *al);</pre>
+	<param name="hash"/>
+	<param name="cmp"/>
+	<param name="context"/>
+	<param name="al"/>
+	<desc>
+The <ident>hashmap_new</ident> function allocates memory for a new <ident>hashmap</ident> object and initializes it with <ident>hashmap_init</ident>
+	</desc>
+	<ret>
+The <ident>hashmap_new</ident> function returns a new <tt>struct hashmap *</tt> object that contains no elements or <ident>NULL</ident> if the operation failed in which case <tt>errno</tt> will be set to an appropriate value.
+	</ret>
+</meth>
+<meth name="del">
+	<pre>int hashmap_del(struct hashmap *h, del_fn key_del, del_fn data_del, void *context);</pre>
+	<param name="h"/>
+	<param name="key_del"/>
+	<param name="data_del"/>
+	<param name="context"/>
+	<desc>
+The <ident>hashmap_del</ident> function deinitializes the <ident>hashmap</ident> <tt>h</tt> with the <ident>hashmap_deinit</ident> function and then releases the <tt>h</tt> object itself.
+	</desc>
+	<ret>
+The <ident>hashmap_del</ident> function returns 0 on success or -1 for failure in which case <tt>errno</tt> will be set to an appropriate value.
+	</ret>
+</meth>
+<meth name="clear">
+	<pre>int hashmap_clear(struct hashmap *h, del_fn key_del, del_fn data_del, void *context);</pre>
+	<param name="h"/>
+	<param name="key_del"/>
+	<param name="data_del"/>
+	<param name="context"/>
+	<desc>
+The <ident>hashmap_clear</ident> function clears all elements from the <ident>hashmap</ident> <tt>h</tt>.
+If the <tt>key_del</tt> or <tt>data_del</tt> functions are not <ident>NULL</ident> they will be called with the <tt>context</tt> object and each key and/or data object in the map.
+	</desc>
+	<ret>
+The <ident>hashmap_clear</ident> function returns 0 on success or -1 for failure in which case <tt>errno</tt> will be set to an appropriate value.
+	</ret>
+</meth>
+<meth name="clean">
+	<pre>int hashmap_clean(struct hashmap *h);</pre>
+	<param name="h"/>
+	<desc>
+The <ident>hashmap_clean</ident> function will release excess memory allocated by the <ident>hashmap</ident> <tt>h</tt>. See the <ident>allocator_set_reclaim</ident> function.
+	</desc>
+	<ret>
+The <ident>hashmap_clean</ident> function returns the number of unused elements released (possibly 0) or -1 if an error occured in which case <tt>errno</tt> will be set to an appropriate value.
+	</ret>
+</meth>
+</group>
+
+<group>
+<title>Map functions</title>
+
+<meth name="put">
+	<pre>int hashmap_put(struct hashmap *h, void *key, void *data);</pre>
+	<param name="h"/>
+	<param name="key"/>
+	<param name="data"/>
+	<desc>
+Put a data pointer into the map with the key <tt>key</tt>. If an element with the same key already exists in the map, -1 will be returned and <tt>errno</tt> will be set to <tt>EEXIST</tt>. If another error occurs, -1 will be returned and <tt>errno</tt> will be set to an appropriate value.
+	</desc>
+</meth>
+
+<meth name="get">
+	<pre>void *hashmap_get(const struct hashmap *h, const void *key);</pre>
+	<param name="h"/>
+	<param name="key"/>
+	<desc>
+Retrieve a data pointer from the map with the key <tt>key</tt>.
+	</desc>
+	<ret>
+The <ident>hashmap_get</ident> function returns the data pointer being retrieved or <ident>NULL</ident> if the element was not found. <ident>NULL</ident> will also be returned if the <tt>h</tt> or <tt>key</tt> parameters are <tt>NULL</tt> but this function does not set <tt>errno</tt> to any value.
+	</ret>
+</meth>
+
+<meth name="is_empty">
+	<pre>int hashmap_is_empty(struct hashmap *h);</pre>
+	<param name="h"/>
+	<desc>
+Returns 1 if the map is empty and 0 otherwise.
+	</desc>
+</meth>
+
+<meth name="size">
+	<pre>unsigned int hashmap_size(struct hashmap *h);</pre>
+	<param name="h"/>
+	<desc>
+Returns the number of data pointers in the map.
+	</desc>
+	<ret>
+The <ident>hashmap_size</ident> function returns the number of data pointers in the map. If <tt>h</tt> is <tt>NULL</tt>, zero is returned.
+	</ret>
+</meth>
+
+<meth name="iterate">
+	<pre>void hashmap_iterate(void *h, iter_t *iter);</pre>
+	<param name="h"/>
+	<param name="iter"/>
+	<desc combine="next">
+Enumerate each key in the map. The <tt>hashmap_iterate</tt> function initializes the <tt>iter</tt> object to point to the  beginning  of the map. With each call to <tt>hashmap_next</tt>, a key will be returned.  When  all  keys  have been enumerated, <tt>hashmap_next</tt> will return <tt>NULL</tt>. Keys are not returned in any particular order.
+<p/>
+Modifying the map during the enumeration is permitted however should adding or removing data cause the table to be resized, not all keys may be enumerated and some keys may be returned more than once. Therefore, to make multiple modifications during the enumeration it may be desirable to first create a snapshot of the keys in an array or list.
+	</desc>
+</meth>
+
+<meth name="next">
+	<pre>void *hashmap_next(void *h, iter_t *iter);</pre>
+	<param name="h"/>
+	<param name="iter"/>
+	<ret>
+The <ident>hashmap_next</ident> function returns the next key in the map or <tt>NULL</tt> if all keys have been enumerated.
+	</ret>
+</meth>
+
+<meth name="remove">
+	<pre>int hashmap_remove(struct hashmap *h, void **key, void **data);</pre>
+	<param name="h"/>
+	<param name="key"/>
+	<param name="data"/>
+	<desc>
+The <ident>hashmap_remove</ident> function removes the element associated with <tt>key</tt> from the <ident>hashmap</ident> <tt>h</tt> and stores pointers to the original key and data in the provided <tt>key</tt> and <tt>data</tt> parameters.
+<p/>
+The following is an example of removing an element from a <ident>hashmap</ident>.
+<pre>
+char *key = name;
+struct foo *data;
+hashmap_remove(hm, (void **)&amp;key, (void **)&amp;data);
+/* free data if necessary */
+</pre>
+	</desc>
+	<ret>
+The <ident>hashmap_remove</ident> function returns 0 on success or -1 for failure in which case <tt>errno</tt> will be set to an appropriate value.
+	</ret>
+</meth>
+</group>
+
+</interface>
+

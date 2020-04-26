@@ -1,0 +1,221 @@
+Just registering message numbers and using the MSG, MNO, MNF macros is not that useful by itself. In this example we explore how to use the other msgno macros and how msgno is used greatest potential.
+
+This example explores a program that is supposed to query a database with Structured Query Language (SQL). Unfortunately it is riddled with checks that tend to cause the code to return errors. For this reason, it isn't really a very good database program but it is great for illustrating how to use msgno.
+
+The db.h and db.c interface for our database library is shown below. It uses the files sock.h and sock.c for handing the network sockets. The sql.c module calls the db code which calls the sock code. The db and sock interfaces are supposed to represent shared libraries. For simplicity, they will not be compiled as such in this example but it would still work fine if they had been. Each of these "libraries" registers msgno messages for themselves using msgno_add_codes after which the msgno macros can be used externally to build and dispatch messages (probably to stderr).
+
+
+/* db.h - a database interface
+ */
+
+#ifndef DB_H
+#define DB_H
+
+#include <mba/msgno.h>
+#include "sock.h"
+
+extern int dberr;
+extern struct msgno_entry db_codes[];
+
+#define DB_INVALID_NAME db_codes[0].msgno
+#define DB_EXEC_ERR     db_codes[1].msgno
+
+#define PORT 900
+
+struct db {
+	const char *name;
+	struct sock *conn;
+};
+
+struct db_result_set {
+} rs;
+
+struct db *db_open(const char *name);
+int db_close(struct db *d);
+struct db_result_set *db_execute_query(struct db *d, const char *sql);
+
+#endif /* DB_H */
+
+/* db.c - the database interface implementation
+ */
+
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include "db.h"
+
+int dberr;
+
+struct msgno_entry db_codes[] = {
+	{ 1, "The database identifier is malformed" },
+	{ 0, "SQL error" },
+	{ 0, NULL}
+};
+
+struct db *
+db_open(const char *name)
+{
+	struct db *d;
+
+	msgno_add_codes(db_codes);
+
+	if (name == NULL) {
+		dberr = EINVAL;
+		PMNO(dberr);
+		return NULL;
+	}
+
+	if (*name < 103) {
+		dberr = DB_INVALID_NAME;
+		PMNF(dberr, ": '%s'", name);
+		return NULL;
+	}
+
+	if ((d = malloc(sizeof *d)) == NULL ||
+				(d->name = strdup(name)) == NULL) {
+		dberr = errno;
+		PMNO(dberr);
+		return NULL;
+	}
+	if ((d->conn = sock_open(name, PORT)) == NULL) {
+		dberr= sockerr;
+		AMSG("");
+		free(d);
+		return NULL;
+	}
+
+	return d;
+}
+int
+db_close(struct db *d)
+{
+	if (d == NULL) {
+		dberr = EINVAL;
+		PMNO(dberr);
+		return -1;
+	}
+	free(d);
+	return 0;
+}
+struct db_result_set *
+db_execute_query(struct db *d, const char *sql)
+{
+	if (*d->name > 118 && *d->name < 121) {
+		dberr = DB_EXEC_ERR;
+		PMNF(dberr, ": %s", sql);
+		return NULL;
+	}
+	return &rs;
+}
+
+/* sock.h - a network socket interface
+ */
+
+#include <stdlib.h>
+#include "sock.h"
+
+int sockerr;
+
+struct msgno_entry sock_codes[] = {
+	{ 1, "Failed to bind interface" },
+	{ 0, "Unknown host" },
+	{ 0, NULL }
+};
+
+struct sock *
+sock_open(const char *host, int port)
+{
+	msgno_add_codes(sock_codes);
+
+	if (*host > 103 && *host < 117) {
+		sockerr = SOCK_BIND_ERR;
+		PMNF(sockerr, ": host=%s,port=%u", host, port);
+		return NULL;
+	}
+
+	return &s;
+}
+
+int
+sock_write(const char *data)
+{
+	return 1;
+}
+
+/* sock.h - a network socket interface
+ */
+
+#ifndef SOCK_H
+#define SOCK_H
+
+#include <mba/msgno.h>
+
+extern int sockerr;
+extern struct msgno_entry sock_codes[];
+
+#define SOCK_BIND_ERR    sock_codes[0].msgno
+#define SOCK_UKNOWN_HOST sock_codes[1].msgno
+
+struct sock {
+} s;
+
+struct sock *sock_open(const char *host, int port);
+int sock_write(const char *data);
+
+#endif /* SOCK_H */
+
+/* sql.c - an sql program that queries a database
+ */
+
+#include <stdlib.h>
+#include <string.h>
+#include "db.h"
+
+struct msgno_entry mydb_codes[] = {
+	{ 1, "Must provide a database name like 'www', 'bar', or 'hal', etc" },
+	{ 0, "Failed to open database" },
+	{ 0, "Failed to close database" },
+	{ 0, "Database transaction failed" },
+	{ 0, NULL }
+};
+
+#define MYDB_NO_ARG    mydb_codes[0].msgno
+#define MYDB_OPEN_ERR  mydb_codes[1].msgno
+#define MYDB_CLOSE_ERR mydb_codes[2].msgno
+#define MYDB_TRANS_ERR mydb_codes[3].msgno
+
+int
+main(int argc, char *argv[])
+{
+	struct db *d;
+	struct db_result_set *rs;
+
+	msgno_add_codes(mydb_codes);
+
+	if (argc < 2) {
+		MNO(MYDB_NO_ARG);
+		return EXIT_FAILURE;
+	}
+
+	d = db_open(argv[1]);
+	if (d == NULL) {
+		MNF(MYDB_OPEN_ERR, " '%s'", argv[1]);
+		return EXIT_FAILURE;
+	}
+
+	rs = db_execute_query(d, "select * from emp");
+	if (rs == NULL) {
+		MNO(MYDB_TRANS_ERR);
+		db_close(d);
+		return EXIT_FAILURE;
+	}
+
+	if (db_close(d) == -1) {
+		MNF(MYDB_CLOSE_ERR, " '%s'", argv[1]);
+		return EXIT_FAILURE;
+	}
+
+	MNO(0); /* Success */
+
+	return EXIT_SUCCESS;
+}

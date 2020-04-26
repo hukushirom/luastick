@@ -1,0 +1,8 @@
+err:
+	@echo This Makefile should not be invoked directly. Just run make. It will call this Makefile where necessary.
+
+platform_specific_install:
+	cd $(mandir)/man3 && gunzip -f $(MANGZ)
+
+platform_specific_uninstall:
+	./mktool -u $(MAN) $(mandir)/man3

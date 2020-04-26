@@ -1,0 +1,28 @@
+INSTALLATION
+
+The  libmba-0.7.0.zip  package  contains  a  DLL that can be copied into an
+applications  path  (e.g. c:\winnt\system32) and the libmba source code. To
+build a debug DLL use nmake: 
+
+  > cd libmba-0.7.0
+  > nmake -f Makefile.msvc
+
+To  build the release DLL switch cflags variables in Makefile.msvc. To make
+the static .LIB just do: 
+
+  > nmake -f Makefile.msvc libmba.lib
+
+To install the dll in c:\winnt\system32 run:
+
+  > nmake -f Makefile.msvc install
+
+The  domnode  module  (which has been deprecated but is still in the source
+tree)  will  read  UTF-8  encoded XML files but it currently does not write
+UTF-8  unless  the  program  is running in a UTF-8 locale. Windows does not
+support a UTF-8 locale. 
+
+To  execute  cl,  link, and implib from the commandline (as nmake does with
+Makefile.msvc)  it  is  necessary  to  either  check  "Register environment
+variables"  when  you install MSVC or run the VCVARS32.BAT file in VC98\BIN
+but  it  will  be necessary to re-run setup and check "Register environment
+variables" for the changes to persist. 

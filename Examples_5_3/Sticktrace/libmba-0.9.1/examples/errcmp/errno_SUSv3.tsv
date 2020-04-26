@@ -1,0 +1,79 @@
+E2BIG	0	Argument list too long.
+EACCES	0	Permission denied.
+EADDRINUSE	0	Address in use.
+EADDRNOTAVAIL	0	Address not available.
+EAFNOSUPPORT	0	Address family not supported.
+EAGAIN	0	Resource unavailable, try again [3]
+EALREADY	0	Connection already in progress.
+EBADF	0	Bad file descriptor.
+EBADMSG	0	Bad message.
+EBUSY	0	Device or resource busy.
+ECANCELED	0	Operation canceled.
+ECHILD	0	No child processes.
+ECONNABORTED	0	Connection aborted.
+ECONNREFUSED	0	Connection refused.
+ECONNRESET	0	Connection reset.
+EDEADLK	0	Resource deadlock would occur.
+EDESTADDRREQ	0	Destination address required.
+EDOM	0	Mathematics argument out of domain of function.
+EDQUOT	0	Reserved.
+EEXIST	0	File exists.
+EFAULT	0	Bad address.
+EFBIG	0	File too large.
+EHOSTUNREACH	0	Host is unreachable.
+EIDRM	0	Identifier removed.
+EILSEQ	0	Illegal byte sequence.
+EINPROGRESS	0	Operation in progress.
+EINTR	0	Interrupted function.
+EINVAL	0	Invalid argument.
+EIO	0	I/O error.
+EISCONN	0	Socket is connected.
+EISDIR	0	Is a directory.
+ELOOP	0	Too many levels of symbolic links.
+EMFILE	0	Too many open files.
+EMLINK	0	Too many links.
+EMSGSIZE	0	Message too large.
+EMULTIHOP	0	Reserved.
+ENAMETOOLONG	0	Filename too long.
+ENETDOWN	0	Network is down.
+ENETRESET	0	Connection aborted by network.
+ENETUNREACH	0	Network unreachable.
+ENFILE	0	Too many files open in system.
+ENOBUFS	0	No buffer space available.
+ENODATA	0	XSR No message is available on the STREAM head read queue.
+ENODEV	0	No such device.
+ENOENT	0	No such file or directory.
+ENOEXEC	0	Executable file format error.
+ENOLCK	0	No locks available.
+ENOLINK	0	Reserved.
+ENOMEM	0	Not enough space.
+ENOMSG	0	No message of the desired type.
+ENOPROTOOPT	0	Protocol not available.
+ENOSPC	0	No space left on device.
+ENOSR	0	XSR No STREAM resources.
+ENOSTR	0	XSR Not a STREAM.
+ENOSYS	0	Function not supported.
+ENOTCONN	0	The socket is not connected.
+ENOTDIR	0	Not a directory.
+ENOTEMPTY	0	Directory not empty.
+ENOTSOCK	0	Not a socket.
+ENOTSUP	0	Not supported.
+ENOTTY	0	Inappropriate I/O control operation.
+ENXIO	0	No such device or address.
+EOPNOTSUPP	0	Operation not supported on socket.
+EOVERFLOW	0	Value too large to be stored in data type.
+EPERM	0	Operation not permitted.
+EPIPE	0	Broken pipe.
+EPROTO	0	Protocol error.
+EPROTONOSUPPORT	0	Protocol not supported.
+EPROTOTYPE	0	Protocol wrong type for socket.
+ERANGE	0	Result too large.
+EROFS	0	Read-only file system.
+ESPIPE	0	Invalid seek.
+ESRCH	0	No such process.
+ESTALE	0	Reserved.
+ETIME	0	XSR Stream ioctl() timeout.
+ETIMEDOUT	0	Connection timed out.
+ETXTBSY	0	Text file busy.
+EWOULDBLOCK	0	Operation would block [3]
+EXDEV	0	Cross-device link.

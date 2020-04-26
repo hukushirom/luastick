@@ -1,0 +1,271 @@
+<interface name="cfg"
+	short="persistent configuration properties interface">
+
+<comments>
+Copyright 2002 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/cfg.h</include>
+
+<title>Cfg</title>
+<desc>
+The <def>cfg</def>(3m) module provides an interface to load and store comments and key/value pairs. A small state machine parser preserves all space tokens and comments in order between loading, manipulating, and storing <ident>cfg</ident> files. The following is a sample of serialized properties (the <ident>cfg</ident> file format):
+<pre>
+# This is a comment
+addr = 192.168.1.15
+!port = 15000
+user.1 = miallen
+user.2 = gchan
+</pre>
+Lines beginning with the '#' and '!' characters will be interpreted as comments. Keys are separated from values with '='. Reserved characters, leading and trailing spaces, and Unicode are supported with '\' escapes. If <tt>USE_WCHAR</tt> is defined, strings are <tt>wchar_t</tt>. Otherwise string encoding is locale dependant. See the HTML documentation for the <ident>text</ident> module.
+</desc>
+
+<group>
+<title>Memory management functions</title>
+<desc>These functions should be used to manage <def>cfg</def> objects.</desc>
+<meth name="init">
+	<pre>int cfg_init(struct cfg *cfg, struct allocator *al);</pre>
+	<param name="cfg"/>
+	<param name="al"/>
+	<desc>
+The <ident>cfg_init</ident> function initializes a <ident>cfg</ident> object. The object will have no properties. Memory for all <ident>cfg</ident> operations will be allocated from the allocator <tt>al</tt>. It may be necessary to call <ident>cfg_deinit</ident> to release memory allocated from the allocator <tt>al</tt>.
+	</desc>
+	<ret>
+The <ident>cfg_init</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if an error occured or 0 if the object was successfully initialized.
+	</ret>
+</meth>
+<meth name="deinit">
+	<pre>int cfg_deinit(struct cfg *cfg);</pre>
+	<param name="cfg"/>
+	<desc>
+The <ident>cfg_deinit</ident> function frees any resources associated with this <ident>cfg</ident> object. It is not necessary to deinitialize a <ident>cfg</ident> object if the memory backing it's allocator can be freed separately (e.g. using a <ident>suba</ident>(3m) allocator backed with stack memory is more efficient).
+	</desc>
+	<ret>
+The <ident>cfg_deinit</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if an error occured or 0 if resources were successfully freed.
+	</ret>
+</meth>
+<meth name="new">
+	<pre>struct cfg *cfg_new(struct allocator *al);</pre>
+	<param name="al"/>
+	<desc>
+The <ident>cfg_new</ident> function allocates memory from the allocator specified by the <tt>al</tt> parameter, initializes it with <ident>cfg_init</ident>, and returns a pointer to the new <ident>cfg</ident> object. The object will have no properties. The allocator specified by the <tt>al</tt> parameter will be used for all further memory management associated with this object. It may be necessary to call <ident>cfg_del</ident> to release memory allocated from the allocator <tt>al</tt>.
+	</desc>
+	<ret>
+The <ident>cfg_new</ident> function returns a new <ident>cfg</ident> object if the operation succeeded or <ident>NULL</ident> if the operation failed in which case <tt>errno</tt> is set appropriately.
+	</ret>
+</meth>
+<meth name="del">
+	<pre>int cfg_del(void *cfg);</pre>
+	<param name="cfg"/>
+	<desc>
+The <ident>cfg_del</ident> function frees the <ident>cfg</ident> object and all properties within it. It is not necessary to delete a <ident>cfg</ident> object if the memory backing it's allocator can be freed separately (e.g. using a <ident>suba</ident>(3m) allocator backed with stack memory is more efficent).
+	</desc>
+	<ret>
+The <ident>cfg_del</ident> function return 0 if the operation was successful or -1 if it failed in which case <tt>errno</tt> will be set accordingly.
+	</ret>
+</meth>
+</group>
+
+<group>
+<title>Load and store functions</title>
+<meth name="load">
+	<pre>int cfg_load(struct cfg *cfg, const char *filename);</pre>
+	<param name="cfg"/>
+	<param name="filename"/>
+	<desc>
+The <ident>cfg_load</ident> function loads the properties in <tt>filename</tt> into the <ident>cfg</ident> object <tt>cfg</tt>.
+	</desc>
+	<ret>
+The <ident>cfg_load</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the properties were successfully loaded.
+	</ret>
+</meth>
+<meth name="load_str">
+	<pre>int cfg_load_str(struct cfg *cfg, const tchar *src, const tchar *slim);</pre>
+	<param name="cfg"/>
+	<param name="src"/>
+	<param name="slim"/>
+	<desc>
+The <ident>cfg_load_str</ident> function loads properties into this <ident>cfg</ident> object from the character string at <tt>src</tt> up to but not including the memory at <tt>slim</tt>.
+	</desc>
+</meth>
+<meth name="load_env">
+	<pre>int cfg_load_env(struct cfg *cfg);</pre>
+	<param name="cfg"/>
+	<desc>
+The <ident>cfg_load_env</ident> function loads the process environment as properties.
+	</desc>
+	<ret>
+The <ident>cfg_load_env</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the process environment was successfully loaded.
+	</ret>
+</meth>
+<meth name="load_cgi_query_string">
+	<pre>int cfg_load_cgi_query_string(struct cfg *cfg, const tchar *qs);</pre>
+	<desc>
+The <ident>cfg_load_cgi_query_string</ident> function parses a <tt>QUERY_STRING</tt> style string like the one below which would result in loading properties 'hl', 'lr', 'ie', 'oe' and 'group' with their respective values. Parameters with no values such as 'lr' will be loaded with an empty string.
+<pre>
+hl=en&amp;lr=&amp;ie=UTF-8&amp;oe=UTF-8&amp;group=comp.unix.programmer
+</pre>
+	</desc>
+	<ret>
+The <ident>cfg_load_cgi_query_string</ident> function returns 0 if the query string parameters were valid and loaded successfully. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	</ret>
+</meth>
+<meth name="store">
+	<pre>int cfg_store(struct cfg *cfg, const char *filename);</pre>
+	<param name="cfg"/>
+	<param name="filename"/>
+	<desc>
+The <ident>cfg_store</ident> function serializes the properties of the object <ident>cfg</ident> and stores them in <tt>filename</tt>.
+	</desc>
+	<ret>
+The <ident>cfg_store</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the properties were successfully stored.
+	</ret>
+</meth>
+<meth name="fwrite">
+	<pre>int cfg_fwrite(struct cfg *cfg, FILE *stream);</pre>
+	<param name="cfg"/>
+	<param name="stream"/>
+	<desc>
+The <ident>cfg_fwrite</ident> function serializes the properties of the object <ident>cfg</ident> and stores them in <tt>filename</tt>.
+	</desc>
+	<ret>
+The <ident>cfg_fwrite</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the properties were successfully written.
+	</ret>
+</meth>
+</group>
+
+<group>
+<title>Property manipulation functions</title>
+<meth name="iterate">
+	<pre>void cfg_iterate(void *cfg, iter_t *iter);</pre>
+	<param name="cfg"/>
+	<param name="iter"/>
+	<desc combine="next">
+Enumerate each key in this <ident>cfg</ident> object. The <ident>cfg_iterate</ident> function initializes <tt>iter</tt> with the position of the first property in this <ident>cfg</ident>. With each subsequent call to <ident>cfg_next</ident> the key of each property is returned or <ident>NULL</ident> if all keys have been enumerated.
+	</desc>
+</meth>
+<meth name="next">
+	<pre>const tchar *cfg_next(void *cfg, iter_t *iter);</pre>
+	<param name="cfg"/>
+	<param name="iter"/>
+	<ret>
+The <ident>cfg_next</ident> function returns the next property in this <ident>cfg</ident> object or <ident>NULL</ident> if all keys have been enumerated.
+	</ret>
+</meth>
+<meth name="get_str" wrap="true">
+	<pre>int cfg_get_str(struct cfg *cfg, tchar *dst, int dn, const tchar *def, const tchar *name);</pre>
+	<param name="cfg"/>
+	<param name="dst"/>
+	<param name="dn"/>
+	<param name="def"/>
+	<param name="name"/>
+	<desc>
+The <ident>cfg_get_str</ident> function retrieves a property identified by <tt>name</tt> into the memory spcecified by <tt>dst</tt> as a string. No more than <tt>dn</tt> bytes of <tt>dst</tt> will be written to. If the value is truncated a trailing '\0' will be included. If the named property is not in the list and the string <tt>def</tt> is not <ident>NULL</ident>, <tt>def</tt> will be copied into <tt>dst</tt>.
+	</desc>
+	<ret>
+If the named property is not found and <tt>def</tt> is <ident>NULL</ident> or the operation fails for another reason the <ident>cfg_get_str</ident> function will return -1 and set <tt>errno</tt> to an appropriate value. Otherwise 0 is returned to indicate the string was successfully copied.
+	</ret>
+</meth>
+<meth name="vget_str" wrap="true">
+	<pre>int cfg_vget_str(struct cfg *cfg, tchar *dst, int dn, const tchar *def, const tchar *name, ...);</pre>
+	<param name="cfg"/>
+	<param name="dst"/>
+	<param name="dn"/>
+	<param name="def"/>
+	<param name="name"/>
+	<desc>
+The <ident>cfg_vget_str</ident> function retrieves a property identified by <tt>name</tt> into the memory spcecified by <tt>dst</tt> as a string. The <tt>name</tt> parameter is a format specifier that is parsed by <def>vsprintf</def>(3) before being passed to <ident>cfg_get_str</ident>. This permits complex keys to be constructed in-situ. To iterate over each element in a list of at most 10 properties named user.0, user.1, user.2, ... the following might be used:
+<pre>
+for (i = 0; i &lt; 10; i++)
+	if (cfg_vget_str(cfg, buf, BUFSIZ, NULL, "user.%d", idx)) == 0)
+		break;   /* end of list */
+</pre>
+	</desc>
+	<ret>
+The <ident>cfg_vget_str</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the string was successfully copied.
+	</ret>
+</meth>
+
+<meth name="get_short">
+	<pre>int cfg_get_short(struct cfg *cfg, short *dst, short def, const tchar *name);</pre>
+	<param name="cfg"/>
+	<param name="dst"/>
+	<param name="def"/>
+	<param name="name"/>
+	<desc>
+The <ident>cfg_get_short</ident> function is a convienence function that retrieves the property identified by <tt>name</tt> from <tt>cfg</tt> <ident>cfg</ident> object, converts it to a short integer with <def>strtol</def>(3), and stores the value in <tt>dst</tt>. If the named property does not exist, <tt>def</tt> will be copied to <tt>dst</tt>.
+	</desc>
+	<ret>
+The <ident>cfg_get_short</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the integer was successfully retrieved.
+	</ret>
+</meth>
+<meth name="get_int">
+	<pre>int cfg_get_int(struct cfg *cfg, int *dst, int def, const tchar *name);</pre>
+	<param name="cfg"/>
+	<param name="dst"/>
+	<param name="def"/>
+	<param name="name"/>
+	<desc>
+The <ident>cfg_get_int</ident> function is a convienence function that retrieves the property identified by <tt>name</tt> from <tt>cfg</tt> <ident>cfg</ident> object, converts it to an integer with <def>strtol</def>(3), and stores the value in <tt>dst</tt>. If the named property does not exist, <tt>def</tt> will be copied to <tt>dst</tt>.
+	</desc>
+	<ret>
+The <ident>cfg_get_int</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the integer was successfully retrieved.
+	</ret>
+</meth>
+<meth name="get_long">
+	<pre>int cfg_get_long(struct cfg *cfg, long *dst, long def, const tchar *name);</pre>
+	<param name="cfg"/>
+	<param name="dst"/>
+	<param name="def"/>
+	<param name="name"/>
+	<desc>
+The <ident>cfg_get_long</ident> function is a convienence function that retrieves the property identified by <tt>name</tt> from <tt>cfg</tt> <ident>cfg</ident> object, converts it to a long integer with <def>strtol</def>(3), and stores the value in <tt>dst</tt>. If the named property does not exist, <tt>def</tt> will be copied to <tt>dst</tt>.
+	</desc>
+	<ret>
+The <ident>cfg_get_long</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the integer was successfully retrieved.
+	</ret>
+</meth>
+
+<meth name="vget_short">
+	<pre>int cfg_vget_short(struct cfg *cfg, short *dst, short def, const tchar *name, ...);</pre>
+	<param name="cfg"/>
+	<param name="dst"/>
+	<param name="def"/>
+	<param name="name"/>
+	<desc>
+The <ident>cfg_vget_short</ident> function is a convienence function that retrieves the property identified by <tt>name</tt> from <tt>cfg</tt> <ident>cfg</ident> object, converts it to a short integer with <def>strtol</def>(3), and stores the value in <tt>dst</tt>. The <tt>name</tt> parameter and variable arguments are first reduced using <def>vsprintf</def>(3) permitting complex keys to be constructed. If the named property does not exist, <tt>def</tt> will be copied to <tt>dst</tt>.
+	</desc>
+	<ret>
+The <ident>cfg_vget_short</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the integer was successfully retrieved.
+	</ret>
+</meth>
+<meth name="vget_int">
+	<pre>int cfg_vget_int(struct cfg *cfg, int *dst, int def, const tchar *name, ...);</pre>
+	<param name="cfg"/>
+	<param name="dst"/>
+	<param name="def"/>
+	<param name="name"/>
+	<desc>
+The <ident>cfg_vget_int</ident> function is a convienence function that retrieves the property identified by <tt>name</tt> from <tt>cfg</tt> <ident>cfg</ident> object, converts it to an integer with <def>strtol</def>(3), and stores the value in <tt>dst</tt>. The <tt>name</tt> parameter and variable arguments are first reduced using <def>vsprintf</def>(3) permitting complex keys to be constructed. If the named property does not exist, <tt>def</tt> will be copied to <tt>dst</tt>.
+	</desc>
+	<ret>
+The <ident>cfg_vget_int</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the integer was successfully retrieved.
+	</ret>
+</meth>
+<meth name="vget_long">
+	<pre>int cfg_vget_long(struct cfg *cfg, long *dst, long def, const tchar *name, ...);</pre>
+	<param name="cfg"/>
+	<param name="dst"/>
+	<param name="def"/>
+	<param name="name"/>
+	<desc>
+The <ident>cfg_vget_long</ident> function is a convienence function that retrieves the property identified by <tt>name</tt> from <tt>cfg</tt> <ident>cfg</ident> object, converts it to a long integer with <def>strtol</def>(3), and stores the value in <tt>dst</tt>. The <tt>name</tt> parameter and variable arguments are first reduced using <def>vsprintf</def>(3) permitting complex keys to be constructed. If the named property does not exist, <tt>def</tt> will be copied to <tt>dst</tt>.
+	</desc>
+	<ret>
+The <ident>cfg_vget_long</ident> function returns -1 and sets <tt>errno</tt> to an appropriate value if the operation failed or 0 if the integer was successfully retrieved.
+	</ret>
+</meth>
+
+</group>
+
+</interface>

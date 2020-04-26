@@ -1,0 +1,24 @@
+!include <win32.mak>
+# nmake -f Makefile.msvc
+#
+cflags=$(cflags) /MDd /GZ /Gm /ZI /Od /I. /I..\src /D_DEBUG /DWIN32 /D_WINDOWS /DUNICODE /D_UNICODE /D_USRDLL /DLIBMBA_EXPORTS /DUSE_WCHAR /DMSGNO
+lflags=/nologo /debug /pdbtype:sept /libpath:.. libmba.lib
+OBJS = tests\CsvEol.obj tests\PoolExercise.obj tests\PathCanonExamples.obj tests\HashmapExercise.obj tests\LinkedlistExercise.obj tests\CsvExamples.obj tests\StackExercise.obj tests\VarrayOps.obj tests\CfgOps.obj tests\TcharAll.obj tests\TextTest.obj tests\CfgSuba.obj tests\BitsetOps.obj common.obj
+EXES = tmba.exe
+
+tmba.exe: tmba.obj
+
+tmba.obj: $(OBJS)
+
+.obj.exe:
+	$(link) $(lflags) /out:$@ $(OBJS) $*.obj
+
+.c.obj:
+	$(cc) $(cflags) /Fo$@ $*.c
+
+test:
+	tmba -t tmba-win32.csv
+
+clean:
+	del $(OBJS) $(EXES) tmba.obj tmba.lib tmba.exp tmba.ilk tmba.pdb vc60.idb vc60.pdb
+

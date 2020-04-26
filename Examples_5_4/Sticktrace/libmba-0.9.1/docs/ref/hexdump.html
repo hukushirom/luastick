@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Hexdump</TITLE>
+</HEAD>
+<BODY>
+<H1>8. Hexdump</H1>
+	The <I>hexdump</I>(3m) module provides useful debugging functions for printing the contents of memory in conventional hex dump format.
+<H3>8.1. Hexdump functions</H3>
+<A name="hexdump"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>hexdump</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/hexdump.h&gt;
+  void hexdump(FILE *stream, const void *src, size_t n, size_t width);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+Print <tt>n</tt> bytes of memory at <tt>src</tt> to <tt>stream</tt> in human readable "hex dump" format that is <tt>width</tt> columns wide.
+<PRE>
+
+  000b0:  0c ff 75 e8 e8 9f d5 ff  |..u.....|
+  000b8:  ff 8b 45 f0 2b 45 10 c1  |..E.+E..|
+  000c0:  f8 02 8d 65 f4 5b 5e 5f  |...e.[^_|
+  </PRE>
+	<P>
+</P>
+<HR NOSHADE>
+<small>
+Copyright 2002 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

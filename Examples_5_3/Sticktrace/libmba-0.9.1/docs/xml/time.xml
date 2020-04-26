@@ -1,0 +1,24 @@
+<interface name="time" short="supplimentary time functions">
+
+<comments>
+Copyright 2003 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/time.h</include>
+
+<title>Time</title>
+<desc>
+	The <def>time</def>(3m) module provides functions for querying and manipluating time values.
+</desc>
+
+<group>
+<title>Time functions</title>
+<meth name="current_millis">
+	<pre>uint64_t time_current_millis(void);</pre>
+	<desc>
+The <ident>time_current_millis</ident> function returns the current time in milliseconds since Jan 1, 1970 as a 64 bit integer. It works equally well on UNIX and Windows.
+	</desc>
+</meth>
+</group>
+
+</interface>

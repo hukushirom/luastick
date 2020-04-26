@@ -1,0 +1,83 @@
+<interface name="csv" short="parse comma separated values">
+
+<comments>
+Copyright 2003 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/csv.h</include>
+
+<title>Csv</title>
+<desc>
+The <def>csv</def>(3m) module parses the popular comma separated values (CSV) format exported by applications like spreadsheets. This parser considers quoted elements, quoted quotes, and preserves carriage returns and newlines within elements. The separator character is specified by the user.
+
+<example id="passwd">
+<title>Reading /etc/passwd</title>
+<desc>
+The following example uses <def>csv</def>(3m) to parse the <tt>/etc/passwd</tt> file and print the username and uid of each user.
+<pre>
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;mba/csv.h&gt;
+
+int
+main(void)
+{
+    FILE *in;
+    unsigned char buf[1024];
+    unsigned char *row[10];
+    int n;
+
+    in = fopen(&quot;/etc/passwd&quot;, &quot;r&quot;);
+
+    while ((n = csv_row_fread(in, buf, 1024, row, 10, ':', CSV_TRIM)) &gt; 0) {
+        printf(&quot;%s %s\n&quot;, row[0], row[2]);
+    }
+    fclose(in);
+
+    return EXIT_SUCCESS;
+}
+</pre>
+</desc>
+</example>
+<p/>
+Please note that escaping a quote requires that the entire element be quoted as well. So a quoted string element would actually look like <tt>"""foo"""</tt> where the outer quotes quote the element and the remaining quote pairs are each an escape followed by the literal quote. This is consistent with how popular spreadsheets behave and deviating from this behavior will generate an error.
+</desc>
+
+<group>
+<title>Csv functions</title>
+<meth name="row_parse" wrap="true">
+	<pre>int csv_row_parse(const tchar *src, size_t sn, tchar *buf, size_t bn, tchar *row[], int rn, int sep, int flags)</pre>
+	<param name="src"/>
+	<param name="sn"/>
+	<param name="buf"/>
+	<param name="bn"/>
+	<param name="row"/>
+	<param name="rn"/>
+	<param name="sep"/>
+	<param name="flags"/>
+	<desc>
+The <ident>csv_row_parse</ident> function will parse a line of text at <tt>src</tt> for no more than <tt>sn</tt> bytes and place pointers to zero terminiated strings allocated from no more than <tt>bn</tt> bytes of the memory at <tt>buf</tt> into the array <tt>row</tt> for at most <tt>rn</tt> data elements. The <tt>sep</tt> parameter must specify a separator to use (e.g. a comma <tt>','</tt>) and must not be a quote, carriage return, or newline. Comma <tt>','</tt>, tab <tt>'\t'</tt>, colon <tt>':'</tt>, and pipe <tt>'|'</tt> are common separators.
+<p/>
+The <tt>flags</tt> parameter can be zero or any combination of <tt>CSV_TRIM</tt> and <tt>CSV_QUOTES</tt>. If <tt>CSV_TRIM</tt> is specified, strings will be trimmed of leading and trailing whitespace (but an unquoted carriage-return before a newline is always trimmed regardless). If the <tt>CSV_QUOTES</tt> flag is spcecified, quotes will be interpreted. Both flags should be specified when parsing conventional CSV files.
+<p/>
+The <ident>csv_row_parse</ident> function is actually a macro for either <ident>csv_row_parse_str</ident> or <ident>csv_row_parse_wcs</ident>. The <ident>csv_row_parse_wcs</ident> function has the same prototype but accepts <tt>wchar_t</tt> parameters whereas <ident>csv_row_parse_str</ident> accepts <tt>unsigned char</tt> parameters.
+	</desc>
+	<ret>The <tt>csv_row_parse</tt> function returns the number of bytes of <tt>src</tt> parsed or -1 if an error occured in which case <tt>errno</tt> will be set appropriately.</ret>
+</meth>
+<meth name="row_fread" wrap="true">
+	<pre>int csv_row_fread(FILE *in, unsigned char *buf, size_t bn, unsigned char *row[], int numcols, int sep, int flags)</pre>
+	<param name="in"/>
+	<param name="buf"/>
+	<param name="bn"/>
+	<param name="row"/>
+	<param name="numcols"/>
+	<param name="sep"/>
+	<param name="flags"/>
+	<desc>
+Read a line of text from the stream <tt>in</tt>, process the line with <ident>csv_row_parse</ident> and place pointers to zero terminiated strings allocated from no more than <tt>bn</tt> bytes of the memory at <tt>buf</tt> into the array <tt>row</tt> for at most <tt>rn</tt> data elements.
+	</desc>
+	<ret>The <tt>csv_row_fread</tt> function returns the number of bytes read from the stream <tt>in</tt> or -1 if an error occured in which case <tt>errno</tt> will be set appropriately.</ret>
+</meth>
+</group>
+
+</interface>

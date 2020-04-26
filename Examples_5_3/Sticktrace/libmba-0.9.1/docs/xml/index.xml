@@ -1,0 +1,444 @@
+<?xml version="1.0"?>
+
+<proj>
+
+<title>libmba</title>
+<short>A library of generic C modules</short>
+<desc>
+The  libmba  package  is  a  collection  of  mostly  independent  C modules
+potentially  useful  to  any  project. There are the usual ADTs including a
+linkedlist,  hashmap, pool, stack, and varray, a flexible memory allocator,
+CSV   parser,   path   canonicalization  routine,  I18N  text  abstraction,
+configuration  file  module,  portable  semaphores, condition variables and
+more.  The  code  is  designed so that individual modules can be integrated
+into  existing  codebases  rather  than requiring the user to commit to the
+entire  library.  The code has no typedefs, few comments, and extensive man
+pages and HTML documentation. 
+</desc>
+
+<links>
+
+<a href="dl/">Download</a>
+<a href="dl/docs/ref/libmba.html">API Reference</a>
+<a href="dl/src/">Browse The Source</a>
+
+<group>
+<title>Similar Projects</title>
+<desc>
+<small>
+These projects <i>look</i> similar in purpose to libmba although in most cases that has not be confirmed and their presence here is in not necessarily an endorsement of quality. They are listed here (not in any particular order) only to help developers focus their search.
+<p/>
+</small>
+</desc>
+<a href="http://www.freetype.org/mlib/">MLib</a>
+<a href="http://www.stanford.edu/~blp/avl/">libavl</a>
+<a href="http://www.xref-tech.com/sglib/">SGLIB</a>
+<a href="http://libtc.sourceforge.net/">Libtc</a>
+<a href="http://www.netsw.org/system/libs/generalpurpose/">netsw.org</a>
+<a href="http://www.ossp.org/">OSSP</a>
+<a href="http://freshmeat.net/projects/libast/">LibAST</a>
+<a href="http://www.skarnet.org/software/skalibs/">skalibs</a>
+<a href="http://libslack.org/">libslack</a>
+<a href="http://libh.slashusr.org/">LIBH</a>
+<a href="http://arch.quackerhead.com/~lord/">Hackerlab</a>
+<a href="http://users.footprints.net/~kaz/kazlib.html">Kazlib</a>
+<a href="http://xref-tech.com/sglib/">SGLIB</a>
+<a href="http://tos.maintree.com/matt/Projects/MattsCUtilityLibrary.html">Matt's C Utility Library</a>
+<a href="http://ubiqx.org/modules.html">ubiqx</a>
+<a href="http://www.nongnu.org/gdsl/">gdsl</a>
+<a href="http://www.cs.berkeley.edu/~smcpeak/elkhound/sources/smbase/">smbase</a>
+</group>
+
+</links>
+<news>
+
+<!-- entry>
+<title></title>
+<sub></sub>
+<desc></desc>
+</entry-->
+
+<entry>
+<title>libmba-0.9.0 released</title>
+<sub>Thu Apr 28, 2005</sub>
+<desc>
+Portability of libmba has been greatly improved. It has been compiled and tested (albeit not extensively on all platforms) on OSF1, HP-UX [1], Linux, Mac OS X [2], and FreeBSD with gcc, DECC, and aC++. There have also been the following modifications and enhancements.
+<ul>
+<li>
+The <ident>msgno</ident>(3m) module has been significantly reworked. The <tt>MSG</tt>, <tt>MNO</tt>, and <tt>MNF</tt> macros have been renamed to <tt>MMSG</tt>, <tt>MMNO</tt>, and <tt>MMNF</tt> respectively to reduce namespace collisions. There is also no longer a dependance on variadic macros. The <ident>msgno</ident>(3m) module is now highly portable. The <tt>MSGNO</tt> macro is no longer used -- <ident>msgno</ident> is now enabled at all times.
+</li>
+<li>
+The <ident>bitset</ident>(3m) module macros have been converted to functions so that using expressions  as arguments (e.g. <tt>i++</tt>) does not result in undefined behavior. As a result, some return values have changed. Please review the man page or HTML documentation.
+</li>
+<li>
+A debug module has been added that provides some useful backtrace oriented functions but it is not documented because it is specific to GNUC on i386.
+</li>
+<li>
+The <ident>linkedlist_insert_sorted</ident> function has been modified to support a context parameter that is passed as-is to the supplied <ident>cmp_fn</ident> defined in <ident>hashmap</ident>(3m). The <ident>compare_fn</ident> type has been removed.
+</li>
+<li>
+A <ident>path_name</ident> function has been added to the <ident>path</ident>(3m) module.
+</li>
+<li>
+Some parameters of <ident>shellout</ident>(3m) function have been changed from <tt>unsigned char</tt> to <tt>char</tt>.
+</li>
+<li>
+The <ident>csv</ident>(3m) module will now exclude carriage returns preceeding newlines in elements. 
+</li>
+<li>
+A <tt>SUBA_PTR_SIZE</tt> macro has been added to the <ident>suba</ident>(3m) module that evaluates to the size of the cell backing the suba allocated object. This code can also be easily modified to support a payload within each cell (e.g. stack addresses for stacktraces).
+</li>
+<li>
+The <tt>SEM_UNDO</tt> flag has been been replaced with <tt>O_UNDO</tt> to avoid possible collision with other <tt>O_*</tt> bits.
+</li>
+<li>
+A <ident>varray_index</ident> function has been added. 
+</li>
+<li>
+A variety of other small bugfixes have been applied.
+</li>
+</ul>
+As usual some nifty <a href="dl/examples/">example programs</a> are included.
+<ul>
+<li><tt>csvprint</tt> has been considerably improved.</li>
+<li><tt>errcmp</tt> is a program used to generate this useful <a href="http://www.ioplex.com/~miallen/errcmp.html">Errno Codes by Platform</a> page.</li>
+<li><tt>bindiff</tt>, <tt>hexdiff</tt>, <tt>spell</tt>, and <tt>strdiff</tt> thoroughly illustrate the possibilities of the diff(3m) module</li>
+<li><tt>hexd</tt> will print hexdump formatted output based on a comma separated list of ranges. There is also an HTML option that will color code the ranges. This is potantially useful for documenting binary formats. Below is an example <tt>SMB_COM_SESSION_SETUP</tt> response packet from the CIFS networking protocol.
+<p/>
+<img src="images/hexd.gif"/>
+<p/>
+It was generated with the below command where <tt>ssxr.bin</tt> is a file containing the raw packet data (exported from Ethereal).
+<pre>
+
+hexd -h -r "32:SMB Header,14:8:Signature,32:1:WordCount,6:Words,2:ByteCount,25:Bytes,0x44:17:Tree Connect AndX" ssxr.bin
+
+</pre>
+</li>
+</ul>
+<small>
+[1] <ident>shellout</ident>(3m) does not work on HP-UX because it lacks the non-standard <ident>forkpty</ident>(2).<br/>
+[2] <ident>svsem</ident>(3m) and <ident>svcond</ident>(3m) do not work properly on Mac OS X. It appears that <ident>semop</ident>(2) does not initialize semid_ds.sem_otime in the same way that other platforms do.
+</small>
+</desc>
+</entry>
+
+<entry>
+<title>libmba-0.8.10 released</title>
+<sub>Sat Aug 28, 2004</sub>
+<desc>
+Two bugs have been found and fixed in the csv module. If a non-ASCII character was read with <tt>csv_row_parse</tt>, parsing would stop prematurely due to a signedness error. The csv module now uses <tt>unsigned char</tt> throughout to properly support internationalized text. Note <tt>csv_row_fread</tt> was unaffected by this bug. Second, if the character preceeding EOF was a double quote (as opposed to a newline) an error would occur. The csv module will now correctly process the final element.
+<p/>
+Also related, a few example programs are now included with the distribution. One such example is the <tt>csvprint</tt> utility which prints data in a csv file using a format string.
+<pre>
+
+examples$ ./csvprint data.csv "%2|%1|FOO(%2)\n"
+three|two|FOO(three)
+...
+
+</pre>
+This is suprisingly useful for reordering fields, generating source code, etc.
+<p/>
+The <tt>bitset_find_first</tt> function will now set <tt>errno</tt> to <tt>ENOENT</tt> if the target bit was not found.
+<p/>
+Some issues regarding the initialization of <ident>svsem</ident>(3m) semaphores have been fixed. The module should now properly handle the initialization race outlined in Stevens' UNPv2 in addition to the scenario where a semaphore is removed during initialization.
+<p/>
+Finally the <ident>eval</ident>(3m) module now provides for a <tt>context</tt> parameter to be specifed that will be passed to the user supplied <tt>symlook</tt> function. This is necessary for full reentrance.
+<p/>
+All documentation has been updated accordingly.
+</desc>
+</entry>
+
+<entry>
+<title>libmba-0.8.9 released</title>
+<sub>Fri May 21, 2004</sub>
+<desc>
+The <tt>sho_loop</tt> function now accepts a pattern vector and timeout like <tt>sho_expect</tt> and the <ident>cfg</ident> module has been modified to more closely support Java Properties escape sequences for spaces and Unicode characters.
+</desc>
+</entry>
+
+<entry>
+<title>libmba-0.8.8 released</title>
+<sub>Thu May 6, 2004</sub>
+<desc>
+The purpose of this project is to provide generic C implementations of concepts elemental to a wide variety of programming problems. The latest addition to libmba is the <a href="dl/docs/ref/diff.html">diff</a> module and it is a fine example of a non-trivial algorithm that is crucial to the function and efficiency of many common applications such as spell checkers, version control systems, spam filters, speech recognition, and more. The code is generic such that anything that can be indexed and compared with user supplied callbacks can be used such as strings, linked lists, pointers to lines in files, etc.
+<p/>
+The algorithm is perhaps best known for it's use in the GNU diff(1) program for generating a "diff" of two files. Formally it is known as the <i>shortest edit script (SES)</i> problem and is solved efficiently using the dynamic programming algorithm described by Myers [1] and in linear space with the Hirschberg refinement. The objective is to compute the minimum set of edit operations necessary to transform sequence A of length N into B of lenth M. This can be performed in O((N+M)D^2) expected time where D is the edit distance (the number of elements deleted and inserted).
+<p/>
+<small>
+[1] E. Myers, ``An O(ND) Difference Algorithm and Its Variations,'' Algorithmica 1, 2 (1986), 251-266. http://www.cs.arizona.edu/people/gene/PAPERS/diff.ps
+</small>
+<p/>
+Also, in this release, the <a href="dl/docs/ref/path.html">path</a> module, which has been in libmba for a some time, is now documented. This module provides a high quality filesystem path canonicalization routine. Path canonicalization is notoriously unforgiving because the parsing rountine is complex and yet it is not uncommon for programs to be required to accept paths from potentially malicous sources. This implementation uses a state machine approach to reduce complexity and has been tested with a wide range of inputs (see tcase/test/data/PathCanonExamples.data). Certain conditions are enforced that minimize the potential for exploits. For exmaple, only one input character is examined with each iteration of the outer loop so that it can be certain that the <tt>slim</tt> and <tt>dlim</tt> limit pointers are checked with the advance of every input character. A canonicalized path cannot begin with a path separator unless the input began with a path separator. Because of the state machine structure, if there is a flaw in the implementation the fix is more likely to be a local adjustment which limits the potential for creating new flaws.
+</desc>
+</entry>
+
+<entry old="true">
+<title>libmba-0.8.5 released</title>
+<sub>Wed Mar 10, 2004</sub>
+<desc>
+This release includes several bug fixes. The <tt>hashmap_remove</tt> function could corrupt the integrity of the ADT resulting in lost elements. The <tt>hashmap_clear</tt> function was largely incorrect. These problems have been fixed. The <tt>svcond_wait</tt> function could return without reaquiring the specified lock if a signal was received. The function has been modified to assure that the lock is reaquired before the function returns if an <tt>EINTR</tt> signal is received.
+<p/>
+There have also been some minor enhancements. The <tt>csv</tt> functions now accept a <tt>CSV_QUOTES</tt> flag to indicate quotes should be interpreted. <i>To preserve the previous behavior it will be necessary to include this flag but the signature has not changed!</i> Also, the signatures of the <tt>hash_fn</tt> and <tt>cmp_fn</tt> in the <tt>hashmap</tt> module have been modified to permit a context object. New text compare functions have been provided that should be used in favor of <tt>strcmp</tt> or similar. See HTML documentation for details.
+<p/>
+Finally the <tt>domnode</tt> module has been deprecated. It is still in the tree and should build fine but modules that are not actively used by the author will be removed. Expat is no longer required by default.
+</desc>
+</entry>
+
+<entry old="true">
+<title>libmba-0.8.0 released</title>
+<sub>Thu Jan 3, 2004</sub>
+<desc>
+There have been very pervasive changes throughout this library. There are new modules, changes that affect many of the modules, and other miscellaneous adjustments. Specifically, there are seven (7) new modules. These are:
+
+<ul>
+<li><a href="dl/docs/ref/allocator.html">allocator</a> - The <tt>allocator</tt> module abstracts memory management in Libmba and programs that use it. Most modules that allocate memory have been modified to use it but there is no additional knowledge required to use Libmba due to the <tt>allocator</tt> module. Just supply <tt>NULL</tt> for any <tt>allocator</tt> parameter to indicate the standard library allocator should be used (i.e. <tt>malloc</tt>(3)).</li>
+<li><a href="dl/docs/ref/suba.html">suba</a> - The <tt>suba</tt> module provides a lock-less <tt>allocator</tt> implemented using a simple circular list of "cells". Using this allocator has many benifits including measurably increasing the performace of an application.</li>
+<li><a href="dl/docs/ref/bitset.html">bitset</a> - Some macros and functions for manipluating arbitrary pointer to memory as a collection of bits.</li>
+<li><a href="dl/docs/ref/hashmap.html">hashmap</a> - The <tt>hashmap</tt> module has been completely replaced. The new implementation uses a very plain rehashing scheme with automatic resizing of the hash table. It is very space efficient and should be as fast as one could hope for from a general purpose hash map. This module replaces the previous chaining <tt>hashmap</tt> implementation.</li>
+<li><a href="dl/docs/ref/svsem.html">svsem</a> - The <tt>svsem</tt> module provides a POSIX-like semaphore implementation that uses the more common System V semaphores interface.</li>
+<li><a href="dl/docs/ref/svcond.html">svcond</a> - The <tt>svcond</tt> module provides a POSIX-like condition variables implementation that uses only System V semaphores. This is useful on Linux where process shared semaphores and condition variables are not supported.</li>
+<li><a href="dl/docs/ref/time.html">time</a> - Currently the <tt>time</tt> module only provides the <tt>time_current_millis</tt> function for retrieving the current time in milliseconds since Jan 1, 1970. The implematation works equally well on Linux and the Win32 environment at least.</li>
+</ul>
+
+Changes that affect multiple modules include:
+
+<ul>
+<li><b>Many Allocator Changes</b> - With the addition of the <tt>allocator</tt> module most modules that allocate memory have been modified to accept the specification of an allocator. See the <a href="dl/docs/ref/suba.html">suba</a> documentation for a description of the benifits of using a custom allocation scheme with Libmba ADTs.</li>
+<li><b>Destruction and Function Parameters</b> - One implication of factoring in the <tt>allocator</tt> module is that many functions that accepted function pointers to create or destroy objects have been modified to accept functions with signatures more suited to reentrant code and specifically functions of the <tt>allocator</tt> module. For example, previously the <tt>linkedlist_del</tt> function would accept a <tt>void del_fn(void *)</tt> parameter because this matched the signature of <tt>free</tt>(3). This has been changed to match the signature <tt>int *del_fn(void *context, void *object)</tt> (typedef'd as simply <tt>del_fn</tt>) which, with a cast, matches the signature of <tt>allocator_free</tt>. Similar changes have been made to function parameters that create objects such as <a href="dl/docs/ref/pool.html#new">pool_new</a>.</li>
+<li><b>New Clean Functions and Automatically Reclaiming Memory</b> - Many modules have been modified with <tt>clean</tt> functions (not to be confused with <tt>clear</tt>). These functions will free any memory not explicitly being used by the module. For example the <tt>pool_clear</tt> function will destroy any unused objects. These functions are specifically designed to be called from a <tt>reclaim_fn</tt> specified using the <a href="dl/docs/ref/allocator.html#set_reclaim">allocator_set_reclaim</a> function.</li>
+<li><b>New Initializers</b> - Many ADTs can be now be initialized into memory provided by the user. This has the benifit of reducing the number of objects created in programs and simplifying their management. It can be benificial to know that initializers that that have <tt>init</tt> in their name do not allocate memory. Initializers that have <tt>create</tt> in their name do allocate memory and must be explicitly destroyed even if they have not been used. Additionally the <tt>new</tt> functions have been modified to accept an <a href="dl/docs/ref/allocator.html">allocator</a> but otherwise their behavior has not fundamentally changed.</li>
+</ul>
+
+Other adjustments include the following:
+
+<ul>
+<li>The <tt>cfg_write</tt> function has been changed to <tt>cfg_fwrite</tt>. The <tt>csv_row_read</tt> function has been changed to <tt>csv_row_fread</tt>. The <tt>domnode_read</tt> function has been changed to <tt>domnode_fread</tt>. The <tt>domnode_write</tt> function has been changed to <tt>domnode_fwrite</tt>.</li>
+<li>The paramter name <tt>this</tt> which is reserved in C++ has been removed entirely from the library.</li>
+<li>The <tt>str_copy_new</tt> and <tt>wcs_copy_new</tt> functions have been modified to accept an <a href="dl/docs/ref/allocator.html">allocator</a> (again, use <tt>NULL</tt> for stdlib <tt>malloc</tt>).</li>
+</ul>
+
+</desc>
+</entry>
+
+<entry old="true">
+<title>libmba-0.7.0 released</title>
+<sub>Wed Oct 15, 2003</sub>
+<desc>Microsoft  Windows  support  has been improved. The Win32 debug build
+now  properly  creates  DLLs  with  PDB information for listing source code
+after  a  memory fault. The standard <tt>__cplusplus</tt> macro guards have
+been  added. Macros for prefixing <tt>__declspec(dllexport)</tt> directives
+have  been  added in favor of an explicit DEF file. These changes have been
+performed  during  the  development  of a non-trial MFC application so this
+release   should   work  smoothly  in  a  Win32  or  MFC  environment.  The
+<tt>text</tt>   module  appears  to  work  as  advertised  although  a  few
+adjustments have been made. 
+<p/>
+The  <tt>csv</tt>  module  has  been converted to support the <tt>text</tt>
+module     text     handling.     The    multibyte    function    is    now
+<tt>csv_row_parse_str</tt>,     the     wide    character    function    is
+<tt>csv_row_parse_wcs</tt>,  and the <tt>csv_row_parse</tt> function is now
+a  macro  that  accepts  <tt>tchar</tt> parameters. The prototypes of these
+functions  have  also  been  changed  to  accept  the  specification of the
+separator that is used (e.g. '\t' rather than ','). 
+<p/>
+A  new  <a href="dl/docs/ref/eval.html">eval</a> module has been added that
+will  "calculate"  the  value  of  an  expression  such  as  '(5 + 3) * N',
+'(10+10-((10*10/11)|(10&amp;10)))^0xFF78', etc. 
+<p/>
+The <a href="dl/docs/ref/msgno.html">msgno</a> functions have been adjusted
+to  perform  better in environments where variadic macros are not supported
+(e.g. MSVC).
+</desc>
+</entry>
+
+<entry old="true">
+<title>libmba-0.6.15 released</title>
+<sub>Sat Aug 23, 2003</sub>
+<desc>
+There have been significant and pervasive changes however to emphasize that
+all of these changes are binary compatible I have not incremented the major
+version  number.  All  code  that  uses  the published interfaces of libmba
+should work without modification. 
+<p/>
+The     most     significant    change    is    the    addition    of    <a
+href="dl/src/mba/text.h">text.h</a> which contains a <tt>tchar</tt> typedef
+and  many  macros  that  abstract  wide  and  multi-byte  string functions.
+Depending  on  whether  or  not  <tt>USE_WCHAR</tt> is defined these string
+functions will accept wide or multi-byte strings. This will permit programs
+to run using wide or locale dependent multi-byte text handling. Some of the
+libmba modules such as <a href="dl/src/cfg.c">cfg</a> have been modified to
+support   both  wide  and  locale  dependent  multi-byte  text  using  this
+abstraction.  Do not be alarmed that these prototypes have changed. Because
+the  <tt>tchar</tt>  typedef is defined as either <tt>unsigned char</tt> or
+<tt>wchar_t</tt>  users can continue to use these modules as before without
+using  <tt>tchar</tt>  at  all.  It is also easy to globally substitute and
+replace  <tt>tchar</tt> with the desired type in the source of interest. If
+you choose to take advantage of this new I18N functionality please read the
+following document for important information: 
+<p/>
+<blockquote>
+<a href="dl/docs/ref/text_details.html">http://www.ioplex.com/~miallen/libmba/dl/docs/ref/text_details.html</a>
+</blockquote>
+One  big  advantage  of  this new text abstraction is that libmba will soon
+support  Unicode on the Microsoft Windows platform (cfg and domnode modules
+already do). 
+<p/>
+The  test suite has been cleaned up considerably. Just run make followed by
+the generated tmba program in the tcase directory to run all tests. 
+<p/>
+The  build  process  has  been formalized further. The code is now compiled
+using  <tt>-D_XOPEN_SOURCE=500</tt>  meaning an SUSv2/UNIX98 is desired but
+most   of  the  code  does  not  require  this  standards  level.  In  fact
+<tt>#ifdefs</tt> have been added to consider lesser environments.
+<p/>
+Finally,   a   <a  href="dl/docs/ref/path.html">path</a>  module  has  been
+introduced.     Currently    this    module    contains    one    function;
+<tt>path_canon</tt>  which  canonicalizes  a filesystem pathname. The state
+machine  design  is  very safe when given the full range of possible inputs
+(see                                                                     <a
+href="dl/tcase/tests/data/PathCanonExamples.txt">tcase/tests/data/PathCanonExamples.data</a>).
+</desc>
+</entry>
+
+<entry old="true">
+<title>libmba-0.6.1</title>
+<sub>Sat May 17, 2003</sub>
+<desc>
+Several bugs and buffer overruns were fixed in the <tt>csv</tt> module. The
+<tt>trim</tt> parameter did not work as advertised and a malformed CSV file
+could  cause  memory  to  be  overwritten  unintentionaly.  A  bug  in  the
+<tt>cfg_load_cgi_query_string</tt>  function  that prevented the last query
+parameter    from    being    parsed    has    also    been    fixed.   The
+<tt>linkedlist_insert_sorted</tt> function is now documented. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>Mailing List Moved</title>
+<sub>Fri May 9, 2003</sub>
+<desc>
+The       mailing       list       has      been      moved      to      <a
+href="http://www.ioplex.com/mailman/listinfo/libmba/">http://www.ioplex.com/mailman/listinfo/libmba/</a>.
+The old mailing list will be disabled shortly. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>libmba-0.6.0 released</title>
+<sub>Tue May 6, 2003</sub>
+<desc>
+There have been siginificant bugs fixed as well as API changes.
+<p/>
+The     <tt>iterate</tt>     and    <tt>next</tt>    functions    of    the
+<tt>linkedlist</tt>,    <tt>cfg</tt>,    <tt>hashmap</tt>,   <tt>pool</tt>,
+<tt>stack</tt>,  and  <tt>varray</tt> modules now accept an <tt>iter_t</tt>
+object              defined              in              new             <a
+href="dl/src/mba/iterator.h"><tt>mba/iterator.h</tt></a> header to hold the
+state of iterations. These modules now permit multiple iterators per object
+(i.e. they are now fully reentrant). 
+<p/>
+The        library        has       been       profiled       with       <a
+href="http://www.inf.ethz.ch/personal/biere/projects/ccmalloc/">ccmalloc</a>.
+Several memory leaks have been detected and repaired. The <tt>shellout</tt>
+module was not freeing the <tt>struct sho *</tt> in <tt>sho_close</tt>. The
+<tt>linkedlist_insert_sorted</tt>  function  (previously  undocumented) did
+not  free a <tt>struct entry *</tt> if it was being replaced and it was the
+first  element.  The  <tt>cfg_store</tt>  function  did  not close the file
+pointer  it  opened.  The  <tt>cfg_del</tt>  function  did  not  delete the
+<tt>struct  cfg  *</tt>  allocated  in  <tt>cfg_new</tt>.  And finally, the
+<tt>linkedlist_remove_last</tt>  function  did not free the <tt>struct node
+*</tt> if the list contained only one element. 
+<p/>
+The    <tt>linkedlist_get</tt>    function    has    been   optimized   for
+forward-sequential  access (an O(1) operation now whereas previously it was
+O(log N)). 
+<p/>
+The   <tt>linkedlist_insert_sorted</tt>  function  has  been  reviewed  and
+documented as an official part of the <tt>linkedlist</tt> interface. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>libmba-0.5.2 released</title>
+<sub>Tue Apr 29, 2003</sub>
+<desc>
+A <a href="dl/docs/ref/csv.html">csv</a> module has been added. This module
+properly  parses  the  CSV  format.  It  can handle quoted elements, quotes
+within  quoted elements, and commas and quotes withing quotes. It should be
+able  to  handle anything exported by Excel or Gnumeric (but don't quote me
+on that). 
+</desc>
+</entry>
+
+<entry old="true">
+<title>libmba-0.5.1 released</title>
+<sub>Tue Apr 1, 2003</sub>
+<desc>The  <tt>varray</tt>  module  did  not  properly initialize the array
+hosting  allocated  memory  chunks  which  could result in dereferencing an
+invalid pointer. The 0.5.1 package fixes this problem.</desc> 
+</entry>
+
+<entry old="true">
+<title>libmba-0.5.0 released</title>
+<sub>Sat Mar 22, 2003</sub>
+<desc>
+Many  function  return codes have changed. Previously the convention was to
+return  0 on error and 1 for success. This has changed to -1 on error and 0
+for success to be more consistent with UNIX, POSIX, and interfaces of other
+standards. The functions that are affected by this change in convention are
+<tt>cfg_load,    cfg_load_str,   cfg_load_env,   cfg_load_cgi_query_string,
+cfg_store,    cfg_write,    cfg_get_str,    cfg_vget_str,    cfg_get_short,
+cfg_get_int,  cfg_get_long,  cfg_vget_short,  cfg_vget_int,  cfg_vget_long,
+domnode_load,      domnode_store,      domnode_attrs_put,      hashmap_put,
+linkedlist_add,         linkedlist_insert,        linkedlist_insert_sorted,
+linkedlist_toarray,  msgno_add_codes, pool_release, stack_push</tt> as well
+as some functions of new interfaces. 
+<p/>
+Two        new       modules       are       introduced.       The       <a
+href="dl/docs/ref/shellout.html">shellout</a>  module  will  spawn  a shell
+connected  to a pseudo-tty and premits the caller to read and write data to
+it  as  if  it  had  been  typed  on the keyboard. This is analygous to the
+popular  <tt>expect</tt>(1)  but with only 400 lines of code (not available
+in Win32 build). The <a href="dl/docs/ref/varray.html">varray</a> module is
+a  variable array that dynamically allocates storage in increasingly larger
+chunks  are  elements  of  an  index  are accessed. This is a very effcient
+method of allocating storage in programs like network servers and clients.
+</desc>
+</entry>
+
+<entry old="true">
+<title>libmba-0.4.6 released</title>
+<sub>Wed Nov 20, 2002</sub>
+<desc>
+An important symbols was missing from the Win32 DLL exports definition. The
+header files have also been moved within the source package to permit other
+packages to build against the package without actually installing it. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>libmba-0.4.5 released</title>
+<sub>Tue Nov 5, 2002</sub>
+<desc>
+The portability of libmba has been greatly improved. It is known to compile
+on  Linux, Solaris, and Windows. Other platforms may require adjustments in
+<tt>src/defines.h</tt>.  The web page, API reference, and man pages are now
+generated using the <a href="../cstylex/">CStyleX</a> package. 
+<p/>
+This  release  also  introduces  the <a href="dl/docs/ref/cfg.html">cfg</a>
+module  which  provides  a  simple load/store Java <tt>Properties</tt> like
+interface. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>mba-0.3.6 released</title>
+<sub>Fri Mar 29, 2002</sub>
+<desc>
+Some XSLT templates have been added for generating documentation.
+</desc>
+</entry>
+
+</news>
+</proj>
+

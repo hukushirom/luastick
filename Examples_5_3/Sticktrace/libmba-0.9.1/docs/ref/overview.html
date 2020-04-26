@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+		}
+		TH, TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+	</STYLE>
+<title>libmba &lt;mba/*.h&gt;</title>
+</head>
+<body bgcolor="#f5f5f5">
+<h1>libmba &lt;mba/*.h&gt;</h1>
+The libmba package is a collection of mostly independent C modules potentially useful to any project. There are hashmap, linkedlist, pool, and stack ADTs, a CSV parser, a DOM-like interface for simple XML processing, a module for managing error codes and associated messages across separate C libraries, and more.
+	<H2>Allocator</H2>
+The <I>allocator</I>(3m) module defines an interface for allocating and freeing memory without defining the implementation.
+Modules that implement this interface such as <I>suba</I>(3m) provide a <tt>struct allocator *</tt> that can be used with these functions. Modules that utilize this interface such as <I>varray</I>(3m) accept the specification of an allocator. This abstraction permits changing the memory management behavior of a program by switching allocators.
+<H2>Bitset</H2>
+	The <I>bitset</I>(3m) module provides functions for testing and manipulating an arbitrary pointer to memory as a set of bits. Unlike other modules in Libmba, this is not an abstract data type in that it is the responsibility of the user to manage the memory of the bitset. All <I>bitset</I>(3m) operations threat the target memory as an array of <tt>unsigned char</tt> elements. Bit 0 of each element is the least significant bit whereas bit 7 is the most significant bit.
+<p>
+</p>
+Paramters and return values that represent the index of a bit in the <I>bitset</I>(3m) start at 0 relative to the provided target memory. It is the caller's responsability to ensure that a bit index parameter falls within the target memory.
+<H2>Cfg</H2>
+The <I>cfg</I>(3m) module provides an interface to load and store comments and key/value pairs. A small state machine parser preserves all space tokens and comments in order between loading, manipulating, and storing <TT>cfg</TT> files. The following is a sample of serialized properties (the <TT>cfg</TT> file format):
+<PRE>
+
+  # This is a comment
+  addr = 192.168.1.15
+  !port = 15000
+  user.1 = miallen
+  user.2 = gchan
+  </PRE>
+Lines beginning with the '#' and '!' characters will be interpreted as comments. Keys are separated from values with '='. Reserved characters, leading and trailing spaces, and Unicode are supported with '\' escapes. If <tt>USE_WCHAR</tt> is defined, strings are <tt>wchar_t</tt>. Otherwise string encoding is locale dependant. See the HTML documentation for the <TT>text</TT> module.
+<H2>Csv</H2>
+The <I>csv</I>(3m) module parses the popular comma separated values (CSV) format exported by applications like spreadsheets. This parser considers quoted elements, quoted quotes, and preserves carriage returns and newlines within elements. The separator character is specified by the user.
+
+
+<p>
+</p>
+Please note that escaping a quote requires that the entire element be quoted as well. So a quoted string element would actually look like <tt>"""foo"""</tt> where the outer quotes quote the element and the remaining quote pairs are each an escape followed by the literal quote. This is consistent with how popular spreadsheets behave and deviating from this behavior will generate an error.
+<H2>Diff</H2>
+The <I>diff</I>(3m) module will compute the <i>shortest edit script</i> (SES) of two sequences. This algorithm is perhaps best known as the one used in GNU <I>diff</I>(1) although GNU <I>diff</I> employs additional optimizations specific to line oriented input such as source code files whereas this implementation is more generic. Formally, this implementation of the SES solution uses the dynamic programming algorithm described by Myers [1] with the Hirschberg linear space refinement. The objective is to compute the minimum set of edit operations necessary to transform a sequence A of length N into B of length M. This can be performed in O(N+M*D^2) expected time where D is the <i>edit distance</i> (number of elements deleted and inserted to transform A into B). Thus the algorithm is particularly fast and uses less space if the difference between sequences is small. The interface is generic such that sequences can be anything that can be indexed and compared with user supplied functions including arrays of structures, linked lists, arrays of pointers to strings in a file, etc.
+<p>
+</p>
+
+[1] E. Myers, ``An O(ND) Difference Algorithm and Its Variations,'' Algorithmica 1, 2 (1986), 251-266. http://www.cs.arizona.edu/people/gene/PAPERS/diff.ps
+
+
+<H2>Eval</H2>
+The <I>eval</I>(3m) module will evaluate simple arithmentic expressions consisting of integers, symbols for which the provided <TT>symlook_fn</TT> returns an integer, and any of the operators <tt>|&amp;^+-*/()</tt>.
+Operator Precedence
+<p>
+</p>
+Operator precedence is roughly the same as the C language.
+<PRE>
+
+   ( )  higher
+   * /
+   + -
+  ^ &amp; | lower
+  </PRE>
+Prefixing integer tokens with minus <tt>'-'</tt> to indicate a negative value is currently not supported.
+
+
+<H2>Hashmap</H2>
+A  <I>hashmap</I>(3m)  object  associates  keys  with data pointers. Large numbers of elements may be stored and retrieved efficiently.
+<p>
+</p>
+Memory management of keys and data pointers is the resposibility of the user although <TT>del_fn</TT> function pointers (defined in <TT>allocator</TT>(3m)) may be specified with some <TT>hashmap</TT> functions to assist the user with this task.
+<H2>Hexdump</H2>
+	The <I>hexdump</I>(3m) module provides useful debugging functions for printing the contents of memory in conventional hex dump format.
+<H2>Linkedlist</H2>
+The <I>linkedlist</I> functions manipulate a sigularly linked list of data pointers.
+
+<H2>Msgno</H2>
+The <I>msgno</I>(3m) module provides a set of macros that when used consistently will generate stacktrace-like output like the following example:
+<PRE>
+
+  src/expatls.c:97:utf8tods: Character encoding error
+    src/expatls.c:449:start_fn: 
+    src/dom.c:405:DOM_Element_normalize: 
+    dump.c:30:main: Failed to process sample.xml
+  </PRE>
+<p>
+</p>
+<i>Note: As of version 0.9, this implementation no longer uses variadic macros -- it is strict standard C.</i>
+<p>
+</p>
+Additionally this module provides functions for managing error codes (or more generically message numbers) and associated messages across separate C libraries. This functionality is very similar to the <TT>com_err</TT> library but with runtime message registration. Each participating library registers a table of messages at runtime with the <TT>msgno_add_codes</TT> function. The <I>msgno</I>(3m) macros are provided to dispatch messages (e.g. print to <tt>stderr</tt>).
+<p>
+</p>
+<i>Note: The <def>msgno</def>(3m) macros operate on a shared buffer and therefore they are not reentrant. Meaning they cannot not be used concurrently by multiple threads.</i>
+<H2>Path</H2>
+	The <I>path</I>(3m) module provides functions for some common path manipulations.
+<H2>Pool</H2>
+	The <I>pool</I>(3m) module provides a container that will manage a reuseable pool of data objects. If the data objects are costly to create and can be reused in a different context the object can be released back to the pool for retrival at a later point without creating and destroying objects frequently. The number of data objects in a pool is limited to <tt>POOL_SIZE_MAX</tt> defined in the <I>pool</I>(3m) header file. This limit is 2040 by default which will create a bitmap of 256 bytes. Memory to store data pointers will increase dynamically as more space is required.
+
+
+<H2>Shellout</H2>
+The <I>shellout</I>(3m) module provides a robust interface to a UNIX shell such as sh or bash. Spawned programs may be controlled interactively from a terminal (i.e. "shell out") or entirely in the background (i.e. cron, network daemon, etc). For most purposes this functionality is identical to that of the popular <TT>expect</TT>(1) program.
+
+<p>
+</p>
+The <I>svcond</I>(3m) module is not available in the Win32 environment. This module also does not work on HP-UX because it does not support the <TT>forkpty</TT>(3) function.
+<H2>Stack</H2>
+The stack functions manipulate a simple LIFO stack of pointers to objects but the underlying array will grow and shrink as storage requirements change.
+<H2>Suba</H2>
+The <I>suba</I>(3m) module provides a "sub-allocator" that can allocate and free memory from a larger fixed size chunk of memory. This allocator is lock-less but reentrant meaning it will be faster but more consideration is necessary for coordinating multiple threads as opposed to the standard C library allocator.
+<p>
+</p>
+All objects within the allocator are tracked using offsets relative to the beginning of the sub-allocator and all offsets and state are stored as part of the memory being sub-allocated. Thus the memory backing the allocator can be copied and deleted without being deinitialized to achive a variety of useful effects. The memory of an allocator can be copied temporarily to implement transaction control or checkpoints. Complex data structures can be manipulated by multiple processes in shared memory. When used with the POSIX <I>mmap</I>(2) function (or Windows equivalent), sophisticated (but non-portable) data archives can be created easily.
+<p>
+</p>
+A very simple and effective use for <I>suba</I>(3m) is as a sub-allocator of stack memory that is implicitly freed when the function returns as the follow code example illustrates:
+<PRE>
+
+  int
+  myfn(void)
+  {
+      unsigned char chunk[0x3FFF]; /* 16K */
+      struct allocator *al = suba_init(chunk, 0x3FFF, 1, 0);
+      struct hashmap map;
+  
+      hashmap_init(&amp;map, 0, hash_text, cmp_text, NULL, al);
+  
+      /* use hashmap and allocator ... */
+  
+      return 0; /* no cleanup necessary; all memory on stack. */
+  }
+  </PRE>
+<H2>Svcond</H2>
+Condition variables are similar to semaphores however a lock can be specified with the wait function that will be unlocked just before blocking. When the blocked process or thread is subsequently signalled the lock will be reaquired. In practice this is frequently a superior coordination mechanism to semaphores alone. The <I>svcond</I>(3m) module provides a POSIX-like condition variables interface implemented using only System V semaphores.
+<p>
+</p>
+The <I>svcond</I>(3m) module is not available in the Win32 environment.
+<H2>Svsem</H2>
+Semaphores provide a mechanism to coordinate multiple processes or threads accessing shared resources. The <I>svsem</I>(3m) module provides a POSIX-like semaphore interface implemented using the more common System V semaphore interface.
+<p>
+</p>
+The <I>svsem</I>(3m) module is not available in the Win32 environment.
+<H2>Text</H2>
+The <TT>text</TT> module provides typedefs and macros to abstract the character type and all standard library functions that operate on them. The resulting source code will support extended charsets and can be used with little or no modification on a variety of popular platforms. If <tt>USE_WCHAR</tt> is defined, wide characters will be used (e.g. <tt>wchar_t</tt> is UTF-16LE on Windows). Otherwise the locale dependent encoding will be used (e.g. UTF-8 on Unix). Many functions in this library now accept <tt>tchar *</tt> strings however <tt>char *</tt> or <tt>wchar_t *</tt> strings can be used with these functions as <tt>tchar</tt> is just a typedef for <tt>unsigned char</tt> or <tt>wchar_t</tt>.
+<p>
+</p>
+Additionally, several sentinel pointer string functions are provided.
+<p>
+</p>
+See Tchar I18N Text Abstraction for details.
+<H2>Time</H2>
+	The <I>time</I>(3m) module provides functions for querying and manipluating time values.
+<H2>Varray</H2>
+The <I>varray</I>(3m) module is a variable array that permits quick access to elements by index without allocating all the memory for the array when the array is created. Instead, memory is allocated as necessary in increasingly larger chunks (32 * <tt>membsize</tt>, 64 * <tt>membsize</tt>, 128 * <tt>membsize</tt>, upto 2^20 * <tt>membsize</tt>).
+<hr noshade>
+<small></small>
+</body>
+</html>

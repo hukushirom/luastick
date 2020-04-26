@@ -1,0 +1,102 @@
+<interface name="suba"
+	short="Sub-allocate memory from larger chunk of memory.">
+
+<comments>
+	Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/suba.h</include>
+
+<title>Suba</title>
+<desc>
+The <def>suba</def>(3m) module provides a &quot;sub-allocator&quot; that can allocate and free memory from a larger fixed size chunk of memory. This allocator is lock-less but reentrant meaning it will be faster but more consideration is necessary for coordinating multiple threads as opposed to the standard C library allocator.
+<p/>
+All objects within the allocator are tracked using offsets relative to the beginning of the sub-allocator and all offsets and state are stored as part of the memory being sub-allocated. Thus the memory backing the allocator can be copied and deleted without being deinitialized to achive a variety of useful effects. The memory of an allocator can be copied temporarily to implement transaction control or checkpoints. Complex data structures can be manipulated by multiple processes in shared memory. When used with the POSIX <def>mmap</def>(2) function (or Windows equivalent), sophisticated (but non-portable) data archives can be created easily.
+<p/>
+A very simple and effective use for <def>suba</def>(3m) is as a sub-allocator of stack memory that is implicitly freed when the function returns as the follow code example illustrates:
+<pre>
+int
+myfn(void)
+{
+    unsigned char chunk[0x3FFF]; /* 16K */
+    struct allocator *al = suba_init(chunk, 0x3FFF, 1, 0);
+    struct hashmap map;
+
+    hashmap_init(&amp;map, 0, hash_text, cmp_text, NULL, al);
+
+    /* use hashmap and allocator ... */
+
+    return 0; /* no cleanup necessary; all memory on stack. */
+}
+</pre>
+</desc>
+
+<group>
+<title>Suba functions</title>
+<desc>
+These functions should be used to initialize a new or existing <ident>suba</ident> allocator as well as to allocate and free objects from the allocator.
+<p/>
+<i>Important:</i> When sharing objects between multiple processes it is important to note that it is not possible to share pointers between processes[1]. However, if the pointer points to an object allocated from a <ident>suba</ident> allocator it is possible to convert the pointer to an offset relative to the beginning of the sub-allocator using the <ident>suba_ref</ident> function. The <tt>ref_t</tt> returned can be passed between processes or stored in a file and later converted back to a valid pointer using the analygous <ident>suba_addr</ident> function.
+<p/>
+<small>[1] Actually, it is possible to share pointers between multiple processes if the pointer points to shared memory and it can be guaranteed that that memory is mapped at the same address in each process. The <def>mmap</def>(2) function accepts a parameter specifying the address at which the memory should be mapped but this is only a hint and use of that option is discouraged. Memory mapped in a parent process, however, will be inherited by children which does meet this guarantee. Pointers to constant data inherited by child processes may also be referenced even though it may not be shared.
+</small>
+</desc>
+<meth name="init">
+	<pre>struct allocator *suba_init(void *mem, size_t size, int rst, size_t mincell);</pre>
+	<param name="mem"/>
+	<param name="size"/>
+	<param name="rst"/>
+	<param name="mincell"/>
+	<desc>
+The <ident>suba_init</ident> function initializes a new sub-allocator or attaches to an existing allocator. The memory pointed to by the <tt>mem</tt> parameter must be at least <tt>size</tt> bytes. When the <tt>rst</tt> parameter is non-zero, the beginning of this memory is "reset" meaning it is initialized with the <tt>struct allocator</tt> structure (discarding any existing allocation state). The remaining memory, which is <tt>size</tt> bytes minus the header, constitutes the "heap" from which memory will be allocated and freed. If the <tt>rst</tt> parameter is zero, the existing header is used which presumably came from shared memory or a disk file. If the <tt>mincell</tt> parameter is non-zero, no memory "cell" will be less than this value (i.e. if <tt>mincell</tt> is 32 alloc-ing 5 bytes results in a 32 byte cell to back it). The <tt>mincell</tt> parameter will be increased to accomodate memory alignment requirements if necessary. Larger values for <tt>mincell</tt> can be faster but results in poorer memory utilization.
+	</desc>
+	<ret>
+The <ident>suba_init</ident> function returns a sub-allocator that can be used directly with the other <def>suba</def>(3m) functions or with the more general <def>allocator</def>(3m) functions used by other modules in this package. If an error occurs a null pointer is returned and <tt>errno</tt> is set accordingly.
+	</ret>
+</meth>
+<meth name="alloc">
+	<pre>void *suba_alloc(struct allocator *suba, size_t size, int zero);</pre>
+	<param name="suba"/>
+	<param name="size"/>
+	<param name="zero"/>
+	<desc>
+The <ident>suba_alloc</ident> function returns a pointer to memory of <tt>size</tt> bytes from the sub-allocator identified by the <tt>suba</tt> parameter. If the <tt>zero</tt> parameter is non-zero, the memory will be set to zero.
+	</desc>
+</meth>
+<meth name="free">
+	<pre>int suba_free(struct allocator *suba, void *ptr);</pre>
+	<param name="suba"/>
+	<param name="ptr"/>
+	<desc>
+The <ident>suba_free</ident> function frees the memory pointed to by <tt>ptr</tt> back into the allocator identified by <ident>suba</ident> parameter.
+	</desc>
+	<ret>
+On success, 0 is returned. On error, -1 is returned, and <tt>errno</tt> is set appropriately.
+	</ret>
+</meth>
+<meth name="addr">
+	<pre>void *suba_addr(const struct allocator *suba, const ref_t ref);</pre>
+	<param name="suba"/>
+	<param name="ref"/>
+	<desc>
+The <ident>suba_addr</ident> function converts an offset, relative to the beginning of the sub-allocator, of the object idenfied by the <tt>ref</tt> parameter to a pointer in the current processes address space. This function is equivalent to the expression <tt>(char *)suba + ref</tt> but with bounds checking.
+	</desc>
+	<ret>
+The <ident>suba_addr</ident> function returns a pointer to the object referenced by <tt>ref</tt> or <tt>NULL</tt> if the reference was invalid.
+	</ret>
+</meth>
+<meth name="ref">
+	<pre>ref_t suba_ref(const struct allocator *suba, const void *ptr);</pre>
+	<param name="suba"/>
+	<param name="ptr"/>
+	<desc>
+The <ident>suba_ref</ident> function converts a pointer <tt>ptr</tt> that points to an object allocated from the sub-allocator identified by the <tt>suba</tt> parameter to an offset relative to the beginning of the sub-allocator. This function is equivalent to the expression <tt>(char *)ptr - (char *)suba</tt> but with bounds checking.
+See the <i>Suba functions</i> section for a description of when it is necessary to convert pointer to a reference.
+	</desc>
+	<ret>
+The <ident>suba_ref</ident> function returns an offset to the object pointed to by <tt>ptr</tt> or 0 if the pointer was invalid.
+	</ret>
+</meth>
+</group>
+
+</interface>

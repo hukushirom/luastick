@@ -1,0 +1,46 @@
+<interface name="foo"
+	short="very brief description">
+
+<comments>
+	Copyright 2004 Your Name Here &lt;userid domain.com&gt;
+</comments>
+
+<include>foo.h</include>
+
+<title>Foo</title>
+<desc>
+General description that will appear in the overview page and in the HTML reference and man page.
+</desc>
+
+<group>
+<title>Foo definitions and functions</title>
+<desc>
+The <def>foo</def>(3) module ... in-depth description here (does not appear in the man page) ...
+</desc>
+
+<code>
+<title>Foo definitions</title>
+<pre>
+struct foo {
+	int n; /* members must be indented by a tab */
+};
+</pre>
+<desc>
+Description of Foo definitions (does not appear in the man page) ...
+</desc>
+</code>
+
+<meth name="bar">
+	<pre>int foo_bar(struct foo *foo, int n);</pre>
+	<param name="foo"/>
+	<param name="n"/>
+	<desc>
+The <ident>foo_bar</ident> function ...
+	</desc>
+	<ret>
+The <ident>foo_bar</ident> function returns 1 or 0 to indicate ...
+	</ret>
+</meth>
+</group>
+
+</interface>

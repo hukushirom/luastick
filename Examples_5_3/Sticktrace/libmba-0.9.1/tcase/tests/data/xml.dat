@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<s3>
+    <!-- This is a comment right here.
+	-->
+    <smb laddr="192.168.1.15"
+        socket_timeout="15000"
+        port="445"/>
+    <netbios wins="146.125.10.17"
+        baddr="192.168.1.255"
+        hostname="fruit"/>
+	<?foo bar?>
+    <users>
+        <user id="miallen" auth="nis.o">nis.foo.net:9812:fretos:IOJUSHHSYGGSHHSHHHJSJHHSJJSSS</user>
+        <user id="jpresto">
+            <!-- hello, world -->
+            ASHSJDJKKDIKKAOPPQLOMNMDNBBCHJUHYSGTWFFWRGHGK
+        </user>
+        <user id="maxroach">HSJDJASHSJDJKKDIKKAOPPQLOMNMDNBBCHJUHYSGTWFIJ</user>
+    </users>
+    <groups>
+        <group id="auditors">miallen, jpresto</group>
+        <group id="interns">jpresto</group>
+    </groups>
+    <exports>
+        <export name="foo" path="/tmp" accept="auditors" comment="Top Secret">
+            Public space to store auditing information. Used
+            primarily by employees of the Technology Dept. for
+            timesheets.
+        </export>
+        <export name="bar" path="/home/pub" deny="interns"/>
+        <export name="tmp" path="/mnt/scratch" accept="miallen"/>
+    </exports>
+</s3>
+

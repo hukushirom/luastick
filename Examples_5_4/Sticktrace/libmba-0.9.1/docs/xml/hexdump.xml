@@ -1,0 +1,33 @@
+<interface name="hexdump" short="print the contents of memory in conventional hex dump format">
+
+<comments>
+Copyright 2002 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/hexdump.h</include>
+
+<title>Hexdump</title>
+<desc>
+	The <def>hexdump</def>(3m) module provides useful debugging functions for printing the contents of memory in conventional hex dump format.
+</desc>
+
+<group>
+<title>Hexdump functions</title>
+<func name="hexdump">
+	<pre>void hexdump(FILE *stream, const void *src, size_t n, size_t width);</pre>
+	<param name="stream"/>
+	<param name="src"/>
+	<param name="n"/>
+	<param name="width"/>
+	<desc>
+Print <tt>n</tt> bytes of memory at <tt>src</tt> to <tt>stream</tt> in human readable &#34;hex dump&#34; format that is <tt>width</tt> columns wide.
+<pre>
+000b0:  0c ff 75 e8 e8 9f d5 ff  |..u.....|
+000b8:  ff 8b 45 f0 2b 45 10 c1  |..E.+E..|
+000c0:  f8 02 8d 65 f4 5b 5e 5f  |...e.[^_|
+</pre>
+	</desc>
+</func>
+</group>
+
+</interface>

@@ -1,0 +1,14 @@
+Check ~/todo for note
+Clean test directory
+Update Makefile, libmba.spec, and docs/Makefile
+Update documentation
+Remove unncessary includes in sources like msgno and hexdump
+Remove unncessary prototypes and forward references
+Rebuild docs updating ref/libmba.html with any new entity references if necessary
+Build archives (without -g)
+	tgz
+	copy tgz to RH 6.2 and build RPM
+	zip
+	copy zip to NT and build bin.zip
+Add blurb in README.txt
+Remove docs/www/dl link if it exists

@@ -1,0 +1,171 @@
+<interface name="msgno"
+	short="manage error codes and associated messages across separate libraries">
+
+<comments>
+	Copyright 2002 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/msgno.h</include>
+
+<title>Msgno</title>
+<desc>
+The <def>msgno</def>(3m) module provides a set of macros that when used consistently will generate stacktrace-like output like the following example:
+<pre>
+src/expatls.c:97:utf8tods: Character encoding error
+  src/expatls.c:449:start_fn: 
+  src/dom.c:405:DOM_Element_normalize: 
+  dump.c:30:main: Failed to process sample.xml
+</pre>
+<p/>
+<i>Note: As of version 0.9, this implementation no longer uses variadic macros -- it is strict standard C.</i>
+<p/>
+Additionally this module provides functions for managing error codes (or more generically message numbers) and associated messages across separate C libraries. This functionality is very similar to the <ident>com_err</ident> library but with runtime message registration. Each participating library registers a table of messages at runtime with the <ident>msgno_add_codes</ident> function. The <def>msgno</def>(3m) macros are provided to dispatch messages (e.g. print to <tt>stderr</tt>).
+<p/>
+<i>Note: The <def>msgno</def>(3m) macros operate on a shared buffer and therefore they are not reentrant. Meaning they cannot not be used concurrently by multiple threads.</i>
+</desc>
+
+<group>
+<title>MMSG, MMNO, MMNF, PMSG, PMNO, PMNF, AMSG, AMNO, AMNF</title>
+<desc>
+The nine <ident>msgno</ident> macros are used to initiate, append, and finally dispatch messages and formatted output to a user defined handler (the default is <tt>stderr</tt>).
+</desc>
+
+<code>
+<title>The 9 Msgno Macros</title>
+<pre>
+MMSG(fmt, ...)
+MMNO(msgno)
+MMNF(msgno, fmt, ...)
+
+/* Primary */
+PMSG(fmt, ...)
+PMNO(msgno)
+PMNF(msgno, fmt, ...)
+
+/* Additional */
+AMSG(fmt, ...)
+AMNO(msgno)
+AMNF(msgno, fmt, ...)
+
+extern int (*msgno_hdlr)(const char *fmt, ...);
+
+struct msgno_entry {
+	unsigned int msgno;
+	const char *msg;
+};
+</pre>
+<desc>
+The <i>Primary</i> and <i>Additional</i> macros (begin with P and A) do not dispatch messages to the <tt>msgno_hdlr</tt> but instead write to a global buffer. The <tt>MMSG</tt>, <tt>MMNO</tt>, or <tt>MMNF</tt> macros will dispatch messages to the <tt>msgno_hdlr</tt> in addition to any <i>Primary</i> and <i>Additional</i> messages in the global buffer. The general flow should be to use a <i>Primary</i> macro to initiate a new buffered message, then use the <i>Additional</i> macros to append messages, and finally trigger the entire stack-trace-like message to be dispatched to the <tt>msgno_hdlr</tt> with a <tt>MMSG</tt>, <tt>MMNO</tt>, or <tt>MMNF</tt> macro.
+<table>
+<tr><th></th><th>Formatted String</th><th>Message Number</th><th>Message Number and Formatted String</th></tr>
+<tr>
+<td>Primary message at the beginning of the message buffer</td>
+<td><b>PMSG</b> - The <i>primary message</i> macro writes formated <tt>printf</tt> like string to the beginning of the message buffer</td>
+<td><b>PMNO</b> - The <i>primary message number</i> macro accepts just a message number and writes the associated message the to the beginning of the message buffer</td>
+<td><b>PMNF</b> - The <i>primary message number format</i> macro accepts a message number and a formatted <tt>printf</tt> like string and writes both the message associated with the message number and the formatted output to the beginning of the message buffer</td>
+</tr>
+
+<tr>
+<td>Additional message appended to the message buffer</td>
+<td><b>AMSG</b> - The <i>additional message</i> macro appends a formated <tt>printf</tt> like string to the message buffer</td>
+<td><b>AMNO</b> - The <i>additional message number</i> macro accepts just a message number and appends the associated message the to the message buffer</td>
+<td><b>AMNF</b> - The <i>additional message number format</i> macro accepts a message number and a formatted <tt>printf</tt> like string and appends both the message associated with the message number and the formatted output to the message buffer</td>
+</tr>
+
+<tr>
+<td>Dispatched immediatedly to <tt>msgno_hdlr</tt></td>
+<td><b>MMSG</b> - The <i>message</i> macro writes a formatted string to the registered <tt>msgno_hdlr</tt></td>
+<td><b>MMNO</b> - THe <i>message number</i> macro writes the message associated with the provided number to the <tt>msgno_hdlr</tt></td>
+<td><b>MMNF</b> - The <i>message number format</i> macro writes both the message associated with the message number and a formatted <tt>printf</tt> like string to the <tt>msgno_hdlr</tt>.</td>
+</tr>
+
+</table>
+<p/>
+The <ident>msgno</ident> macros are designed to be the least intrusive way to place debugging information within C source code. The following is an example of how and where these macros might be used to generate the example stack-trace-like output listed above.
+<pre>
+if ((n = dec_mbsncpy(&amp;s, sn, NULL, -1, -1, "UTF-8")) == (size_t)-1) {
+	PMNO(DOM_Exception = DOM_CHARACTER_ENC_ERR);
+	return -1;
+}
+...
+if (utf8tods(atts[i], -1, ud) == (size_t)-1) {
+	AMSG("");
+	return;
+}
+...
+if (DOM_DocumentLS_load(doc, argv[1]) == -1 ||
+		DOM_DocumentLS_fwrite(doc, stdout) == -1) {
+	MMSG("Failed to process %s", argv[1]);
+	return EXIT_FAILURE;
+}
+</pre>
+</desc>
+</code>
+</group>
+
+<group>
+<title>Message management functions</title>
+<meth name="add_codes">
+	<pre>int msgno_add_codes(struct msgno_entry *list);</pre>
+	<param name="list"/>
+	<desc>
+The <ident>mnsgo_add_codes</ident> function registers an array of <tt>msgno_entry</tt> structures. The array must contain at least one element and the <tt>msg</tt> member of the last element must be <tt>NULL</tt>. Each <tt>msgno</tt> value must be greater than the previous value. Values will be created at runtime if not provided (e.g. all 0s becomes 0,1,2,3,..). Create macros for each message value by referencing the <tt>msgno</tt> member like the following:
+<pre>
+#define DOM_INDEX_SIZE_ERR              dom_codes[0].msgno
+#define DOM_DOMSTRING_SIZE_ERR          dom_codes[1].msgno
+
+struct msgno_entry dom_codes[] = {      
+    { 1, "The index specified was out of range" },
+    { 0, "The text size is out of range" },
+    ...
+    { 0, NULL }
+};
+</pre>
+	</desc>
+	<ret>
+The <ident>msgno_add_codes</ident> function returns 0 if the operation was successful. Otherwise -1 is returned and <tt>errno</tt> is set appropriately.
+	</ret>
+</meth>
+<meth name="msg">
+	<pre>const char *msgno_msg(unsigned int msgno);</pre>
+	<param name="msgno"/>
+	<desc>
+The <ident>msgno_msg</ident> function returns the message associated with the <tt>msgno</tt> parameters that have previously been registered with <ident>msgno_add_codes</ident>. If no such message has been registered, then the message "No such msgno list" or "No such message in msgno list" is returned.
+	</desc>
+</meth>
+<meth name="hdlr_stderr">
+	<pre>int msgno_hdlr_stderr(const char *fmt, ...);</pre>
+	<param name="fmt"/>
+	<desc>
+The <ident>msgno_hdlr_stderr</ident> function writes msgno messages to <tt>stderr</tt>. It is the default msgno message handler. The msgno message handler may be changed by reassigning a new function that matches the signature to the <ident>msgno_hdlr</ident> function pointer.
+<p/>
+Tip: If you are working on a Microsoft Windows MFC application, create a <tt>msgno_hdlr</tt> function like the one below that calls <tt>AfxMessageBox</tt> and set it to <tt>msgno_hdlr</tt> in <tt>InitInstance</tt>. This will permit your MFC application to report errors generated from within libmba.
+<pre>
+static int
+MessageBoxHdlr(const char *fmt, ...)
+{
+	char mbs[4096];
+	wchar_t wcs[4096];
+	va_list ap;
+	va_start(ap, fmt);
+
+	_vsnprintf(mbs, 4096, fmt, ap);
+	if (mbstowcs(wcs, mbs, 4096) != (size_t)-1) {
+		AfxMessageBox(wcs);
+	}
+
+	va_end(ap);
+	return 0;
+}
+BOOL CWutApp::InitInstance()
+{
+	...
+	msgno_hdlr = MessageBoxHdlr;
+</pre>
+	</desc>
+	<ret>
+The <ident>msgno_hdlr_stderr</ident> function (i.e. the <ident>msgno_hdlr</ident> function) returns the number of characters printed to <tt>stderr</tt>.
+	</ret>
+</meth>
+</group>
+</interface>

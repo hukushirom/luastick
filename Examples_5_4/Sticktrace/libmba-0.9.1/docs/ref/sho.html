@@ -1,0 +1,204 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Shellout</TITLE>
+</HEAD>
+<BODY>
+<H1>13. Shellout</H1>
+The <I>shellout</I>(3m) module provides a robust interface to a UNIX shell such as sh or bash. Spawned programs may be controlled interactively from a terminal (i.e. "shell out") or entirely in the background (i.e. cron, network daemon, etc). For most purposes this functionality is identical to that of the popular <TT>expect</TT>(1) program.
+<P>
+<B CLASS="tfc">Example 6. hello, world</B>
+<BR>
+To use the <I>shellout</I>(3m) module effectively there are a few important rules that must be followed. One, is that the <tt>sho_close</tt> function calls <I>wait</I>(2) and will not return until the process spawned within the shell exits. If the child program is well behaved this can be achived by sending "exit $?\n" however doing so will not trigger the shell to exit if it is not ready to receive input.
+<p>
+</p>
+<i>Tip: If your program is not responding it is possible to write the special Ctrl-C chacter. For example on Linux at least this appears to be "\x03". If the process still does not respond a <tt>kill</tt>(2) can be used to send a <tt>SIGKILL</tt> to <tt>sh-&gt;pid</tt> however even though this is almost garunteed to get shell control back take care that it does not leave a zombie process lingering in the background.</i>
+<p>
+</p>
+The below code is a minimal "hello, world" example that opens a new /bin/sh shell with <tt>sho_open</tt> and writes the command "echo hello, world\n" to it. Note the '\n' character is as important as it is equivalent to pressing the 'Enter' key. Then it calls <tt>sho_expect</tt> which will wait for the command prompt 'sh&gt; ' to come back. The command prompt is defined by the <tt>ps1</tt> parameter to <tt>sho_open</tt> so the caller will know what it is and that it is uniqe to the expected output.
+<PRE>
+
+  struct sho *sh;
+  const char *cmd = "echo hello, world\n";
+  const char *pv[] = { "sh&gt; " };
+  char buf[256];
+  int i;
+  
+  sh = sho_open("sh", pv[0], 0);
+  writen(sh-&gt;ptym, cmd, strlen(cmd));
+  
+  i = sho_expect(sh, pv, 1, buf, 256, 10);
+  
+  if (i == 1) { 
+      fprintf(stderr, "success: %s\n", buf);
+  } else if (i == -1) {
+      perror("timeout");
+  } else if (i == 0) { 
+      fputs("EOF\n", stderr);
+  }
+  
+  /* output */
+  
+  success: hello, world
+  sh&gt;
+  </PRE>
+In this example the caller knows when the command has completed when the command prompt is returned. Keep in mind that it is usually a better stategy to wait for the command prompt and then interpret the output in the buffer so that unexpected output doesn't result in a timeout. Provided the logic is equipted to handle the unexcepted output it might be perfectly reasonable to call <tt>sho_expect</tt> with other strings in the pattern vector. For example, to get a list of mounted filesystems the <I>mount</I>(8) command might be used with no arguments. If the pattern vector were change to: <tt>const char *pv[] = { "sh&gt; ", "\n" };</tt> for example the <tt>sho_expect</tt> function would return with each line in the buffer which assists in parsing the values in each mount entry.
+</P>
+<p>
+</p>
+The <I>svcond</I>(3m) module is not available in the Win32 environment. This module also does not work on HP-UX because it does not support the <TT>forkpty</TT>(3) function.
+<H3>13.1. Shellout functions</H3>
+<A name="The struct sho structure"></A>
+<P>
+<B CLASS="tfc">The <TT>struct sho</TT> structure</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/shellout.h&gt;
+	
+  SHO_FLAGS_INTERACT
+  SHO_FLAGS_ISATTY
+  
+  struct sho {
+  	char ps1[32];
+  	int flags;
+  	pid_t pid;
+  	int ptym;
+  	struct termios t0;
+  };
+  </PRE>
+<B>Description</B>
+<BR>
+<BR>
+</P>
+<A name="open"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>sho_open</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/shellout.h&gt;
+  struct sho *sho_open(const char *sh, const char *ps1, int flags);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>sho_open</TT> function uses <I>forkpty</I>(3) and <I>execvp</I>(3) to execute a UNIX shell in a pseudo terminial. The <tt>struct sho *</tt> object returned may be used with <tt>sho_expect</tt>, <tt>writen</tt>, etc to interact with the shell. Writing characters to the <tt>sh-&gt;ptym</tt> (PTY master) descriptor will be read by the shell as if they had been typed at a terminal. A <tt>struct sho *</tt> must be closed with <tt>sho_close</tt>.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>sho_open</TT> function returns the new shell instance or NULL if an error occured in which case errno will be set appropriately.
+	<P>
+</P>
+<A name="close"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>sho_close</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/shellout.h&gt;
+  int sho_close(struct sho *sh);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>sho_close</TT> function calls <tt>wait</tt>(2) to wait for the shell process to exit. The shell will not exit until it is instructed to. This can be occomplished by writing "exit $?\n" or if the program spawned within the shell is taking too long, a Ctrl-C may be written by sending "\x03\n". Or, as a last resort, <tt>SIGKILL</tt> may be sent to <tt>sh-&gt;pid</tt> with <tt>kill</tt>(2).
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>sho_close</TT> function returns the exit status of the shell. However, normally it is desireable to return the exit status of the last program to run within that shell. In this case the special shell variable "$?" which evaluates to the exit status of the last program to run may passed to the exit command such as "exit $?\n".
+	<P>
+</P>
+<A name="expect"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>sho_expect</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/shellout.h&gt;
+  int sho_expect(struct sho *sh, const char *pv[], int pn, char *dst, size_t dn, int timeout);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>sho_expect</TT> function accepts a "pattern vector" of <tt>pn</tt> strings to match and reads characters from the shell represented by <tt>sh</tt> copying each into <tt>dst</tt> for no more than <tt>dn</tt> bytes and returns either;
+<ul>
+<li>the index of the matching pattern + 1,</li>
+<li>zero if EOF was read from <tt>sh-&gt;ptym</tt>,</li>
+<li>or -1 if <tt>timeout</tt> was exceeded or another error occured.</li>
+</ul>
+Tips: It is very easy to be confused about what you think the shell is doing and what it is really doing. It is important to emulate what happens when you type the equivalent input in a shell in a terminal window but consider that the shell does not echo your commands. The shell will just write the output of the program followed by the shell prompt (whatever you defined that to be). If you are issueing multiple commands or the "exit $?\n" command take care not to write the commands before the shell is ready (receive the shell prompt). Finally, the buffer passed to <tt>sho_expect</tt> will only contain the characters up to and including the pattern that matched. If the pattern matched is not the shell prompt it will be necessary to call <tt>sho_expect</tt> again to match the prompt before another command may be issued.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>sho_expect</TT> function returns the index of the matching pattern + 1, 0 if EOF was read, or -1 if an error occured in which case errno will be set appropriately. If the <tt>timeout</tt> period is exceeded <TT>sho_expect</TT> will return -1 and set errno to EINTR.
+	<P>
+</P>
+<A name="loop"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>sho_loop</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/shellout.h&gt;
+  int sho_loop(struct sho *sh, const char *pv[], int pn, int timeout);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>sho_loop</TT> function uses the <I>select</I>(2) system call to read from the shell and write to <tt>stdout</tt> at the same time. The loop will exit when either one of <tt>pn</tt> patterns at the beginning of the pattern vector <tt>pv</tt> is encountered or the <tt>timeout</tt> period has expired.
+<p>
+</p>
+When combined with the <tt>SHO_FLAGS_INTERACT</tt> flag passed to <tt>sho_open</tt> this will effectively create a shell within a shell. Note, currently some programs will not operate correctly (e.g. vi) because certain <tt>termios</tt> flags are not optimal for interactive sessions. This would need futher study.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>sho_loop</TT> function returns the index of the matching pattern + 1, 0 if EOF was read, or -1 if an error occured in which case errno will be set appropriately. If the <tt>timeout</tt> period is exceeded <TT>sho_expect</TT> will return -1 and set errno to EINTR.
+	<P>
+</P>
+<HR NOSHADE>
+<small>
+Copyright 2003 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

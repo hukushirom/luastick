@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Time</TITLE>
+</HEAD>
+<BODY>
+<H1>19. Time</H1>
+	The <I>time</I>(3m) module provides functions for querying and manipluating time values.
+<H3>19.1. Time functions</H3>
+<A name="current_millis"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>time_current_millis</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/time.h&gt;
+  uint64_t time_current_millis(void);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>time_current_millis</TT> function returns the current time in milliseconds since Jan 1, 1970 as a 64 bit integer. It works equally well on UNIX and Windows.
+	<BR>
+<P>
+</P>
+<HR NOSHADE>
+<small>
+Copyright 2003 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

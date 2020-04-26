@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, A, .tfc {
+			color: #000080;
+			font-family: arial, verdana; font-size: small;
+		}
+		PRE { 
+		    font-family: monospace;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+		TH {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+		TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-right: 1px solid #000000;
+			font-family: arial, verdana; font-size: small;
+		}
+	</STYLE>
+<TITLE>Bitset</TITLE>
+</HEAD>
+<BODY>
+<H1>2. Bitset</H1>
+	The <I>bitset</I>(3m) module provides functions for testing and manipulating an arbitrary pointer to memory as a set of bits. Unlike other modules in Libmba, this is not an abstract data type in that it is the responsibility of the user to manage the memory of the bitset. All <I>bitset</I>(3m) operations threat the target memory as an array of <tt>unsigned char</tt> elements. Bit 0 of each element is the least significant bit whereas bit 7 is the most significant bit.
+<p>
+</p>
+Paramters and return values that represent the index of a bit in the <I>bitset</I>(3m) start at 0 relative to the provided target memory. It is the caller's responsability to ensure that a bit index parameter falls within the target memory.
+<H3>2.1. The bitset functions</H3>
+These functions should be used to test and manipulate a memory pointer as a set of bits.
+<A name="isset"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>bitset_isset</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/bitset.h&gt;
+  int bitset_isset(void *ptr, int bit);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>bitset_isset</TT> function tests the bit at the index identified by <tt>bit</tt> and returns 1 or 0 to indicate that it is set or unset respectively.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>bitset_isset</TT> function returns 1 or 0 to indicate that the bit at the index identified by <tt>bit</tt> is set or unset respectively.
+	<P>
+</P>
+<A name="set"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>bitset_set</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/bitset.h&gt;
+  int bitset_set(void *ptr, int bit);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>bitset_set</TT> function sets the bit at the index identified by <tt>bit</tt> and returns 1 if the bit was set or 0 if the <TT>bitset</TT> was not modified.
+	<BR>
+<P>
+</P>
+<A name="unset"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>bitset_unset</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/bitset.h&gt;
+  int bitset_unset(void *ptr, int bit);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>bitset_unset</TT> function unsets the bit at the index identified by <tt>bit</tt> and returns 1 if the bit was unset or 0 if the <TT>bitset</TT> was not modified.
+	<BR>
+<P>
+</P>
+<A name="toggle"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>bitset_toggle</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/bitset.h&gt;
+  void bitset_toggle(void *ptr, int bit);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>bitset_toggle</TT> function toggles the bit identified by <tt>bit</tt>. This function does not return a value.
+	<BR>
+<P>
+</P>
+<A name="find_first"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>bitset_find_first</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/bitset.h&gt;
+  int bitset_find_first(void *ptr, void *plim, int val);<BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>bitset_find_first</TT> function returns the index of the first bit with the value <tt>val</tt> starting at the memory <tt>ptr</tt> up to, but not including, the memory at <tt>plim</tt>. Specifically if <tt>val</tt> is 0 the index of the first bit not set is returned whereas if <tt>val</tt> is non-zero the index of the first bit that is set is returned.
+	<BR>
+<B>Returns</B>
+<BR>
+The <TT>bitset_find_first</TT> function returns the index of the first bit with the value <tt>val</tt> or -1 and sets <TT>errno</TT> to <tt>ENOENT</tt> if there is no such bit in the memory between <tt>ptr</tt> and <tt>plim</tt>.
+	<P>
+</P>
+<A name="iterate"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>bitset_iterate</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/bitset.h&gt;
+  void bitset_iterate(iter_t *iter); <BR>
+</PRE>
+<B>Description</B>
+<BR>
+The <TT>bitset_iterate</TT> and <TT>bitset_next</TT> functions are used to iterate over the bits in the <I>bitset</I>(3m) identified by the memory at <tt>ptr</tt>.
+	<BR>
+<P>
+</P>
+<A name="next"></A>
+<P>
+</P>
+<B CLASS="tfc">The <TT>bitset_next</TT> function</B>
+<BR>
+<B>Synopsis</B>
+<PRE>
+<BR>  #include &lt;mba/bitset.h&gt;
+  int bitset_next(void *ptr, void *plim, iter_t *iter);<BR>
+</PRE>
+<B>Returns</B>
+<BR>
+The <TT>bitset_next</TT> function returns 0, 1, or -1 to indicate the next bit in the memory at <tt>ptr</tt> representing this bitset(3m). If the next bit is unset, 0 is returned. If the bit is set, 1 is returned. Only memory up to, but not including, <tt>plim</tt> will be examined. When <tt>plim</tt> is reached -1 is returned.
+	<P>
+</P>
+<HR NOSHADE>
+<small>
+	Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</small>
+</BODY>
+</HTML>

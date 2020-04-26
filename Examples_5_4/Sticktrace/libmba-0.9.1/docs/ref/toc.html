@@ -1,0 +1,398 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: f5f5f5;
+			font-family: arial, verdana; font-size: small;
+		}
+		H2, H3, .tfc {
+			font-family: arial, verdana; font-size: small;
+			color: #000080;
+		}
+		A {
+			color: #000080;
+			font-weight: bold;
+		}
+		PRE { 
+		    font-family: monospaced, courier;
+			border: 1px lightgrey dotted;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #efefef; 
+		}
+		TABLE {
+			float: right;
+			border-collapse: collapse;
+			border-top: 1px solid #000000;
+			border-right: 1px solid #000000;
+		}
+		TH, TD {
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 5px;
+			padding-left: 5px;
+			border-bottom: 1px solid #000000;
+			border-left: 1px solid #000000;
+		}
+	</STYLE>
+<TITLE>libmba &lt;mba/*.h&gt;</TITLE>
+</HEAD>
+<BODY>
+<H2>Index</H2>
+<A HREF="overview.html" TARGET="right">Overview</A>
+<BR>
+<A href="allocator.html" target="right">Allocator</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="allocator.html#" target="right">Definitions</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="allocator.html#alloc" target="right">alloc</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="allocator.html#free" target="right">free</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="allocator.html#realloc" target="right">realloc</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="allocator.html#set_reclaim" target="right">set_reclaim</A>
+<BR>
+</SMALL><A href="bitset.html" target="right">Bitset</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="bitset.html#isset" target="right">isset</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="bitset.html#set" target="right">set</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="bitset.html#unset" target="right">unset</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="bitset.html#toggle" target="right">toggle</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="bitset.html#find_first" target="right">find_first</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="bitset.html#iterate" target="right">iterate</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="bitset.html#next" target="right">next</A>
+<BR>
+</SMALL><A href="cfg.html" target="right">Cfg</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#init" target="right">init</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#deinit" target="right">deinit</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#new" target="right">new</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#del" target="right">del</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#load" target="right">load</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#load_str" target="right">load_str</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#load_env" target="right">load_env</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#load_cgi_query_string" target="right">load_cgi_query_string</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#store" target="right">store</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#fwrite" target="right">fwrite</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#iterate" target="right">iterate</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#next" target="right">next</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#get_str" target="right">get_str</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#vget_str" target="right">vget_str</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#get_short" target="right">get_short</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#get_int" target="right">get_int</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#get_long" target="right">get_long</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#vget_short" target="right">vget_short</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#vget_int" target="right">vget_int</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="cfg.html#vget_long" target="right">vget_long</A>
+<BR>
+</SMALL><A href="csv.html" target="right">Csv</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="csv.html#row_parse" target="right">row_parse</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="csv.html#row_fread" target="right">row_fread</A>
+<BR>
+</SMALL><A href="diff.html" target="right">Diff</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="diff.html#" target="right">Diff definitions</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="diff.html#diff" target="right">diff</A>
+<BR>
+</SMALL><A href="eval.html" target="right">Eval</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="eval.html#new" target="right">new</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="eval.html#del" target="right">del</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="eval.html#eval_expression" target="right">eval_expression</A>
+<BR>
+</SMALL><A href="hashmap.html" target="right">Hashmap</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#" target="right">Hashmap Definitions</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#init" target="right">init</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#deinit" target="right">deinit</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#new" target="right">new</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#del" target="right">del</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#clear" target="right">clear</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#clean" target="right">clean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#put" target="right">put</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#get" target="right">get</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#is_empty" target="right">is_empty</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#size" target="right">size</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#iterate" target="right">iterate</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#next" target="right">next</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hashmap.html#remove" target="right">remove</A>
+<BR>
+</SMALL><A href="hexdump.html" target="right">Hexdump</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="hexdump.html#hexdump" target="right">hexdump</A>
+<BR>
+</SMALL><A href="linkedlist.html" target="right">Linkedlist</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#init" target="right">init</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#deinit" target="right">deinit</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#new" target="right">new</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#del" target="right">del</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#clear" target="right">clear</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#add" target="right">add</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#insert" target="right">insert</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#insert_sorted" target="right">insert_sorted</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#is_empty" target="right">is_empty</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#size" target="right">size</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#get" target="right">get</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#get_last" target="right">get_last</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#iterate" target="right">iterate</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#next" target="right">next</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#remove" target="right">remove</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#remove_data" target="right">remove_data</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="linkedlist.html#remove_last" target="right">remove_last</A>
+<BR>
+</SMALL><A href="msgno.html" target="right">Msgno</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="msgno.html#" target="right">The 9 Msgno Macros</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="msgno.html#add_codes" target="right">add_codes</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="msgno.html#msg" target="right">msg</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="msgno.html#hdlr_stderr" target="right">hdlr_stderr</A>
+<BR>
+</SMALL><A href="path.html" target="right">Path</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="path.html#canon" target="right">canon</A>
+<BR>
+</SMALL><A href="pool.html" target="right">Pool</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="pool.html#create" target="right">create</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="pool.html#destroy" target="right">destroy</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="pool.html#new" target="right">new</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="pool.html#del" target="right">del</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="pool.html#clean" target="right">clean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="pool.html#get" target="right">get</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="pool.html#release" target="right">release</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="pool.html#size" target="right">size</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="pool.html#unused" target="right">unused</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="pool.html#iterate" target="right">iterate</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="pool.html#next" target="right">next</A>
+<BR>
+</SMALL><A href="sho.html" target="right">Shellout</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="sho.html#" target="right">The struct sho struct...</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="sho.html#open" target="right">open</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="sho.html#close" target="right">close</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="sho.html#expect" target="right">expect</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="sho.html#loop" target="right">loop</A>
+<BR>
+</SMALL><A href="stack.html" target="right">Stack</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#init" target="right">init</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#deinit" target="right">deinit</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#new" target="right">new</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#del" target="right">del</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#clear" target="right">clear</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#clean" target="right">clean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#push" target="right">push</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#pop" target="right">pop</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#is_empty" target="right">is_empty</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#size" target="right">size</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#iterate" target="right">iterate</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#next" target="right">next</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="stack.html#peek" target="right">peek</A>
+<BR>
+</SMALL><A href="suba.html" target="right">Suba</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="suba.html#init" target="right">init</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="suba.html#alloc" target="right">alloc</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="suba.html#free" target="right">free</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="suba.html#addr" target="right">addr</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="suba.html#ref" target="right">ref</A>
+<BR>
+</SMALL><A href="svcond.html" target="right">Svcond</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svcond.html#create" target="right">create</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svcond.html#destroy" target="right">destroy</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svcond.html#wait" target="right">wait</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svcond.html#signal" target="right">signal</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svcond.html#broadcast" target="right">broadcast</A>
+<BR>
+</SMALL><A href="svsem.html" target="right">Svsem</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#create" target="right">create</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#destroy" target="right">destroy</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#open" target="right">open</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#close" target="right">close</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#remove" target="right">remove</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#pool_create" target="right">pool_create</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#pool_destroy" target="right">pool_destroy</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#wait" target="right">wait</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#trywait" target="right">trywait</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#post" target="right">post</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#post_multiple" target="right">post_multiple</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#getvalue" target="right">getvalue</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="svsem.html#setvalue" target="right">setvalue</A>
+<BR>
+</SMALL><A href="text.html" target="right">Text</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="text.html#" target="right">The tchar Type</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="text.html#" target="right">The TEXT Macro</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="text.html#" target="right">Function Macros</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="text.html#text_length" target="right">text_length</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="text.html#text_copy" target="right">text_copy</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="text.html#text_copy_new" target="right">text_copy_new</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="text.html#text_size" target="right">text_size</A>
+<BR>
+</SMALL><A href="time.html" target="right">Time</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="time.html#current_millis" target="right">current_millis</A>
+<BR>
+</SMALL><A href="varray.html" target="right">Varray</A>
+<BR>
+<SMALL>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="varray.html#init" target="right">init</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="varray.html#deinit" target="right">deinit</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="varray.html#new" target="right">new</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="varray.html#del" target="right">del</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="varray.html#get" target="right">get</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="varray.html#index" target="right">index</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="varray.html#release" target="right">release</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="varray.html#iterate" target="right">iterate</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="varray.html#next" target="right">next</A>
+<BR>
+</SMALL>
+</BODY>
+</HTML>

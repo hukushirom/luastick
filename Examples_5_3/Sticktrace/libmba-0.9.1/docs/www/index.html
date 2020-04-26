@@ -1,0 +1,279 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+		BODY {
+			background-color: #808080;
+		}
+		H1 {
+			font-family: verdana, arial;
+			font-size: normal;
+			color: #000000;
+		}
+		H2 {
+			font-family: verdana, arial;
+			font-size: normal;
+			color: #000000;
+		}
+		H3 {
+			font-family: verdana, arial;
+			font-size: small;
+			color: #000080;
+		}
+		A {
+			color: #000080;
+			font-weight: bold;
+		}
+		BIG {
+			color: #000080;
+			font-weight: bold;
+			font-size: 50px;
+		}
+		EM {
+			color: #000080;
+			font-family: Times New Roman;
+			font-weight: bold;
+			font-size: 20px;
+		}
+		PRE { 
+		    font-family: monospaced, courier;
+		    white-space: pre; 
+		    color: black;
+		    background-color: #e0e0e0; 
+		}
+		TABLE {
+			border-collapse: collapse;
+		}
+		TH, TD {
+			font-family: verdana, arial;
+			font-size: small;
+		}
+		.mainpane {
+			background-color: #A2B5CD;
+			padding: 10px;
+		}
+		.leftpane {
+			background-color: #FFD700;
+			padding: 10px;
+		}
+		.middlepane {
+			background-color: #f5f5f5;
+			padding: 10px;
+		}
+		.footer {
+			background-color: #808080;
+		}
+	</STYLE>
+<TITLE>libmba</TITLE>
+</HEAD>
+<BODY>
+<TABLE>
+<TR>
+<TD colspan="2" class="mainpane"><BIG>libmba</BIG>
+<BR>
+<b>A library of generic C modules</b>
+<P>
+</P>
+The  libmba  package  is  a  collection  of  mostly  independent  C modules
+potentially  useful  to  any  project. There are the usual ADTs including a
+linkedlist,  hashmap, pool, stack, and varray, a flexible memory allocator,
+CSV   parser,   path   canonicalization  routine,  I18N  text  abstraction,
+configuration  file  module,  portable  semaphores, condition variables and
+more.  The  code  is  designed so that individual modules can be integrated
+into  existing  codebases  rather  than requiring the user to commit to the
+entire  library.  The code has no typedefs, few comments, and extensive man
+pages and HTML documentation. 
+<P>
+</P>
+</TD>
+</TR>
+<TR>
+<TD valign="top" width="250" class="leftpane">
+<h1>Links</h1>
+<a href="dl/">Download</a>
+<br>
+<a href="dl/docs/ref/libmba.html">API Reference</a>
+<br>
+<a href="dl/src/">Browse The Source</a>
+<br>
+<br>
+<h2>Similar Projects</h2>
+<small>
+These projects <i>look</i> similar in purpose to libmba although in most cases that has not be confirmed and their presence here is in not necessarily an endorsement of quality. They are listed here (not in any particular order) only to help developers focus their search.
+<p>
+</p>
+</small>
+<a href="http://www.freetype.org/mlib/">MLib</a>
+<br>
+<a href="http://www.stanford.edu/~blp/avl/">libavl</a>
+<br>
+<a href="http://www.xref-tech.com/sglib/">SGLIB</a>
+<br>
+<a href="http://libtc.sourceforge.net/">Libtc</a>
+<br>
+<a href="http://www.netsw.org/system/libs/generalpurpose/">netsw.org</a>
+<br>
+<a href="http://www.ossp.org/">OSSP</a>
+<br>
+<a href="http://freshmeat.net/projects/libast/">LibAST</a>
+<br>
+<a href="http://www.skarnet.org/software/skalibs/">skalibs</a>
+<br>
+<a href="http://libslack.org/">libslack</a>
+<br>
+<a href="http://libh.slashusr.org/">LIBH</a>
+<br>
+<a href="http://arch.quackerhead.com/~lord/">Hackerlab</a>
+<br>
+<a href="http://users.footprints.net/~kaz/kazlib.html">Kazlib</a>
+<br>
+<a href="http://xref-tech.com/sglib/">SGLIB</a>
+<br>
+<a href="http://tos.maintree.com/matt/Projects/MattsCUtilityLibrary.html">Matt's C Utility Library</a>
+<br>
+<a href="http://ubiqx.org/modules.html">ubiqx</a>
+<br>
+<a href="http://www.nongnu.org/gdsl/">gdsl</a>
+<br>
+<a href="http://www.cs.berkeley.edu/~smcpeak/elkhound/sources/smbase/">smbase</a>
+<br>
+</TD><TD valign="top" class="middlepane">
+<h1>News</h1>
+<EM>libmba-0.9.0 released</EM>
+<BR>
+<SMALL>Thu Apr 28, 2005</SMALL>
+<BR>
+Portability of libmba has been greatly improved. It has been compiled and tested (albeit not extensively on all platforms) on OSF1, HP-UX [1], Linux, Mac OS X [2], and FreeBSD with gcc, DECC, and aC++. There have also been the following modifications and enhancements.
+<ul>
+<li>
+The <ident>msgno</ident>(3m) module has been significantly reworked. The <tt>MSG</tt>, <tt>MNO</tt>, and <tt>MNF</tt> macros have been renamed to <tt>MMSG</tt>, <tt>MMNO</tt>, and <tt>MMNF</tt> respectively to reduce namespace collisions. There is also no longer a dependance on variadic macros. The <ident>msgno</ident>(3m) module is now highly portable. The <tt>MSGNO</tt> macro is no longer used -- <ident>msgno</ident> is now enabled at all times.
+</li>
+<li>
+The <ident>bitset</ident>(3m) module macros have been converted to functions so that using expressions  as arguments (e.g. <tt>i++</tt>) does not result in undefined behavior. As a result, some return values have changed. Please review the man page or HTML documentation.
+</li>
+<li>
+A debug module has been added that provides some useful backtrace oriented functions but it is not documented because it is specific to GNUC on i386.
+</li>
+<li>
+The <ident>linkedlist_insert_sorted</ident> function has been modified to support a context parameter that is passed as-is to the supplied <ident>cmp_fn</ident> defined in <ident>hashmap</ident>(3m). The <ident>compare_fn</ident> type has been removed.
+</li>
+<li>
+A <ident>path_name</ident> function has been added to the <ident>path</ident>(3m) module.
+</li>
+<li>
+Some parameters of <ident>shellout</ident>(3m) function have been changed from <tt>unsigned char</tt> to <tt>char</tt>.
+</li>
+<li>
+The <ident>csv</ident>(3m) module will now exclude carriage returns preceeding newlines in elements. 
+</li>
+<li>
+A <tt>SUBA_PTR_SIZE</tt> macro has been added to the <ident>suba</ident>(3m) module that evaluates to the size of the cell backing the suba allocated object. This code can also be easily modified to support a payload within each cell (e.g. stack addresses for stacktraces).
+</li>
+<li>
+The <tt>SEM_UNDO</tt> flag has been been replaced with <tt>O_UNDO</tt> to avoid possible collision with other <tt>O_*</tt> bits.
+</li>
+<li>
+A <ident>varray_index</ident> function has been added. 
+</li>
+<li>
+A variety of other small bugfixes have been applied.
+</li>
+</ul>
+As usual some nifty <a href="dl/examples/">example programs</a> are included.
+<ul>
+<li>
+<tt>csvprint</tt> has been considerably improved.</li>
+<li>
+<tt>errcmp</tt> is a program used to generate this useful <a href="http://www.ioplex.com/~miallen/errcmp.html">Errno Codes by Platform</a> page.</li>
+<li>
+<tt>bindiff</tt>, <tt>hexdiff</tt>, <tt>spell</tt>, and <tt>strdiff</tt> thoroughly illustrate the possibilities of the diff(3m) module</li>
+<li>
+<tt>hexd</tt> will print hexdump formatted output based on a comma separated list of ranges. There is also an HTML option that will color code the ranges. This is potantially useful for documenting binary formats. Below is an example <tt>SMB_COM_SESSION_SETUP</tt> response packet from the CIFS networking protocol.
+<p>
+</p>
+<img src="images/hexd.gif">
+<p>
+</p>
+It was generated with the below command where <tt>ssxr.bin</tt> is a file containing the raw packet data (exported from Ethereal).
+<pre>
+
+hexd -h -r "32:SMB Header,14:8:Signature,32:1:WordCount,6:Words,2:ByteCount,25:Bytes,0x44:17:Tree Connect AndX" ssxr.bin
+
+</pre>
+</li>
+</ul>
+<small>
+[1] <ident>shellout</ident>(3m) does not work on HP-UX because it lacks the non-standard <ident>forkpty</ident>(2).<br>
+[2] <ident>svsem</ident>(3m) and <ident>svcond</ident>(3m) do not work properly on Mac OS X. It appears that <ident>semop</ident>(2) does not initialize semid_ds.sem_otime in the same way that other platforms do.
+</small>
+<BR>
+<EM>libmba-0.8.10 released</EM>
+<BR>
+<SMALL>Sat Aug 28, 2004</SMALL>
+<BR>
+Two bugs have been found and fixed in the csv module. If a non-ASCII character was read with <tt>csv_row_parse</tt>, parsing would stop prematurely due to a signedness error. The csv module now uses <tt>unsigned char</tt> throughout to properly support internationalized text. Note <tt>csv_row_fread</tt> was unaffected by this bug. Second, if the character preceeding EOF was a double quote (as opposed to a newline) an error would occur. The csv module will now correctly process the final element.
+<p>
+</p>
+Also related, a few example programs are now included with the distribution. One such example is the <tt>csvprint</tt> utility which prints data in a csv file using a format string.
+<pre>
+
+examples$ ./csvprint data.csv "%2|%1|FOO(%2)\n"
+three|two|FOO(three)
+...
+
+</pre>
+This is suprisingly useful for reordering fields, generating source code, etc.
+<p>
+</p>
+The <tt>bitset_find_first</tt> function will now set <tt>errno</tt> to <tt>ENOENT</tt> if the target bit was not found.
+<p>
+</p>
+Some issues regarding the initialization of svsem(3m) semaphores have been fixed. The module should now properly handle the initialization race outlined in Stevens' UNPv2 in addition to the scenario where a semaphore is removed during initialization.
+<p>
+</p>
+Finally the eval(3m) module now provides for a <tt>context</tt> parameter to be specifed that will be passed to the user supplied <tt>symlook</tt> function. This is necessary for full reentrance.
+<p>
+</p>
+All documentation has been updated accordingly.
+<BR>
+<EM>libmba-0.8.9 released</EM>
+<BR>
+<SMALL>Fri May 21, 2004</SMALL>
+<BR>
+The <tt>sho_loop</tt> function now accepts a pattern vector and timeout like <tt>sho_expect</tt> and the cfg module has been modified to more closely support Java Properties escape sequences for spaces and Unicode characters.
+<BR>
+<EM>libmba-0.8.8 released</EM>
+<BR>
+<SMALL>Thu May 6, 2004</SMALL>
+<BR>
+The purpose of this project is to provide generic C implementations of concepts elemental to a wide variety of programming problems. The latest addition to libmba is the <a href="dl/docs/ref/diff.html">diff</a> module and it is a fine example of a non-trivial algorithm that is crucial to the function and efficiency of many common applications such as spell checkers, version control systems, spam filters, speech recognition, and more. The code is generic such that anything that can be indexed and compared with user supplied callbacks can be used such as strings, linked lists, pointers to lines in files, etc.
+<p>
+</p>
+The algorithm is perhaps best known for it's use in the GNU diff(1) program for generating a "diff" of two files. Formally it is known as the <i>shortest edit script (SES)</i> problem and is solved efficiently using the dynamic programming algorithm described by Myers [1] and in linear space with the Hirschberg refinement. The objective is to compute the minimum set of edit operations necessary to transform sequence A of length N into B of lenth M. This can be performed in O((N+M)D^2) expected time where D is the edit distance (the number of elements deleted and inserted).
+<p>
+</p>
+<small>
+[1] E. Myers, ``An O(ND) Difference Algorithm and Its Variations,'' Algorithmica 1, 2 (1986), 251-266. http://www.cs.arizona.edu/people/gene/PAPERS/diff.ps
+</small>
+<p>
+</p>
+Also, in this release, the <a href="dl/docs/ref/path.html">path</a> module, which has been in libmba for a some time, is now documented. This module provides a high quality filesystem path canonicalization routine. Path canonicalization is notoriously unforgiving because the parsing rountine is complex and yet it is not uncommon for programs to be required to accept paths from potentially malicous sources. This implementation uses a state machine approach to reduce complexity and has been tested with a wide range of inputs (see tcase/test/data/PathCanonExamples.data). Certain conditions are enforced that minimize the potential for exploits. For exmaple, only one input character is examined with each iteration of the outer loop so that it can be certain that the <tt>slim</tt> and <tt>dlim</tt> limit pointers are checked with the advance of every input character. A canonicalized path cannot begin with a path separator unless the input began with a path separator. Because of the state machine structure, if there is a flaw in the implementation the fix is more likely to be a local adjustment which limits the potential for creating new flaws.
+<BR>
+<P>
+</P>
+</TD>
+</TR>
+<TR>
+<TD colspan="2" class="footer">
+<hr noshade>
+<small>
+		Last updated Apr 29, 2005<BR>libmba-0.9.1<BR>
+		API documentation and website generated with <a href="../cstylex" style="color: black;">CSytleX</a>
+<BR>
+		Copyright © 2004 Michael B Allen &lt;mba2000 ioplex.com&gt;<BR>
+<a href="http://validator.w3.org/check/referer" style="color: black;">validate this page</a></small></TD>
+</TR>
+</TABLE>
+</BODY>
+</HTML>

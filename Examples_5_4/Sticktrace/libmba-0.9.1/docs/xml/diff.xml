@@ -1,0 +1,109 @@
+<interface name="diff"
+	short="compute a shortest edit script (SES) given two sequences">
+
+<comments>
+	Copyright 2004 Michael B. Allen &lt;mba2000 ioplex.com&gt;
+</comments>
+
+<include>mba/diff.h</include>
+
+<title>Diff</title>
+<desc>
+The <def>diff</def>(3m) module will compute the <i>shortest edit script</i> (SES) of two sequences. This algorithm is perhaps best known as the one used in GNU <def>diff</def>(1) although GNU <def>diff</def> employs additional optimizations specific to line oriented input such as source code files whereas this implementation is more generic. Formally, this implementation of the SES solution uses the dynamic programming algorithm described by Myers [1] with the Hirschberg linear space refinement. The objective is to compute the minimum set of edit operations necessary to transform a sequence A of length N into B of length M. This can be performed in O(N+M*D^2) expected time where D is the <i>edit distance</i> (number of elements deleted and inserted to transform A into B). Thus the algorithm is particularly fast and uses less space if the difference between sequences is small. The interface is generic such that sequences can be anything that can be indexed and compared with user supplied functions including arrays of structures, linked lists, arrays of pointers to strings in a file, etc.
+<p/>
+<small>
+[1] E. Myers, ``An O(ND) Difference Algorithm and Its Variations,'' Algorithmica 1, 2 (1986), 251-266. http://www.cs.arizona.edu/people/gene/PAPERS/diff.ps
+</small>
+<example id="enum_ses">
+<title>Printing the Edit Script</title>
+<desc>
+The below code computes and prints the edit script of two 8 bit encoded character strings <tt>a</tt> and <tt>b</tt>. Note that <tt>off</tt> and <tt>len</tt> for <tt>DIFF_INSERT</tt> operations reference sequence <tt>b</tt> whereas matches and deletes reference sequence <tt>a</tt>.
+<pre>
+int d, sn, i;
+struct varray *ses = varray_new(sizeof(struct diff_edit), NULL);
+
+d = diff(a, 0, n, b, 0, m, NULL, NULL, NULL, 0, ses, &amp;sn, NULL);
+
+for (i = 0; i &lt; sn; i++) {
+	struct diff_edit *e = varray_get(ses, i);
+
+	switch (e-&gt;op) {
+		case DIFF_MATCH:
+			printf("MAT: ");
+			fwrite(a + e-&gt;off, 1, e-&gt;len, stdout);
+			break;
+		case DIFF_DELETE:
+			printf("DEL: ");
+			fwrite(a + e-&gt;off, 1, e-&gt;len, stdout);
+			break;
+		case DIFF_INSERT:
+			printf("INS: ");
+			fwrite(b + e-&gt;off, 1, e-&gt;len, stdout);
+			break;
+	}
+	printf("\n");
+}
+varray_del(ses);
+</pre>
+</desc>
+</example>
+</desc>
+
+<group>
+
+<code>
+<title>Diff definitions</title>
+<pre>
+typedef const void *(*idx_fn)(const void *s, int idx, void *context);
+typedef int (*cmp_fn)(const void *e1, const void *e2, void *context);
+
+typedef enum {
+	DIFF_MATCH = 1,
+	DIFF_DELETE,
+	DIFF_INSERT
+} diff_op;
+
+struct diff_edit {
+	short op;    /* DIFF_MATCH, DIFF_DELETE or DIFF_INSERT */
+	int off; /* off into a if MATCH or DELETE, b if INSERT */
+	int len;
+};
+</pre>
+<desc>
+The <tt>idx_fn</tt> is a pointer to a function that returns the element the numeric index specified by <tt>idx</tt> in the sequence <tt>s</tt>. The <tt>cmp_fn</tt> (actually defined in <ident>hashmap</ident>(3m)) is a pointer to a function that returns zero if the sequence elements <tt>e1</tt> and <tt>e2</tt> are equal and non-zero otherwise. The <tt>context</tt> parameter specified with the <tt>diff</tt> call is always supplied to both callbacks.
+<p/>
+Each element in the <tt>ses</tt> <ident>varray</ident> is a <tt>struct diff_edit</tt> structure and represents an individual match, delete, or insert operation in the edit script. The <tt>op</tt> member is <tt>DIFF_MATCH</tt>, <tt>DIFF_DELETE</tt> or <tt>DIFF_INSERT</tt>. The <tt>off</tt> and <tt>len</tt> members indicate the offset and length of the subsequence that matches or should be deleted from sequence <tt>a</tt> or inserted from sequence <tt>b</tt>.
+</desc>
+</code>
+
+<func name="diff" wrap="true">
+	<pre>int diff(const void *a, int aoff, int n, const void *b, int boff, int m, idx_fn idx, cmp_fn cmp, void *context, int dmax, struct varray *ses, int *sn, struct varray *buf);</pre>
+	<param name="a"/>
+	<param name="aoff"/>
+	<param name="n"/>
+	<param name="b"/>
+	<param name="boff"/>
+	<param name="m"/>
+	<param name="idx"/>
+	<param name="cmp"/>
+	<param name="context"/>
+	<param name="dmax"/>
+	<param name="ses"/>
+	<param name="sn"/>
+	<param name="buf"/>
+<desc>
+The <ident>diff</ident>(3m) function computes the minimum <i>edit distance</i> between the sequences <tt>a</tt> (from <tt>aoff</tt> for length <tt>n</tt>) and <tt>b</tt> (from <tt>boff</tt> for length <tt>m</tt>) and optionally collects the <i>edit script</i> necessary to transform <tt>a</tt> into <tt>b</tt> storing the result in the <ident>varray</ident> identified by the <tt>ses</tt> parameter. The <tt>idx</tt> paremeter is a pointer to an <ident>idx_fn</ident> that returns the element at the numeric index in a sequence. The <tt>cmp</tt> parameter is a pointer to a <ident>cmp_fn</ident> function that returns zero if the two elements <tt>e1</tt> and <tt>e2</tt> are equal and non-zero otherwise. The supplied <tt>context</tt> parameter will be passed directly to both functions with each invokation. If <tt>idx</tt> and <tt>cmp</tt> are <ident>NULL</ident> <tt>a</tt> and <tt>b</tt> will be compared as continuous sequences of <tt>unsigned char</tt> (i.e. raw memory diff).
+<p/>
+If the <tt>ses</tt> parameter is not <ident>NULL</ident> it must be a <ident>varray</ident>(3m) with a <tt>membsize</tt> of <tt>sizeof(struct diff_edit)</tt>. Each <tt>struct diff_edit</tt> element in the <ident>varray</ident>(3m) starting from 0 will be populated with the <tt>op</tt>, <tt>off</tt>, and <tt>len</tt> that together constitute the edit script. The number of <tt>struct diff_edit</tt> elements in the edit script is written to the integer pointed to by the <tt>sn</tt> parameter. If the <tt>ses</tt> or <tt>sn</tt> parameter is <ident>NULL</ident>, the edit script will not be collected.
+<p/>
+If the <tt>dmax</tt> parameter is not 0, the calculation will stop as soon as it is determined that the edit distance of the two sequences equals or exceeds the specified value. A value of 0 indicates that there is no limit.
+<p/>
+If the <tt>buf</tt> parameter is not <ident>NULL</ident> it must be a <ident>varray</ident>(3m) with <tt>membsize</tt> of <tt>sizeof(int)</tt> and will be used as temporary storage for the dynamic programming tables. If <tt>buf</tt> is <ident>NULL</ident> storage will be temporarily allocated and freed with <ident>malloc</ident>(3) and <ident>free</ident>(3).
+</desc>
+<ret>
+The <ident>diff</ident>(3m) function returns the edit distance between the two sequences <tt>a</tt> and <tt>b</tt> or <tt>dmax</tt> if the edit distance has been determined to meet or exceed the specified <tt>dmax</tt> value. If an error occurs -1 is returned and <ident>errno</ident> is set to indicate the error.
+</ret>
+</func>
+</group>
+
+</interface>
