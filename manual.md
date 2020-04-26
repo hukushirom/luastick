@@ -178,7 +178,7 @@ Exports the function which exists just below the tag. You can use this with the 
 - function  
 - variable[^1]
 
-[^1]:Only struct member variables can be exported. Class member variables, global variables cannot be exported.  
+[^1]: Only struct member variables can be exported. Class member variables, global variables cannot be exported.  
 
 ###### Example  
 
@@ -1403,7 +1403,7 @@ They are defined using \<stickconv ...\> tag in 'Sticklib.h'.
 
 ### How to debug
 
-<img src="https://github.com/hukushirom/luastick/blob/master/StickTest/image01.png">
+<img src="https://github.com/hukushirom/luastick/blob/master/Examples_5_3/Sticktrace/image01.png">
 
 1. Start StickTest.exe.
 
