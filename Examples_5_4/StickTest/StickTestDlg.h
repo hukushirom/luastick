@@ -1,5 +1,5 @@
-
-// StickTestDlg.h : ƒwƒbƒ_[ ƒtƒ@ƒCƒ‹
+ï»¿
+// StickTestDlg.h : ãƒ˜ãƒƒãƒ€ãƒ¼ ãƒ•ã‚¡ã‚¤ãƒ«
 //
 
 #pragma once
@@ -45,14 +45,14 @@ extern void MyArrayFunc2(
 	std::vector<std::wstring> & v1
 );
 
-// ƒeƒXƒgB
+// ãƒ†ã‚¹ãƒˆã€‚
 // enum C;
-// void Func(C * c); ‚Ì‚Æ‚«‚Ç‚¤”»’f‚·‚éH
+// void Func(C * c); ã®ã¨ãã©ã†åˆ¤æ–­ã™ã‚‹ï¼Ÿ
 // C c;
-// Func(&c) ‚Æ‚·‚é‚©B
+// Func(&c) ã¨ã™ã‚‹ã‹ã€‚
 // 
 // C c[10];
-// Func(c) ‚Æ‚·‚é‚©B
+// Func(c) ã¨ã™ã‚‹ã‹ã€‚
 
 /// <stick export="true"/>
 class X
@@ -399,17 +399,17 @@ namespace NM2
 /// <seealso cref="CDialogEx" />
 class CStickTestDlg : public CDialogEx
 {
-// ƒRƒ“ƒXƒgƒ‰ƒNƒVƒ‡ƒ“
+// ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚·ãƒ§ãƒ³
 public:
-	CStickTestDlg(CWnd* pParent = NULL);	// •W€ƒRƒ“ƒXƒgƒ‰ƒNƒ^[
+	CStickTestDlg(CWnd* pParent = NULL);	// æ¨™æº–ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ãƒ¼
 
-// ƒ_ƒCƒAƒƒO ƒf[ƒ^
+// ãƒ€ã‚¤ã‚¢ãƒ­ã‚° ãƒ‡ãƒ¼ã‚¿
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_STICKTEST_DIALOG };
 #endif
 
 	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV ƒTƒ|[ƒg
+	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV ã‚µãƒãƒ¼ãƒˆ
 
 public:	
 	/// <stick export="true" />
@@ -419,7 +419,7 @@ public:
 	/// <param name="message" io="in">The message.</param>
 	virtual void DebugOutput(const char* message);
 
-// À‘•
+// å®Ÿè£…
 protected:
 	HICON m_hIcon;
 
@@ -428,7 +428,7 @@ protected:
 
 	static void OnScriptCallback(lua_State * luaState, lua_Debug * luaDebug, void * userData, Sticktrace::Mode mode, Sticktrace* sticktrace);
 	
-	// ¶¬‚³‚ê‚½AƒƒbƒZ[ƒWŠ„‚è“–‚ÄŠÖ”
+	// ç”Ÿæˆã•ã‚ŒãŸã€ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å‰²ã‚Šå½“ã¦é–¢æ•°
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();

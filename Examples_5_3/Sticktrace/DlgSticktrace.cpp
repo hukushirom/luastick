@@ -1,4 +1,4 @@
-// DlgSticktrace.cpp : À‘•ƒtƒ@ƒCƒ‹B
+ï»¿// DlgSticktrace.cpp : å®Ÿè£…ãƒ•ã‚¡ã‚¤ãƒ«ã€‚
 //
 
 #include "stdafx.h"
@@ -11,19 +11,19 @@
 #include "DlgSticktrace.h"
 #include "afxdialogex.h"
 
-static constexpr int FD_PANEBAR_WIDTH = 6;	// ƒyƒCƒ“•ªŠ„‚Ìü•B
+static constexpr int FD_PANEBAR_WIDTH = 6;	// ãƒšã‚¤ãƒ³åˆ†å‰²ã®ç·šå¹…ã€‚
 static constexpr COLORREF FD_COLREF_DARK_GRAY = RGB(0xa9, 0xa9, 0xa9);
 static constexpr COLORREF FD_PANEBAR_COLOR = FD_COLREF_DARK_GRAY;
 
 static constexpr UINT BORDER_TIMER = 5;
 
-// CDlgSticktrace ƒ_ƒCƒAƒƒOB
+// CDlgSticktrace ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã€‚
 
 IMPLEMENT_DYNAMIC(CDlgSticktrace, CFCDlgModelessBase)
 
 CDlgSticktrace::CDlgSticktrace()
 	: BASE_CLASS()
-	, m_bIsBtnOnPaneBorder(FALSE)	// ƒyƒCƒ“ƒ{[ƒ_[ã‚Åƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚Ä‚¢‚é‚©H
+	, m_bIsBtnOnPaneBorder(FALSE)	// ãƒšã‚¤ãƒ³ãƒœãƒ¼ãƒ€ãƒ¼ä¸Šã§ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚Œã¦ã„ã‚‹ã‹ï¼Ÿ
 	, m_hwndWhenBorderMoving(NULL)
 {
 	m_breakpointFast.suspendMode = (LONG)Mode::STOP;
@@ -73,24 +73,24 @@ BEGIN_MESSAGE_MAP(CDlgSticktrace, BASE_CLASS)
 	ON_BN_CLICKED(IDC_SCE_CHK_DEBUG_MODE, &CDlgSticktrace::OnBnClickedSceChkDebugMode)
 END_MESSAGE_MAP()
 
-// CDlgSticktrace ƒƒbƒZ[ƒW ƒnƒ“ƒhƒ‰[B
+// CDlgSticktrace ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ‰ãƒ©ãƒ¼ã€‚
 
 
 BOOL CDlgSticktrace::OnInitDialog()
 {
 	BASE_CLASS::OnInitDialog();
 
-	//----- ƒ^ƒuØ‘Ö‚Ì•”•ª‚ÉƒRƒ“ƒgƒ[ƒ‹‚ğ‘S‚ÄˆÚ“®‚³‚¹‚é -----
-	// Šî€ƒtƒŒ[ƒ€B
+	//----- ã‚¿ãƒ–åˆ‡æ›¿ã®éƒ¨åˆ†ã«ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã‚’å…¨ã¦ç§»å‹•ã•ã›ã‚‹ -----
+	// åŸºæº–ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
 	CRect rtTabFrame;
 	GetDlgItem(IDC_SCE_STC_TAB_FRAME)->GetWindowRect(rtTabFrame);
-	// o—ÍƒEƒBƒ“ƒhƒEƒtƒŒ[ƒ€B
+	// å‡ºåŠ›ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
 	CRect rtOutput;
 	GetDlgItem(IDC_SCE_STC_OUTPUT_FRAME)->GetWindowRect(rtOutput);
-	// ƒGƒ‰[o—ÍƒEƒBƒ“ƒhƒEƒtƒŒ[ƒ€B
+	// ã‚¨ãƒ©ãƒ¼å‡ºåŠ›ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
 	CRect rtError;
 	GetDlgItem(IDC_SCE_STC_ERROR_FRAME)->GetWindowRect(rtError);
-	// ƒEƒHƒbƒ`ƒEƒBƒ“ƒhƒEƒtƒŒ[ƒ€B
+	// ã‚¦ã‚©ãƒƒãƒã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
 	CRect rtWatch;
 	GetDlgItem(IDC_SCE_STC_WATCH_FRAME)->GetWindowRect(rtWatch);
 
@@ -106,34 +106,34 @@ BOOL CDlgSticktrace::OnInitDialog()
 	MoveControl(IDC_SCE_BTN_ADD_WATCH, szMove);
 	MoveControl(IDC_SCE_BTN_DELETE_WATCH, szMove);
 
-	// ƒŒƒCƒAƒEƒgî•ñ‚ğİ’èB
+	// ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆæƒ…å ±ã‚’è¨­å®šã€‚
 	InitLayoutAll();
 
-	// ƒŒƒWƒXƒgƒŠ‚É“o˜^‚³‚ê‚½ƒTƒCƒYî•ñ‚É‡‚í‚¹‚ÄƒŠƒTƒCƒYB
+	// ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã«ç™»éŒ²ã•ã‚ŒãŸã‚µã‚¤ã‚ºæƒ…å ±ã«åˆã‚ã›ã¦ãƒªã‚µã‚¤ã‚ºã€‚
 	SizeToRegistered();
 
-	// ƒ{[ƒ_[‚ÌˆÊ’u‚ğƒŒƒWƒXƒgƒŠ‚©‚ç“Ç‚İo‚·B
+	// ãƒœãƒ¼ãƒ€ãƒ¼ã®ä½ç½®ã‚’ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã‹ã‚‰èª­ã¿å‡ºã™ã€‚
 	int borderX;
 	const DWORD dwDataSz = FCRegBase::LoadRegBinary(
 		GetRegKeyName().c_str(),
 		L"BorderX", (LPBYTE)&borderX, sizeof(borderX));
 	if (dwDataSz == sizeof(borderX))
-		//----- ƒŒƒWƒXƒgƒŠ‚©‚çƒ{[ƒ_[ˆÊ’u‚ª“Ç‚İo‚¹‚½ê‡ -----
+		//----- ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã‹ã‚‰ãƒœãƒ¼ãƒ€ãƒ¼ä½ç½®ãŒèª­ã¿å‡ºã›ãŸå ´åˆ -----
 	{
-		// ƒ{[ƒ_[ˆÊ’u‚ğˆÚ“®B
+		// ãƒœãƒ¼ãƒ€ãƒ¼ä½ç½®ã‚’ç§»å‹•ã€‚
 		const int dx = borderX - GetBorderRect().left;
 		MoveBorder(dx);
 	}
 
-	// ƒtƒHƒ“ƒgİ’èB
-	// ƒXƒNƒŠƒvƒgƒGƒfƒBƒ^[B
+	// ãƒ•ã‚©ãƒ³ãƒˆè¨­å®šã€‚
+	// ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚¨ãƒ‡ã‚£ã‚¿ãƒ¼ã€‚
 	FCRegBase::InitRegFont(m_font, FDFT_SCRIPT_EDITOR);
 	GetDlgItem(IDC_SCE_EDT_SCRIPT)->SetFont(&m_font);
 
-	// ƒXƒNƒŠƒvƒgIDƒŠƒXƒg‚ğXVB
+	// ã‚¹ã‚¯ãƒªãƒ—ãƒˆIDãƒªã‚¹ãƒˆã‚’æ›´æ–°ã€‚
 	UpdateScriptIdList();
 
-	// ƒ{ƒ^ƒ“‚ÉƒAƒCƒRƒ“‚ğİ’èB
+	// ãƒœã‚¿ãƒ³ã«ã‚¢ã‚¤ã‚³ãƒ³ã‚’è¨­å®šã€‚
 	CButton* pButton;
 	pButton = (CButton*)GetDlgItem(IDC_SCE_BTN_FIND_NEXT);
 	pButton->SetIcon(AfxGetApp()->LoadIcon(IDI_FIND));
@@ -151,7 +151,7 @@ BOOL CDlgSticktrace::OnInitDialog()
 	pButton = (CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT);
 	pButton->SetIcon(AfxGetApp()->LoadIcon(IDI_DEBUG_STEP_TO_NEXT));
 
-	// ƒeƒLƒXƒgƒGƒfƒBƒ^[‚ÉUndo‰Â”\‚ğİ’èB
+	// ãƒ†ã‚­ã‚¹ãƒˆã‚¨ãƒ‡ã‚£ã‚¿ãƒ¼ã«Undoå¯èƒ½ã‚’è¨­å®šã€‚
 	m_textEditor.SetIsUndoable(TRUE);
 	m_textEditor.SetLimitText(640000);
 	m_textEditor.SetReadOnly(TRUE);
@@ -162,99 +162,99 @@ BOOL CDlgSticktrace::OnInitDialog()
 	//m_textEditor.SetTabStops(5, s);
 	m_textEditor.SetTabStops(10);
 
-	//----- ƒf[ƒ^æ“¾—pƒŠƒXƒgƒRƒ“ƒgƒ[ƒ‹‚Ìİ’è -----
+	//----- ãƒ‡ãƒ¼ã‚¿å–å¾—ç”¨ãƒªã‚¹ãƒˆã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã®è¨­å®š -----
 	CListCtrl* pLsvEditor = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_EDITOR);
 	UtilDlg::InsertColumn(pLsvEditor, 0, L"", LVCFMT_LEFT, 10);
 	UtilDlg::InsertColumn(pLsvEditor, 1, L"", LVCFMT_LEFT, 10);
 	UtilDlg::InsertColumn(pLsvEditor, 2, L"", LVCFMT_LEFT, 10);
 	UtilDlg::InsertColumn(pLsvEditor, 3, L"", LVCFMT_LEFT, 10);
-	// ƒf[ƒ^æ“¾—pƒŠƒXƒgƒRƒ“ƒgƒ[ƒ‹‚Ì“à—e‚ğƒŒƒWƒXƒgƒŠ‚©‚çæ“¾B
+	// ãƒ‡ãƒ¼ã‚¿å–å¾—ç”¨ãƒªã‚¹ãƒˆã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã®å†…å®¹ã‚’ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã‹ã‚‰å–å¾—ã€‚
 	FD_RegLoadListCtrlContents(this, IDC_SCE_LSV_EDITOR);
 
-	//----- ƒGƒfƒBƒ^[‘I‘ğƒRƒ“ƒ{ƒ{ƒbƒNƒX‚Éİ’è -----
+	//----- ã‚¨ãƒ‡ã‚£ã‚¿ãƒ¼é¸æŠã‚³ãƒ³ãƒœãƒœãƒƒã‚¯ã‚¹ã«è¨­å®š -----
 	CComboBox* pCmb = (CComboBox*)GetDlgItem(IDC_SCE_CMB_SELECT_EDITOR);
 	for (int i = 0; i != pLsvEditor->GetItemCount(); i++)
 		pCmb->AddString(pLsvEditor->GetItemText(i, 0));
 	if (pCmb->GetCount() != 0)
 		pCmb->SetCurSel(0);
 
-	//----- ƒEƒHƒbƒ`ƒŠƒXƒgƒRƒ“ƒgƒ[ƒ‹‚Ìİ’è -----
+	//----- ã‚¦ã‚©ãƒƒãƒãƒªã‚¹ãƒˆã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã®è¨­å®š -----
 	CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
-	// ƒtƒH[ƒJƒX–³‚µó‘Ô‚Å‚à‘I‘ğƒ}[ƒN‚ª•\¦‚³‚ê‚é‚æ‚¤‚ÉƒXƒ^ƒCƒ‹•ÏXB
+	// ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ç„¡ã—çŠ¶æ…‹ã§ã‚‚é¸æŠãƒãƒ¼ã‚¯ãŒè¡¨ç¤ºã•ã‚Œã‚‹ã‚ˆã†ã«ã‚¹ã‚¿ã‚¤ãƒ«å¤‰æ›´ã€‚
 	pLsvWatch->ModifyStyle(0, LVS_SHOWSELALWAYS);
-	// ‘SƒJƒ‰ƒ€‘I‘ğ‚ÌŠg’£ƒXƒ^ƒCƒ‹‚ğİ’èB
+	// å…¨ã‚«ãƒ©ãƒ é¸æŠã®æ‹¡å¼µã‚¹ã‚¿ã‚¤ãƒ«ã‚’è¨­å®šã€‚
 	pLsvWatch->SetExtendedStyle(pLsvWatch->GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 
-	//----- 14.10.02 Fukushiro M. ’Ç‰Án ()-----
-	// ƒeƒXƒgB
+	//----- 14.10.02 Fukushiro M. è¿½åŠ å§‹ ()-----
+	// ãƒ†ã‚¹ãƒˆã€‚
 	m_watchImage.Create(16, 16, ILC_MASK, 4, 1);
-	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_COLLAPSED));		// •Â‚¶‚Ä‚¢‚é(0)
-	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_EXPANDED));		// ŠJ‚¢‚Ä‚¢‚é(1)
-	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_VARIABLE));		// •Ï”(2)
-	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_SUBVARIABLE));	// ƒƒ“ƒo[•Ï”(3)
+	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_COLLAPSED));		// é–‰ã˜ã¦ã„ã‚‹(0)
+	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_EXPANDED));		// é–‹ã„ã¦ã„ã‚‹(1)
+	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_VARIABLE));		// å¤‰æ•°(2)
+	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_SUBVARIABLE));	// ãƒ¡ãƒ³ãƒãƒ¼å¤‰æ•°(3)
 	pLsvWatch->SetImageList(&m_watchImage, LVSIL_SMALL);
-	//----- 14.10.02 Fukushiro M. ’Ç‰ÁI ()-----
+	//----- 14.10.02 Fukushiro M. è¿½åŠ çµ‚ ()-----
 
-	//----- ƒJƒ‰ƒ€‚Ìİ’è -----
+	//----- ã‚«ãƒ©ãƒ ã®è¨­å®š -----
 	CRect rect;
 	pLsvWatch->GetClientRect(rect);
-	// ƒJƒ‰ƒ€•BƒfƒtƒHƒ‹ƒg’l‚Å‰Šú‰»B
+	// ã‚«ãƒ©ãƒ å¹…ã€‚ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå€¤ã§åˆæœŸåŒ–ã€‚
 	const int aColumnWidthInit[] =
 	{
 		rect.Width() / 4,
 		rect.Width() / 2,
 		rect.Width() / 4,
 	};
-	// –¼‘OB
+	// åå‰ã€‚
 	UtilDlg::InsertColumn(pLsvWatch, 0, UtilStr::LoadString(CString(), IDS_NAME), LVCFMT_LEFT, aColumnWidthInit[0]);
-	// ’lB
+	// å€¤ã€‚
 	UtilDlg::InsertColumn(pLsvWatch, 1, UtilStr::LoadString(CString(), IDS_VALUE), LVCFMT_LEFT, aColumnWidthInit[1]);
-	// Œ^B
+	// å‹ã€‚
 	UtilDlg::InsertColumn(pLsvWatch, 2, UtilStr::LoadString(CString(), IDS_TYPE), LVCFMT_LEFT, aColumnWidthInit[2]);
-	// ƒŠƒXƒgƒRƒ“ƒgƒ[ƒ‹‚ÌƒJƒ‰ƒ€‹«ŠE‚ğİ’èB
+	// ãƒªã‚¹ãƒˆã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã®ã‚«ãƒ©ãƒ å¢ƒç•Œã‚’è¨­å®šã€‚
 	FD_RegLoadListCtrlColumnWidth(this, IDC_SCE_LSV_WATCH);
 
-	// ƒ^ƒuƒRƒ“ƒgƒ[ƒ‹‚Éƒ^ƒu‚ğİ’èB
+	// ã‚¿ãƒ–ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã«ã‚¿ãƒ–ã‚’è¨­å®šã€‚
 	CTabCtrl* tabCtrl = (CTabCtrl*)GetDlgItem(IDC_SCE_TAB_OUTPUT);
-	// ƒGƒ‰[o—ÍB
+	// ã‚¨ãƒ©ãƒ¼å‡ºåŠ›ã€‚
 	tabCtrl->InsertItem(0, UtilStr::LoadString(CString(), IDS_ERROR));
-	// •Ï”B
+	// å¤‰æ•°ã€‚
 	tabCtrl->InsertItem(1, UtilStr::LoadString(CString(), IDS_VARIABLE));
-	// o—ÍB
+	// å‡ºåŠ›ã€‚
 	tabCtrl->InsertItem(2, UtilStr::LoadString(CString(), IDS_OUTPUT));
-	// ƒ^ƒu•ÏX‚ğ’Ê’mB
+	// ã‚¿ãƒ–å¤‰æ›´ã‚’é€šçŸ¥ã€‚
 	OnTcnSelchangeSceTabOutput(nullptr, nullptr);
 
 
-	// ƒ^ƒuƒRƒ“ƒgƒ[ƒ‹‚Éƒ^ƒu‚ğİ’èB
+	// ã‚¿ãƒ–ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã«ã‚¿ãƒ–ã‚’è¨­å®šã€‚
 	CTabCtrl* tabCtrl2 = (CTabCtrl*)GetDlgItem(IDC_SCE_TAB_SCRIPT);
-	// ‹óB
+	// ç©ºã€‚
 	tabCtrl2->InsertItem(0, L"");
 
 #if 0
-	// o—ÍƒEƒBƒ“ƒhƒE‚ÉƒRƒ“ƒeƒLƒXƒgƒƒjƒ…[‚ğİ’èB
+	// å‡ºåŠ›ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’è¨­å®šã€‚
 	m_output.SetContextMenu(IDR_RBTN_SCRIPT_EDITOR, 2);
 
-	// ©“®ALTƒL[œŠO‚ÉƒGƒfƒBƒ^[ƒRƒ“ƒgƒ[ƒ‹‚ğ’Ç‰ÁB
+	// è‡ªå‹•ALTã‚­ãƒ¼é™¤å¤–ã«ã‚¨ãƒ‡ã‚£ã‚¿ãƒ¼ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã‚’è¿½åŠ ã€‚
 	m_stAutoAltExcepted.insert(IDC_SCE_EDT_KEYWORD);
 	m_stAutoAltExcepted.insert(IDC_SCE_EDT_SCRIPT);
 	m_stAutoAltExcepted.insert(IDC_SCE_EDT_VARIABLE_NAME);
 	m_stAutoAltExcepted.insert(IDC_SCE_EDT_VARIABLE_VALUE);
 
-	// ƒ_ƒCƒAƒƒO‚Ì’PˆÊ•\¦‚ğİ’è‚·‚éB
+	// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®å˜ä½è¡¨ç¤ºã‚’è¨­å®šã™ã‚‹ã€‚
 	::SetUnitString(m_hWnd);
-	// —˜‚«˜r‘Î‰•¶š—ñ‚Ìİ’è‚ğs‚¤B
+	// åˆ©ãè…•å¯¾å¿œæ–‡å­—åˆ—ã®è¨­å®šã‚’è¡Œã†ã€‚
 	::RightByLeftHand(m_hWnd);
 #endif
 
-	// ƒeƒLƒXƒg—Ìˆæ‚ğXVB
+	// ãƒ†ã‚­ã‚¹ãƒˆé ˜åŸŸã‚’æ›´æ–°ã€‚
 	m_textEditor.UpdateTextRect();
 
 	// Update the display status of script control buttons.
 	PostMessage(WM_IDLEUPDATECMDUI);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-				  // —áŠO : OCX ƒvƒƒpƒeƒB ƒy[ƒW‚Í•K‚¸ FALSE ‚ğ•Ô‚µ‚Ü‚·B
+				  // ä¾‹å¤– : OCX ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ ãƒšãƒ¼ã‚¸ã¯å¿…ãš FALSE ã‚’è¿”ã—ã¾ã™ã€‚
 }
 
 /// <summary>
@@ -321,7 +321,7 @@ bool CDlgSticktrace::TC_IsBreakpoint(const char * name, int lineIndex)
 	return false;
 }
 
-//----- 17.10.20 Fukushiro M. íœn ()-----
+//----- 17.10.20 Fukushiro M. å‰Šé™¤å§‹ ()-----
 ///// <summary>
 ///// Tcs the is suspended.
 ///// This function works at the main application's thread.
@@ -348,7 +348,7 @@ bool CDlgSticktrace::TC_IsBreakpoint(const char * name, int lineIndex)
 //{
 //	return (int)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
 //}
-//----- 17.10.20 Fukushiro M. íœI ()-----
+//----- 17.10.20 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 
 /// <summary>
 /// Tcs the on suspended.
@@ -512,33 +512,33 @@ SticktraceCommand CDlgSticktrace::TC_GetCommand(std::string & param, uint32_t wa
 void CDlgSticktrace::GetWatchedVariables(std::vector<std::string>& vTopLevelName, std::unordered_set<std::string>& stExpandedName) const
 {
 	/// <summary>
-	/// CListCtrl‚Ìs‚ğ‡”Ô‚ÉŒŸ¸‚µAƒe[ƒuƒ‹Œ^•Ï”‚ÅuEXPANDEDi“WŠJjv‚ÌƒAƒCƒRƒ“‚ªİ’è‚³‚ê‚Ä‚¢‚és‚ğ
-	/// ‹L˜^‚·‚éB
-	/// s‚Ì•Ï”‚ÍA‰º}‚Ì‚æ‚¤‚ÉƒCƒ“ƒfƒ“ƒg‚ª•t‚¯‚ç‚ê‚Ä‚¢‚éBƒCƒ“ƒfƒ“ƒgˆÊ’u‚ÅÄ‹AŒÄo‚µ‚ğÀs‚·‚éB
+	/// CListCtrlã®è¡Œã‚’é †ç•ªã«æ¤œæŸ»ã—ã€ãƒ†ãƒ¼ãƒ–ãƒ«å‹å¤‰æ•°ã§ã€ŒEXPANDEDï¼ˆå±•é–‹ï¼‰ã€ã®ã‚¢ã‚¤ã‚³ãƒ³ãŒè¨­å®šã•ã‚Œã¦ã„ã‚‹è¡Œã‚’
+	/// è¨˜éŒ²ã™ã‚‹ã€‚
+	/// è¡Œã®å¤‰æ•°ã¯ã€ä¸‹å›³ã®ã‚ˆã†ã«ã‚¤ãƒ³ãƒ‡ãƒ³ãƒˆãŒä»˜ã‘ã‚‰ã‚Œã¦ã„ã‚‹ã€‚ã‚¤ãƒ³ãƒ‡ãƒ³ãƒˆä½ç½®ã§å†å¸°å‘¼å‡ºã—ã‚’å®Ÿè¡Œã™ã‚‹ã€‚
 	/// 
 	///  [-] e
 	///     [-] 1
-	///         „¥ "abc"
-	///      „¥ "xyz"
+	///         â”œ "abc"
+	///      â”œ "xyz"
 	///      a
 	/// </summary>
-	/// <param name="lvi">ƒŠƒXƒg€–Úæ“¾—pƒ[ƒNB</param>
-	/// <param name="pLsvWatch">ƒŠƒXƒgƒRƒ“ƒgƒ[ƒ‹.</param>
-	/// <param name="index">ƒŠƒXƒgƒRƒ“ƒgƒ[ƒ‹‚ÌsƒCƒ“ƒfƒbƒNƒXBŒŸõŠJnˆÊ’uB</param>
-	/// <param name="iIndent">‹–‚³‚ê‚éƒCƒ“ƒfƒ“ƒgB</param>
-	/// <param name="wcpPiledVarName">˜AŒ‹•Ï”–¼B•Ï”–¼‚ğãˆÊ‚©‚ç‡‚É'\b'‚Å‚Â‚È‚¢‚¾‚à‚ÌBã‚Ì—á‚Ì"abc"‚Å‚Íue\b1\b"abc"v‚Æ‚È‚éB</param>
-	/// <param name="vTopLevelName">ƒŒƒxƒ‹0iƒgƒbƒvƒŒƒxƒ‹j‚Ì•Ï”–¼Bã—á‚Å‚Íuevuav</param>
-	/// <param name="stExpandedName">uEXPANDEDv‚ªİ’è‚³‚ê‚½s‚Ì˜AŒ‹•Ï”–¼B</param>
+	/// <param name="lvi">ãƒªã‚¹ãƒˆé …ç›®å–å¾—ç”¨ãƒ¯ãƒ¼ã‚¯ã€‚</param>
+	/// <param name="pLsvWatch">ãƒªã‚¹ãƒˆã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«.</param>
+	/// <param name="index">ãƒªã‚¹ãƒˆã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã®è¡Œã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã€‚æ¤œç´¢é–‹å§‹ä½ç½®ã€‚</param>
+	/// <param name="iIndent">è¨±ã•ã‚Œã‚‹ã‚¤ãƒ³ãƒ‡ãƒ³ãƒˆã€‚</param>
+	/// <param name="wcpPiledVarName">é€£çµå¤‰æ•°åã€‚å¤‰æ•°åã‚’ä¸Šä½ã‹ã‚‰é †ã«'\b'ã§ã¤ãªã„ã ã‚‚ã®ã€‚ä¸Šã®ä¾‹ã®"abc"ã§ã¯ã€Œe\b1\b"abc"ã€ã¨ãªã‚‹ã€‚</param>
+	/// <param name="vTopLevelName">ãƒ¬ãƒ™ãƒ«0ï¼ˆãƒˆãƒƒãƒ—ãƒ¬ãƒ™ãƒ«ï¼‰ã®å¤‰æ•°åã€‚ä¸Šä¾‹ã§ã¯ã€Œeã€ã€Œaã€</param>
+	/// <param name="stExpandedName">ã€ŒEXPANDEDã€ãŒè¨­å®šã•ã‚ŒãŸè¡Œã®é€£çµå¤‰æ•°åã€‚</param>
 	/// <returns></returns>
 	std::function<int(LVITEM&, CListCtrl*, int, int, const char*, std::vector<std::string>&, std::unordered_set<std::string>&)> GetLevelItem = [&GetLevelItem](LVITEM& lvi, CListCtrl* pLsvWatch, int index, int iIndent, const char* wcpPiledVarName, std::vector<std::string>& vTopLevelName, std::unordered_set<std::string>& stExpandedName)
 	{
-		// ˆÈ‰º‚Ì‚æ‚¤‚ÈƒEƒHƒbƒ`ƒEƒBƒ“ƒhƒE‚Ì•\¦ó‘Ô‚Ìê‡A[-]‚Ì•Ï”iEXPANDEDj‚ğstExpandedName‚ÉW‚ß‚éB
-		// ‚Ü‚½AƒgƒbƒvƒŒƒxƒ‹‚Ì•Ï”ieAaj‚ğvTopLevelName‚ÉW‚ß‚éB
+		// ä»¥ä¸‹ã®ã‚ˆã†ãªã‚¦ã‚©ãƒƒãƒã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®è¡¨ç¤ºçŠ¶æ…‹ã®å ´åˆã€[-]ã®å¤‰æ•°ï¼ˆEXPANDEDï¼‰ã‚’stExpandedNameã«é›†ã‚ã‚‹ã€‚
+		// ã¾ãŸã€ãƒˆãƒƒãƒ—ãƒ¬ãƒ™ãƒ«ã®å¤‰æ•°ï¼ˆeã€aï¼‰ã‚’vTopLevelNameã«é›†ã‚ã‚‹ã€‚
 		// 
 		// [-] e
 		//    [-] 1
-		//        „¥ "abc"
-		//     „¥ "xyz"
+		//        â”œ "abc"
+		//     â”œ "xyz"
 		//     a
 
 		while (index != pLsvWatch->GetItemCount())
@@ -549,25 +549,25 @@ void CDlgSticktrace::GetWatchedVariables(std::vector<std::string>& vTopLevelName
 
 			std::string szText;
 			Astrwstr::wstr_to_astr(szText, lvi.pszText);
-			// ƒŒƒxƒ‹0i‚Â‚Ü‚èƒgƒbƒv‚Ì•Ï”j‚Ì–¼‘O‚ğW‚ß‚éB
+			// ãƒ¬ãƒ™ãƒ«0ï¼ˆã¤ã¾ã‚Šãƒˆãƒƒãƒ—ã®å¤‰æ•°ï¼‰ã®åå‰ã‚’é›†ã‚ã‚‹ã€‚
 			if (lvi.iIndent == 0) vTopLevelName.push_back(szText);
-			// ˜AŒ‹•Ï”–¼B
+			// é€£çµå¤‰æ•°åã€‚
 			const std::string wstrNewPiledVarName = (wcpPiledVarName == NULL) ? szText : std::string(wcpPiledVarName) + "\b" + szText;
 			if (lvi.iImage == 0)
-				//----- ƒAƒCƒRƒ“‚ªƒe[ƒuƒ‹uCOLLAPSEDi•Â‚¶‚Ä‚¢‚éjv‚ğ•\‚·ê‡ -----
+				//----- ã‚¢ã‚¤ã‚³ãƒ³ãŒãƒ†ãƒ¼ãƒ–ãƒ«ã€ŒCOLLAPSEDï¼ˆé–‰ã˜ã¦ã„ã‚‹ï¼‰ã€ã‚’è¡¨ã™å ´åˆ -----
 			{
-				// uCOLLAPSEDi•Â‚¶‚Ä‚¢‚éjvuEXPANDEDiŠJ‚¢‚Ä‚¢‚éjv‚ÍŠÖŒW‚È‚­’²‚×‚éB’Êí‚ÍŠJ‚¢‚Ä‚¢‚éê‡‚Ì‚İ‰ºˆÊ‚ª•\¦‚³‚ê‚é‚ªA
-				// ƒ}ƒEƒXƒNƒŠƒbƒN‚É‚æ‚è•Â‚¶‚½‚Æ‚«‚É‚à‚±‚±‚ªˆ—‚³‚ê‚é‚½‚ßB
+				// ã€ŒCOLLAPSEDï¼ˆé–‰ã˜ã¦ã„ã‚‹ï¼‰ã€ã€ŒEXPANDEDï¼ˆé–‹ã„ã¦ã„ã‚‹ï¼‰ã€ã¯é–¢ä¿‚ãªãèª¿ã¹ã‚‹ã€‚é€šå¸¸ã¯é–‹ã„ã¦ã„ã‚‹å ´åˆã®ã¿ä¸‹ä½ãŒè¡¨ç¤ºã•ã‚Œã‚‹ãŒã€
+				// ãƒã‚¦ã‚¹ã‚¯ãƒªãƒƒã‚¯ã«ã‚ˆã‚Šé–‰ã˜ãŸã¨ãã«ã‚‚ã“ã“ãŒå‡¦ç†ã•ã‚Œã‚‹ãŸã‚ã€‚
 				index = GetLevelItem(lvi, pLsvWatch, index + 1, iIndent + 1, wstrNewPiledVarName.c_str(), vTopLevelName, stExpandedName);
 			}
 			else
 				if (lvi.iImage == 1)
-					//----- ƒAƒCƒRƒ“‚ªƒe[ƒuƒ‹uEXPANDEDiŠJ‚¢‚Ä‚¢‚éjv‚ğ•\‚·ê‡ -----
+					//----- ã‚¢ã‚¤ã‚³ãƒ³ãŒãƒ†ãƒ¼ãƒ–ãƒ«ã€ŒEXPANDEDï¼ˆé–‹ã„ã¦ã„ã‚‹ï¼‰ã€ã‚’è¡¨ã™å ´åˆ -----
 				{
-					// uCOLLAPSEDi•Â‚¶‚Ä‚¢‚éjvuEXPANDEDiŠJ‚¢‚Ä‚¢‚éjv‚ÍŠÖŒW‚È‚­’²‚×‚éB’Êí‚ÍŠJ‚¢‚Ä‚¢‚éê‡‚Ì‚İ‰ºˆÊ‚ª•\¦‚³‚ê‚é‚ªA
-					// ƒ}ƒEƒXƒNƒŠƒbƒN‚É‚æ‚è•Â‚¶‚½‚Æ‚«‚É‚à‚±‚±‚ªˆ—‚³‚ê‚é‚½‚ßB
-					// uEXPANDEDv‚ÍstExpandedName‚É‹L˜^‚µ‚Ä‚¨‚­BŒã‚Å•Ï”‚ğ•\¦‚·‚éÛ‚ÉA“¯‚¶“WŠJó‘Ô‚ğ•œŒ³‚·‚é‚½‚ßB
-					// stExpandedName ‚É‚Íƒƒ“ƒo[•Ï”‚Ü‚Å‚ğ’H‚é–¼Ìi˜AŒ‹•Ï”–¼j‚ğ‘}“üB—áue\b1\b"abc"v
+					// ã€ŒCOLLAPSEDï¼ˆé–‰ã˜ã¦ã„ã‚‹ï¼‰ã€ã€ŒEXPANDEDï¼ˆé–‹ã„ã¦ã„ã‚‹ï¼‰ã€ã¯é–¢ä¿‚ãªãèª¿ã¹ã‚‹ã€‚é€šå¸¸ã¯é–‹ã„ã¦ã„ã‚‹å ´åˆã®ã¿ä¸‹ä½ãŒè¡¨ç¤ºã•ã‚Œã‚‹ãŒã€
+					// ãƒã‚¦ã‚¹ã‚¯ãƒªãƒƒã‚¯ã«ã‚ˆã‚Šé–‰ã˜ãŸã¨ãã«ã‚‚ã“ã“ãŒå‡¦ç†ã•ã‚Œã‚‹ãŸã‚ã€‚
+					// ã€ŒEXPANDEDã€ã¯stExpandedNameã«è¨˜éŒ²ã—ã¦ãŠãã€‚å¾Œã§å¤‰æ•°ã‚’è¡¨ç¤ºã™ã‚‹éš›ã«ã€åŒã˜å±•é–‹çŠ¶æ…‹ã‚’å¾©å…ƒã™ã‚‹ãŸã‚ã€‚
+					// stExpandedName ã«ã¯ãƒ¡ãƒ³ãƒãƒ¼å¤‰æ•°ã¾ã§ã‚’è¾¿ã‚‹åç§°ï¼ˆé€£çµå¤‰æ•°åï¼‰ã‚’æŒ¿å…¥ã€‚ä¾‹ã€Œe\b1\b"abc"ã€
 					stExpandedName.insert(wstrNewPiledVarName);
 					index = GetLevelItem(lvi, pLsvWatch, index + 1, iIndent + 1, wstrNewPiledVarName.c_str(), vTopLevelName, stExpandedName);
 				}
@@ -578,11 +578,11 @@ void CDlgSticktrace::GetWatchedVariables(std::vector<std::string>& vTopLevelName
 		}
 		return index;
 	};
-	// •Ï”–¼‚ğó‚¯æ‚éƒoƒbƒtƒ@B
+	// å¤‰æ•°åã‚’å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡ã€‚
 	wchar_t textBuff[1024];
 	LVITEM lvi;
 	memset(&lvi, 0, sizeof(lvi));
-	lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_INDENT;	// ƒeƒLƒXƒgAƒCƒ[ƒWAƒCƒ“ƒfƒ“ƒg‚ğæ“¾B
+	lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_INDENT;	// ãƒ†ã‚­ã‚¹ãƒˆã€ã‚¤ãƒ¡ãƒ¼ã‚¸ã€ã‚¤ãƒ³ãƒ‡ãƒ³ãƒˆã‚’å–å¾—ã€‚
 	lvi.iSubItem = 0;
 	lvi.pszText = textBuff;
 	lvi.cchTextMax = _countof(textBuff);
@@ -592,10 +592,10 @@ void CDlgSticktrace::GetWatchedVariables(std::vector<std::string>& vTopLevelName
 
 void CDlgSticktrace::UpdateWatchWindow()
 {
-	// // ƒXƒNƒŠƒvƒgƒtƒbƒN’†‚Ì‚İ“®ì‚·‚éB
+	// // ã‚¹ã‚¯ãƒªãƒ—ãƒˆãƒ•ãƒƒã‚¯ä¸­ã®ã¿å‹•ä½œã™ã‚‹ã€‚
 	// if (!IsScriptPausing()) return;
 
-	// •Ï”–¼‚ğó‚¯æ‚éƒoƒbƒtƒ@B
+	// å¤‰æ•°åã‚’å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡ã€‚
 	std::vector<std::string> vTopLevelName;
 	std::unordered_set<std::string> stExpandedName;
 	GetWatchedVariables(vTopLevelName, stExpandedName);
@@ -610,9 +610,9 @@ void CDlgSticktrace::UpdateWatchWindow()
 		acs.WakeConditionVariable();
 	}
 
-	// // ƒEƒHƒbƒ`ƒEƒBƒ“ƒhƒEB
+	// // ã‚¦ã‚©ãƒƒãƒã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã€‚
 	// CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
-	// ƒEƒHƒbƒ`ƒEƒBƒ“ƒhƒE‚ğˆê“xƒNƒŠƒA‚·‚éB
+	// ã‚¦ã‚©ãƒƒãƒã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ä¸€åº¦ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
 	// pLsvWatch->DeleteAllItems();
 
 	// std::function<int(CListCtrl*, int, int, int, LVITEM&, const char*, const char*, const AnyValue&, const std::unordered_set<std::string>&)> f;
@@ -622,66 +622,66 @@ void CDlgSticktrace::UpdateWatchWindow()
 
 void CDlgSticktrace::UpdateScriptIdList()
 {
-//----- 17.10.05 Fukushiro M. íœn ()-----
-//	// Œ»İ‘I‘ğ‚³‚ê‚Ä‚¢‚éƒXƒNƒŠƒvƒgIDB
+//----- 17.10.05 Fukushiro M. å‰Šé™¤å§‹ ()-----
+//	// ç¾åœ¨é¸æŠã•ã‚Œã¦ã„ã‚‹ã‚¹ã‚¯ãƒªãƒ—ãƒˆIDã€‚
 //	const std::wstring wstrCurrentScriptId = GetCurrentScriptId();
-//	// ƒXƒNƒŠƒvƒgIDˆê——ƒŠƒXƒgB
+//	// ã‚¹ã‚¯ãƒªãƒ—ãƒˆIDä¸€è¦§ãƒªã‚¹ãƒˆã€‚
 //	CListBox* pListBox = (CListBox*)GetDlgItem(IDC_SCE_LST_SCRIPT_ID);
 //	pListBox->ResetContent();
 //	std::wstringSet stScriptId;
 //	FFEnv()->GetScriptIdSet(stScriptId);
 //	for (std::wstringSet::const_iterator i = stScriptId.begin(); i != stScriptId.end(); i++)
 //		pListBox->AddString(*i);
-//	// ƒXƒNƒŠƒvƒgIDˆê——ƒŠƒXƒg‚Ì‘I‘ğ‚ğ•ÏX‚·‚éB
+//	// ã‚¹ã‚¯ãƒªãƒ—ãƒˆIDä¸€è¦§ãƒªã‚¹ãƒˆã®é¸æŠã‚’å¤‰æ›´ã™ã‚‹ã€‚
 //	if (!SetCurrentScriptId(wstrCurrentScriptId))
 //	{
-//		// “¯‚¶ID‚ª‘I‘ğ‚Å‚«‚È‚©‚Á‚½ê‡A‘I‘ğ‚Í‰ğœ‚³‚ê‚é‚Ì‚Å•ÏXˆ—‚ª•K—vB
+//		// åŒã˜IDãŒé¸æŠã§ããªã‹ã£ãŸå ´åˆã€é¸æŠã¯è§£é™¤ã•ã‚Œã‚‹ã®ã§å¤‰æ›´å‡¦ç†ãŒå¿…è¦ã€‚
 //		OnLbnSelchangeSceLstScriptId();
 //	}
-//----- 17.10.05 Fukushiro M. íœI ()-----
+//----- 17.10.05 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 }
 
 void CDlgSticktrace::InitLayoutAll()
 {
 	ClearLayout();
 
-	//----- ƒŒƒCƒAƒEƒgî•ñ‚ğŒvZ -----
+	//----- ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆæƒ…å ±ã‚’è¨ˆç®— -----
 
-	// ƒEƒBƒ“ƒhƒE‚Ì¶ã‚Æ‰Eã‚É’Ç]‚µ‚ÄƒŠƒTƒCƒYB
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å·¦ä¸Šã¨å³ä¸Šã«è¿½å¾“ã—ã¦ãƒªã‚µã‚¤ã‚ºã€‚
 	InitLayout(
 		FCDlgLayoutRec::HOOK_LEFT | FCDlgLayoutRec::HOOK_TOP | FCDlgLayoutRec::HOOK_RIGHT,
 		IDC_SCE_STC_TOOL_BORDER,
-		IDC_SCE_TAB_SCRIPT				// ƒ^ƒuƒRƒ“ƒgƒ[ƒ‹B
-	);		// ƒc[ƒ‹ƒ{[ƒ_[
+		IDC_SCE_TAB_SCRIPT				// ã‚¿ãƒ–ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã€‚
+	);		// ãƒ„ãƒ¼ãƒ«ãƒœãƒ¼ãƒ€ãƒ¼
 
-//----- 17.10.05 Fukushiro M. íœn ()-----
-//	// ƒEƒBƒ“ƒhƒE‚Ì¶ã‚Æ¶‰º‚É’Ç]‚µ‚ÄƒŠƒTƒCƒYB
+//----- 17.10.05 Fukushiro M. å‰Šé™¤å§‹ ()-----
+//	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å·¦ä¸Šã¨å·¦ä¸‹ã«è¿½å¾“ã—ã¦ãƒªã‚µã‚¤ã‚ºã€‚
 //	InitLayout(
 //		FCDlgLayoutRec::HOOK_LEFT | FCDlgLayoutRec::HOOK_TOP | FCDlgLayoutRec::HOOK_BOTTOM,
 //	);
-//----- 17.10.05 Fukushiro M. íœI ()-----
+//----- 17.10.05 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 
-//----- 17.10.05 Fukushiro M. íœn ()-----
-//	// ƒEƒBƒ“ƒhƒE‚Ì¶‰º‚É’Ç]‚µ‚ÄƒŠƒTƒCƒYB
+//----- 17.10.05 Fukushiro M. å‰Šé™¤å§‹ ()-----
+//	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å·¦ä¸‹ã«è¿½å¾“ã—ã¦ãƒªã‚µã‚¤ã‚ºã€‚
 //	InitLayout(
 //		FCDlgLayoutRec::HOOK_LEFT | FCDlgLayoutRec::HOOK_BOTTOM,
 //	);
-//----- 17.10.05 Fukushiro M. íœI ()-----
+//----- 17.10.05 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 
-	// ƒEƒBƒ“ƒhƒE‚Ìl•û‚É’Ç]‚µ‚ÄƒŠƒTƒCƒYB
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å››æ–¹ã«è¿½å¾“ã—ã¦ãƒªã‚µã‚¤ã‚ºã€‚
 	InitLayout(
 		FCDlgLayoutRec::HOOK_ALL,
-		IDC_SCE_EDT_SCRIPT	// ƒXƒNƒŠƒvƒgƒGƒfƒBƒ^[B
+		IDC_SCE_EDT_SCRIPT	// ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚¨ãƒ‡ã‚£ã‚¿ãƒ¼ã€‚
 	);
 
-//----- 17.09.27 Fukushiro M. íœn ()-----
-//	// ƒEƒBƒ“ƒhƒE‚Ì‰Eã‚É’Ç]‚µ‚ÄƒŠƒTƒCƒYB
+//----- 17.09.27 Fukushiro M. å‰Šé™¤å§‹ ()-----
+//	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å³ä¸Šã«è¿½å¾“ã—ã¦ãƒªã‚µã‚¤ã‚ºã€‚
 //	InitLayout(
 //		FCDlgLayoutRec::HOOK_RIGHT | FCDlgLayoutRec::HOOK_TOP,
 //	);
-//----- 17.09.27 Fukushiro M. íœI ()-----
+//----- 17.09.27 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 
-	// ƒEƒBƒ“ƒhƒE‚Ì‰Eã‚Æ‰E‰º‚É’Ç]‚µ‚ÄƒŠƒTƒCƒYB
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å³ä¸Šã¨å³ä¸‹ã«è¿½å¾“ã—ã¦ãƒªã‚µã‚¤ã‚ºã€‚
 	InitLayout(
 		FCDlgLayoutRec::HOOK_RIGHT | FCDlgLayoutRec::HOOK_TOP | FCDlgLayoutRec::HOOK_BOTTOM,
 		IDC_SCE_STC_BORDER,
@@ -690,18 +690,18 @@ void CDlgSticktrace::InitLayoutAll()
 		IDC_SCE_LSV_WATCH
 	);
 
-	// ƒEƒBƒ“ƒhƒE‚Ì‰Eã‚É’Ç]‚µ‚ÄƒŠƒTƒCƒYB
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å³ä¸Šã«è¿½å¾“ã—ã¦ãƒªã‚µã‚¤ã‚ºã€‚
 	InitLayout(FCDlgLayoutRec::HOOK_RIGHT | FCDlgLayoutRec::HOOK_TOP,
 		IDC_SCE_TAB_OUTPUT);
 
-	// ƒEƒBƒ“ƒhƒE‚Ì‰E‰º‚É’Ç]‚µ‚ÄˆÚ“®B
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å³ä¸‹ã«è¿½å¾“ã—ã¦ç§»å‹•ã€‚
 	InitLayout(FCDlgLayoutRec::HOOK_RIGHT | FCDlgLayoutRec::HOOK_BOTTOM,
 		IDC_SCE_EDT_VARIABLE_NAME,
 		IDC_SCE_EDT_VARIABLE_VALUE,
 		IDC_SCE_BTN_CHANGE_VARIABLE,
 		IDC_SCE_BTN_ADD_WATCH,
 		IDC_SCE_BTN_DELETE_WATCH,
-		IDC_SCE_STC_LINE_NUMBER			// s”Ô†
+		IDC_SCE_STC_LINE_NUMBER			// è¡Œç•ªå·
 	);
 } // void CDlgSticktrace::InitLayoutAll ()
 
@@ -719,7 +719,7 @@ void CDlgSticktrace::MoveControl(WORD wControlId, const CSize& szMove)
 	GetDlgItem(wControlId)->GetWindowRect(rt);
 	ScreenToClient(rt);
 	const CPoint ptTopLeft = rt.TopLeft() + szMove;
-	// ƒ_ƒCƒAƒƒO‚ğˆÚ“®B
+	// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’ç§»å‹•ã€‚
 	GetDlgItem(wControlId)->SetWindowPos(
 		NULL, ptTopLeft.x, ptTopLeft.y, 0, 0,
 		SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOOWNERZORDER |
@@ -729,47 +729,47 @@ void CDlgSticktrace::MoveControl(WORD wControlId, const CSize& szMove)
 void CDlgSticktrace::MoveBorder(int dx)
 {
 	const WORD ids[] = {
-		IDC_SCE_TAB_SCRIPT,				// ƒ^ƒuƒRƒ“ƒgƒ[ƒ‹B
-		IDC_SCE_EDT_SCRIPT,				// ƒXƒNƒŠƒvƒgƒEƒBƒ“ƒhƒEB
-		IDC_SCE_TAB_OUTPUT,				// ƒ^ƒuƒRƒ“ƒgƒ[ƒ‹B
-		IDC_SCE_STC_BORDER,				// ƒ{[ƒ_[ƒEƒBƒ“ƒhƒEB
-		IDC_SCE_EDT_ERROR,				// ƒGƒ‰[o—ÍƒEƒBƒ“ƒhƒEB
-		IDC_SCE_EDT_OUTPUT,				// o—ÍƒEƒBƒ“ƒhƒEB
-		IDC_SCE_LSV_WATCH,				// ƒEƒHƒbƒ`ƒEƒBƒ“ƒhƒEB
-		IDC_SCE_EDT_VARIABLE_NAME,		// •Ï”–¼ƒEƒBƒ“ƒhƒEB
-		IDC_SCE_EDT_VARIABLE_VALUE,		// •Ï”’lƒEƒBƒ“ƒhƒEB
-		IDC_SCE_STC_LINE_NUMBER,		// s”Ô†B
+		IDC_SCE_TAB_SCRIPT,				// ã‚¿ãƒ–ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã€‚
+		IDC_SCE_EDT_SCRIPT,				// ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã€‚
+		IDC_SCE_TAB_OUTPUT,				// ã‚¿ãƒ–ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã€‚
+		IDC_SCE_STC_BORDER,				// ãƒœãƒ¼ãƒ€ãƒ¼ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã€‚
+		IDC_SCE_EDT_ERROR,				// ã‚¨ãƒ©ãƒ¼å‡ºåŠ›ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã€‚
+		IDC_SCE_EDT_OUTPUT,				// å‡ºåŠ›ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã€‚
+		IDC_SCE_LSV_WATCH,				// ã‚¦ã‚©ãƒƒãƒã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã€‚
+		IDC_SCE_EDT_VARIABLE_NAME,		// å¤‰æ•°åã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã€‚
+		IDC_SCE_EDT_VARIABLE_VALUE,		// å¤‰æ•°å€¤ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã€‚
+		IDC_SCE_STC_LINE_NUMBER,		// è¡Œç•ªå·ã€‚
 
-										//----- 14.09.16 Fukushiro M. íœn ()-----
-										//		IDC_SCE_BTN_CHANGE_VARIABLE,	// •ÏXƒ{ƒ^ƒ“B
-										//		IDC_SCE_BTN_ADD_WATCH,		// ’Ç‰Áƒ{ƒ^ƒ“B
-										//----- 14.09.16 Fukushiro M. íœI ()-----
-										//----- 14.09.17 Fukushiro M. íœn ()-----
-										//		IDC_SCE_CMB_SELECT_EDITOR,		// ƒGƒfƒBƒ^[‘I‘ğƒRƒ“ƒ{ƒ{ƒbƒNƒXB
-										//		IDC_SCE_BTN_EXEC_EDITOR,		// ‹N“®ƒ{ƒ^ƒ“B
-										//----- 14.09.17 Fukushiro M. íœI ()-----
+										//----- 14.09.16 Fukushiro M. å‰Šé™¤å§‹ ()-----
+										//		IDC_SCE_BTN_CHANGE_VARIABLE,	// å¤‰æ›´ãƒœã‚¿ãƒ³ã€‚
+										//		IDC_SCE_BTN_ADD_WATCH,		// è¿½åŠ ãƒœã‚¿ãƒ³ã€‚
+										//----- 14.09.16 Fukushiro M. å‰Šé™¤çµ‚ ()-----
+										//----- 14.09.17 Fukushiro M. å‰Šé™¤å§‹ ()-----
+										//		IDC_SCE_CMB_SELECT_EDITOR,		// ã‚¨ãƒ‡ã‚£ã‚¿ãƒ¼é¸æŠã‚³ãƒ³ãƒœãƒœãƒƒã‚¯ã‚¹ã€‚
+										//		IDC_SCE_BTN_EXEC_EDITOR,		// èµ·å‹•ãƒœã‚¿ãƒ³ã€‚
+										//----- 14.09.17 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 	};
 	for (int i = 0; i != _countof(ids); i++)
 	{
-		CRect rt;		// ƒRƒ“ƒgƒ[ƒ‹ƒEƒBƒ“ƒhƒE—ÌˆæB
+		CRect rt;		// ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦é ˜åŸŸã€‚
 		GetDlgItem(ids[i])->GetWindowRect(rt);
 		ScreenToClient(&rt);
 		switch (ids[i])
 		{
-		case IDC_SCE_TAB_SCRIPT:				// ƒ^ƒuƒRƒ“ƒgƒ[ƒ‹B
-		case IDC_SCE_EDT_SCRIPT:				// ƒXƒNƒŠƒvƒgƒEƒBƒ“ƒhƒEB
-												// 14.09.17 Fukushiro M. 1síœ ()
-												//		case IDC_SCE_CMB_SELECT_EDITOR:			// ƒGƒfƒBƒ^[‘I‘ğƒRƒ“ƒ{ƒ{ƒbƒNƒXB
+		case IDC_SCE_TAB_SCRIPT:				// ã‚¿ãƒ–ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã€‚
+		case IDC_SCE_EDT_SCRIPT:				// ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã€‚
+												// 14.09.17 Fukushiro M. 1è¡Œå‰Šé™¤ ()
+												//		case IDC_SCE_CMB_SELECT_EDITOR:			// ã‚¨ãƒ‡ã‚£ã‚¿ãƒ¼é¸æŠã‚³ãƒ³ãƒœãƒœãƒƒã‚¯ã‚¹ã€‚
 			rt.right += dx;
 			break;
-		case IDC_SCE_STC_BORDER:				// ƒ{[ƒ_[ƒEƒBƒ“ƒhƒE
-												//----- 14.09.16 Fukushiro M. íœn ()-----
-												//		case IDC_SCE_BTN_CHANGE_VARIABLE:		// •ÏXƒ{ƒ^ƒ“B
-												//		case IDC_SCE_BTN_ADD_WATCH:			// ’Ç‰Áƒ{ƒ^ƒ“B
-												//----- 14.09.16 Fukushiro M. íœI ()-----
-												// 14.09.17 Fukushiro M. 1síœ ()
-												//		case IDC_SCE_BTN_EXEC_EDITOR:			// ‹N“®ƒ{ƒ^ƒ“B
-		case IDC_SCE_STC_LINE_NUMBER:			// s”Ô†B
+		case IDC_SCE_STC_BORDER:				// ãƒœãƒ¼ãƒ€ãƒ¼ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+												//----- 14.09.16 Fukushiro M. å‰Šé™¤å§‹ ()-----
+												//		case IDC_SCE_BTN_CHANGE_VARIABLE:		// å¤‰æ›´ãƒœã‚¿ãƒ³ã€‚
+												//		case IDC_SCE_BTN_ADD_WATCH:			// è¿½åŠ ãƒœã‚¿ãƒ³ã€‚
+												//----- 14.09.16 Fukushiro M. å‰Šé™¤çµ‚ ()-----
+												// 14.09.17 Fukushiro M. 1è¡Œå‰Šé™¤ ()
+												//		case IDC_SCE_BTN_EXEC_EDITOR:			// èµ·å‹•ãƒœã‚¿ãƒ³ã€‚
+		case IDC_SCE_STC_LINE_NUMBER:			// è¡Œç•ªå·ã€‚
 			rt.left += dx;
 			rt.right += dx;
 			break;
@@ -778,7 +778,7 @@ void CDlgSticktrace::MoveBorder(int dx)
 		}
 		GetDlgItem(ids[i])->MoveWindow(rt);
 	}
-	// ƒŒƒCƒAƒEƒgî•ñ‚ğİ’èB
+	// ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆæƒ…å ±ã‚’è¨­å®šã€‚
 	InitLayoutAll();
 } // CDlgSticktrace::MoveBorder.
 
@@ -865,10 +865,10 @@ void CDlgSticktrace::Jump(const std::string & name, int lineIndex, CFCTextEdit::
 /// <returns></returns>
 bool CDlgSticktrace::JumpErrorLocation()
 {
-	// ƒGƒ‰[ƒƒbƒZ[ƒW‚ÍˆÈ‰º‚ÌŒ`®B
+	// ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã¯ä»¥ä¸‹ã®å½¢å¼ã€‚
 	//
 	// -----------------------------------------
-	// error 5:ƒvƒƒOƒ‰ƒ€Às’†‚ÌƒGƒ‰[‚Å‚·B
+	// error 5:ãƒ—ãƒ­ã‚°ãƒ©ãƒ å®Ÿè¡Œä¸­ã®ã‚¨ãƒ©ãƒ¼ã§ã™ã€‚
 	// [xyz]:33: attempt to call method 'ABC' (a nil value)
 	// stack traceback:
 	//   [xyz]:33: in function 'CalcLPoint'
@@ -882,11 +882,11 @@ bool CDlgSticktrace::JumpErrorLocation()
 	// 	stack traceback :
 	// [string "script1"] : 22 : in function 'abc2'
 
-	// ‘I‘ğ”ÍˆÍ‚ğæ“¾B
+	// é¸æŠç¯„å›²ã‚’å–å¾—ã€‚
 	int startCharIndex;
 	int endCharIndex;
 	m_errorout.GetSel(startCharIndex, endCharIndex);
-	// ‘I‘ğ”ÍˆÍ‚Ìs‚ğæ“¾B
+	// é¸æŠç¯„å›²ã®è¡Œã‚’å–å¾—ã€‚
 	const int startLineIndex = m_errorout.LineFromChar(startCharIndex);
 	const auto len = m_errorout.LineLength(m_errorout.LineIndex(startLineIndex));
 	std::vector<wchar_t> vBuff(len + 1, L'\0');
@@ -902,7 +902,7 @@ bool CDlgSticktrace::JumpErrorLocation()
 	std::smatch match;
 	if (std::regex_match(strline, match, re))
 	{
-		// match(0)‚ÍwcpLine‘S‘ÌB
+		// match(0)ã¯wcpLineå…¨ä½“ã€‚
 		ASSERT(match.size() == 3);
 		auto wstrScriptId = strline.substr(match.position(1), match.length(1));
 		auto wstrLineNumber = strline.substr(match.position(2), match.length(2));
@@ -1010,9 +1010,9 @@ void CDlgSticktrace::SetWatch(const std::string & data)
 	std::vector<std::tuple<std::string, std::string, std::string, std::string, std::string>> varIconIndentNameTypeValueArray;
 	Stickutil::Unserialize(varIconIndentNameTypeValueArray, receiveddata);
 
-	// ƒEƒHƒbƒ`ƒEƒBƒ“ƒhƒEB
+	// ã‚¦ã‚©ãƒƒãƒã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã€‚
 	CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
-	// ƒEƒHƒbƒ`ƒEƒBƒ“ƒhƒE‚ğˆê“xƒNƒŠƒA‚·‚éB
+	// ã‚¦ã‚©ãƒƒãƒã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ä¸€åº¦ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
 	pLsvWatch->DeleteAllItems();
 
 	LVITEM lvi;
@@ -1025,7 +1025,7 @@ void CDlgSticktrace::SetWatch(const std::string & data)
 	int index = 0;
 	for (const auto & elem : varIconIndentNameTypeValueArray)
 	{
-		int iImage = 1;	// ƒAƒCƒRƒ“ƒCƒ[ƒW‚ÌƒCƒ“ƒfƒbƒNƒXB
+		int iImage = 1;	// ã‚¢ã‚¤ã‚³ãƒ³ã‚¤ãƒ¡ãƒ¼ã‚¸ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã€‚
 		if (std::get<0>(elem) == "CLOSED")
 			iImage = 0;
 		else if (std::get<0>(elem) == "OPENED")
@@ -1047,11 +1047,11 @@ void CDlgSticktrace::SetWatch(const std::string & data)
 		lvi.pszText = (wchar_t*)name.c_str();
 		lvi.iImage = iImage;
 		pLsvWatch->InsertItem(&lvi);
-		// •Ï”’l
+		// å¤‰æ•°å€¤
 		pLsvWatch->SetItemText(index, 1, value.c_str());
-		// •Ï”Œ^
+		// å¤‰æ•°å‹
 		pLsvWatch->SetItemText(index, 2, type.c_str());
-		// e•Ï”‚ÌƒCƒ“ƒfƒbƒNƒX‚ğİ’èB
+		// è¦ªå¤‰æ•°ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’è¨­å®šã€‚
 		pLsvWatch->SetItemData(index, -1);
 		index++;
 	}
@@ -1081,7 +1081,7 @@ void CDlgSticktrace::OnTcnSelchangeSceTabOutput(NMHDR *pNMHDR, LRESULT *pResult)
 	const int index = tabCtrl->GetCurSel();
 	switch (index)
 	{
-	case 0:	// ƒGƒ‰[o—ÍB
+	case 0:	// ã‚¨ãƒ©ãƒ¼å‡ºåŠ›ã€‚
 		GetDlgItem(IDC_SCE_EDT_ERROR)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_SCE_EDT_OUTPUT)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_LSV_WATCH)->ShowWindow(SW_HIDE);
@@ -1100,7 +1100,7 @@ void CDlgSticktrace::OnTcnSelchangeSceTabOutput(NMHDR *pNMHDR, LRESULT *pResult)
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(FALSE);
 		break;
-	case 1:	// •Ï”B
+	case 1:	// å¤‰æ•°ã€‚
 		GetDlgItem(IDC_SCE_EDT_ERROR)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_EDT_OUTPUT)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_LSV_WATCH)->ShowWindow(SW_SHOW);
@@ -1119,7 +1119,7 @@ void CDlgSticktrace::OnTcnSelchangeSceTabOutput(NMHDR *pNMHDR, LRESULT *pResult)
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
 		break;
-	case 2:	// o—ÍB
+	case 2:	// å‡ºåŠ›ã€‚
 		GetDlgItem(IDC_SCE_EDT_ERROR)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_EDT_OUTPUT)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_SCE_LSV_WATCH)->ShowWindow(SW_HIDE);
@@ -1148,21 +1148,21 @@ void CDlgSticktrace::OnTcnSelchangeSceTabOutput(NMHDR *pNMHDR, LRESULT *pResult)
 void CDlgSticktrace::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	if (GetBorderRect().PtInRect(point))
-	{	//----- ƒyƒCƒ“•ªŠ„üã‚Éƒ}ƒEƒX‚ª‚ ‚éê‡ -----
-		// OnLButtonUp‚Ü‚Å‚±‚ÌWindow‚ÉƒCƒxƒ“ƒgB
+	{	//----- ãƒšã‚¤ãƒ³åˆ†å‰²ç·šä¸Šã«ãƒã‚¦ã‚¹ãŒã‚ã‚‹å ´åˆ -----
+		// OnLButtonUpã¾ã§ã“ã®Windowã«ã‚¤ãƒ™ãƒ³ãƒˆã€‚
 		::SetCapture(m_hWnd);
-		// ƒyƒCƒ“ƒ{[ƒ_[ã‚Åƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚Ä‚¢‚é‚©H
+		// ãƒšã‚¤ãƒ³ãƒœãƒ¼ãƒ€ãƒ¼ä¸Šã§ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚Œã¦ã„ã‚‹ã‹ï¼Ÿ
 		m_bIsBtnOnPaneBorder = TRUE;
-		// ƒJ[ƒ\ƒ‹‚ğ•ÏX.
+		// ã‚«ãƒ¼ã‚½ãƒ«ã‚’å¤‰æ›´.
 		::SetCursor(AfxGetApp()->LoadCursor(IDC_CURSOR_SPLIT));
-		//----- ƒyƒCƒ“•ªŠ„ü‚ÌƒNƒ‰ƒCƒAƒ“ƒgÀ•W‚ğm_rtBar‚É
-		//		İ’è‚µACFCMainFrame‚ÌƒNƒ‰ƒCƒAƒ“ƒgÀ•W‚É•ÏŠ·‚·‚é -----
+		//----- ãƒšã‚¤ãƒ³åˆ†å‰²ç·šã®ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆåº§æ¨™ã‚’m_rtBarã«
+		//		è¨­å®šã—ã€CFCMainFrameã®ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆåº§æ¨™ã«å¤‰æ›ã™ã‚‹ -----
 		CRect rtBorder = GetBorderRect();
 		m_rtBar.SetRect((rtBorder.left + rtBorder.right) / 2, rtBorder.top,
 			(rtBorder.left + rtBorder.right) / 2, rtBorder.bottom);
-		//----- CFCMainFrameã‚É‹^—ƒyƒCƒ“•ªŠ„ü‚ğ•`‰æ -----
+		//----- CFCMainFrameä¸Šã«ç–‘ä¼¼ãƒšã‚¤ãƒ³åˆ†å‰²ç·šã‚’æç”» -----
 		CClientDC dcFrame(this);
-		// C³ü•`‰æ—pƒNƒ‰ƒX‚ğì¬B
+		// ä¿®æ­£ç·šæç”»ç”¨ã‚¯ãƒ©ã‚¹ã‚’ä½œæˆã€‚
 		FCEditDraw edrawFrame(&dcFrame, FD_PANEBAR_WIDTH, FD_PANEBAR_COLOR ^ RGB(255, 255, 255), -1, 0, 0);
 		edrawFrame.Line(&CPoint(m_rtBar.left, m_rtBar.top),
 			&CPoint(m_rtBar.left, m_rtBar.bottom));
@@ -1170,7 +1170,7 @@ void CDlgSticktrace::OnLButtonDown(UINT nFlags, CPoint point)
 		m_hwndWhenBorderMoving = ::GetFocus();
 		SetTimer(BORDER_TIMER, 50, nullptr);
 	}
-	// SuperclassŠÖ”ÀsB
+	// Superclassé–¢æ•°å®Ÿè¡Œã€‚
 	BASE_CLASS::OnLButtonDown(nFlags, point);
 }
 
@@ -1178,30 +1178,30 @@ void CDlgSticktrace::OnLButtonDown(UINT nFlags, CPoint point)
 void CDlgSticktrace::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	if (m_bIsBtnOnPaneBorder)
-	{	//----- ƒyƒCƒ“ƒ{[ƒ_[ã‚Åƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚Ä‚¢‚éê‡ -----
+	{	//----- ãƒšã‚¤ãƒ³ãƒœãƒ¼ãƒ€ãƒ¼ä¸Šã§ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚Œã¦ã„ã‚‹å ´åˆ -----
 		KillTimer(BORDER_TIMER);
-		// ƒ}ƒEƒXƒCƒxƒ“ƒgƒLƒƒƒvƒ`ƒƒ‚ğ‰ğœB
+		// ãƒã‚¦ã‚¹ã‚¤ãƒ™ãƒ³ãƒˆã‚­ãƒ£ãƒ—ãƒãƒ£ã‚’è§£é™¤ã€‚
 		::ReleaseCapture();
-		// ƒyƒCƒ“ƒ{[ƒ_[ã‚Åƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚Ä‚¢‚é‚©H
+		// ãƒšã‚¤ãƒ³ãƒœãƒ¼ãƒ€ãƒ¼ä¸Šã§ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚Œã¦ã„ã‚‹ã‹ï¼Ÿ
 		m_bIsBtnOnPaneBorder = FALSE;
 		::SetCursor(AfxGetApp()->LoadCursor(IDC_CURSOR_SPLIT));
-		//----- ‘O‰ñ•`‚¢‚½‹^—ƒyƒCƒ“•ªŠ„ü‚ğÁ‹ -----
+		//----- å‰å›æã„ãŸç–‘ä¼¼ãƒšã‚¤ãƒ³åˆ†å‰²ç·šã‚’æ¶ˆå» -----
 		CClientDC dcFrame(this);
-		// C³ü•`‰æ—pƒNƒ‰ƒX‚ğì¬B
+		// ä¿®æ­£ç·šæç”»ç”¨ã‚¯ãƒ©ã‚¹ã‚’ä½œæˆã€‚
 		FCEditDraw edrawFrame(&dcFrame, FD_PANEBAR_WIDTH, FD_PANEBAR_COLOR ^ RGB(255, 255, 255), -1, 0, 0);
 		edrawFrame.Line(&CPoint(m_rtBar.left, m_rtBar.top),
 			&CPoint(m_rtBar.left, m_rtBar.bottom));
 
-		// ƒyƒCƒ“ƒ{[ƒ_[‚ÌˆÚ“®‹——£B
+		// ãƒšã‚¤ãƒ³ãƒœãƒ¼ãƒ€ãƒ¼ã®ç§»å‹•è·é›¢ã€‚
 		const int pxMove = m_rtBar.CenterPoint().x - GetBorderRect().CenterPoint().x;
 		MoveBorder(pxMove);
 
-		// ƒ{[ƒ_[ˆÊ’u‚ğæ“¾B
+		// ãƒœãƒ¼ãƒ€ãƒ¼ä½ç½®ã‚’å–å¾—ã€‚
 		const int borderX = GetBorderRect().left;
-		// ƒ{[ƒ_[‚ÌˆÊ’u‚ğƒŒƒWƒXƒgƒŠ‚É‹L˜^B
+		// ãƒœãƒ¼ãƒ€ãƒ¼ã®ä½ç½®ã‚’ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã«è¨˜éŒ²ã€‚
 		FCRegBase::SaveRegBinary(GetRegKeyName().c_str(), L"BorderX", (LPBYTE)&borderX, sizeof(borderX));
 	}
-	// SuperclassŠÖ”ÀsB
+	// Superclassé–¢æ•°å®Ÿè¡Œã€‚
 	BASE_CLASS::OnLButtonUp(nFlags, point);
 }
 
@@ -1209,41 +1209,41 @@ void CDlgSticktrace::OnLButtonUp(UINT nFlags, CPoint point)
 void CDlgSticktrace::OnMouseMove(UINT nFlags, CPoint point)
 {
 	if (m_bIsBtnOnPaneBorder)
-	{	//----- ƒyƒCƒ“ƒ{[ƒ_[ã‚Åƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚Ä‚¢‚éê‡ -----
+	{	//----- ãƒšã‚¤ãƒ³ãƒœãƒ¼ãƒ€ãƒ¼ä¸Šã§ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚Œã¦ã„ã‚‹å ´åˆ -----
 		::SetCursor(AfxGetApp()->LoadCursor(IDC_CURSOR_SPLIT));
-		//----- ‘O‰ñ•`‚¢‚½‹^—ƒyƒCƒ“•ªŠ„ü‚ğÁ‹ -----
+		//----- å‰å›æã„ãŸç–‘ä¼¼ãƒšã‚¤ãƒ³åˆ†å‰²ç·šã‚’æ¶ˆå» -----
 		CClientDC dcFrame(this);
-		// C³ü•`‰æ—pƒNƒ‰ƒX‚ğì¬B
+		// ä¿®æ­£ç·šæç”»ç”¨ã‚¯ãƒ©ã‚¹ã‚’ä½œæˆã€‚
 		FCEditDraw edrawFrame(&dcFrame, FD_PANEBAR_WIDTH, FD_PANEBAR_COLOR ^ RGB(255, 255, 255), -1, 0, 0);
 		edrawFrame.Line(&CPoint(m_rtBar.left, m_rtBar.top),
 			&CPoint(m_rtBar.left, m_rtBar.bottom));
-		//----- V‚µ‚¢ƒyƒCƒ“•ªŠ„ü‚ÌÀ•W‚ğİ’è -----
-		// ƒyƒCƒ“ƒo[‚ÌÀ•W‚ğŒvZBm_rtBar.right ‚Í•sg—pB
+		//----- æ–°ã—ã„ãƒšã‚¤ãƒ³åˆ†å‰²ç·šã®åº§æ¨™ã‚’è¨­å®š -----
+		// ãƒšã‚¤ãƒ³ãƒãƒ¼ã®åº§æ¨™ã‚’è¨ˆç®—ã€‚m_rtBar.right ã¯ä¸ä½¿ç”¨ã€‚
 		m_rtBar.SetRect(point.x, m_rtBar.top, point.x, m_rtBar.bottom);
 
-		//----- ƒyƒCƒ“ƒo[‚Ì‰Ò“­”ÍˆÍ‚ğŒvZ -----
-		CRect rtScript;		// ƒXƒNƒŠƒvƒgƒEƒBƒ“ƒhƒE—Ìˆæ
-		CRect rtChange;		// •ÏXƒ{ƒ^ƒ“—Ìˆæ
-		GetDlgItem(IDC_SCE_EDT_SCRIPT)->GetWindowRect(rtScript);	// ƒXƒNƒŠƒvƒgƒGƒfƒBƒ^[
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->GetWindowRect(rtChange);		// •ÏXƒ{ƒ^ƒ“
+		//----- ãƒšã‚¤ãƒ³ãƒãƒ¼ã®ç¨¼åƒç¯„å›²ã‚’è¨ˆç®— -----
+		CRect rtScript;		// ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚¦ã‚£ãƒ³ãƒ‰ã‚¦é ˜åŸŸ
+		CRect rtChange;		// å¤‰æ›´ãƒœã‚¿ãƒ³é ˜åŸŸ
+		GetDlgItem(IDC_SCE_EDT_SCRIPT)->GetWindowRect(rtScript);	// ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚¨ãƒ‡ã‚£ã‚¿ãƒ¼
+		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->GetWindowRect(rtChange);		// å¤‰æ›´ãƒœã‚¿ãƒ³
 		ScreenToClient(&rtScript);
 		ScreenToClient(&rtChange);
-		// ƒXƒNƒŠƒvƒgƒEƒBƒ“ƒhƒE‚Ì•‚ª100ˆÈ‰º‚É‚È‚ç‚È‚¢‚æ‚¤’²®‚·‚éB‰E‚Í•ÏXƒ{ƒ^ƒ“‚ğ‰B‚³‚È‚¢‚æ‚¤B
+		// ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å¹…ãŒ100ä»¥ä¸‹ã«ãªã‚‰ãªã„ã‚ˆã†èª¿æ•´ã™ã‚‹ã€‚å³ã¯å¤‰æ›´ãƒœã‚¿ãƒ³ã‚’éš ã•ãªã„ã‚ˆã†ã€‚
 		if (m_rtBar.left < rtScript.left + 100)
 			m_rtBar.left = rtScript.left + 100;
 		if (rtChange.left - 10 < m_rtBar.left)
 			m_rtBar.left = rtChange.left - 10;
 		m_rtBar.right = m_rtBar.left;
-		//----- CFCMainFrameã‚É‹^—ƒyƒCƒ“•ªŠ„ü‚ğ•`‰æ -----
+		//----- CFCMainFrameä¸Šã«ç–‘ä¼¼ãƒšã‚¤ãƒ³åˆ†å‰²ç·šã‚’æç”» -----
 		edrawFrame.Line(&CPoint(m_rtBar.left, m_rtBar.top),
 			&CPoint(m_rtBar.left, m_rtBar.bottom));
 	}
 	else
-	{	//----- ƒyƒCƒ“ƒ{[ƒ_[ã‚Åƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚Ä‚¢‚éˆÈŠO‚Ìê‡ -----
+	{	//----- ãƒšã‚¤ãƒ³ãƒœãƒ¼ãƒ€ãƒ¼ä¸Šã§ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚Œã¦ã„ã‚‹ä»¥å¤–ã®å ´åˆ -----
 		if (GetBorderRect().PtInRect(point))
 			::SetCursor(AfxGetApp()->LoadCursor(IDC_CURSOR_SPLIT));
 	}
-	// SuperclassŠÖ”ÀsB
+	// Superclassé–¢æ•°å®Ÿè¡Œã€‚
 	BASE_CLASS::OnMouseMove(nFlags, point);
 }
 
@@ -1405,12 +1405,12 @@ LRESULT CDlgSticktrace::OnUserBreakpointUpdated(WPARAM, LPARAM)
 
 //********************************************************************************************
 /*!
-* @brief	CFCTextEdit‚Ìƒ}[ƒJ[—ÌˆæƒNƒŠƒbƒNB
+* @brief	CFCTextEditã®ãƒãƒ¼ã‚«ãƒ¼é ˜åŸŸã‚¯ãƒªãƒƒã‚¯ã€‚
 * @author	Fukushiro M.
-* @date	2014/09/16(‰Î) 21:07:54
+* @date	2014/09/16(ç«) 21:07:54
 *
-* @param[in]	WPARAM	wParam	ControlIdB
-* @param[in]	LPARAM	lParam	lineIndexB
+* @param[in]	WPARAM	wParam	ControlIdã€‚
+* @param[in]	LPARAM	lParam	lineIndexã€‚
 *
 * @return	LRESULT	1
 */
@@ -1432,11 +1432,11 @@ LRESULT CDlgSticktrace::OnUserTextEditMarkerClicked(WPARAM wParam, LPARAM lParam
 
 //********************************************************************************************
 /*!
-* @brief	[ƒuƒŒ[ƒNƒ|ƒCƒ“ƒg‚Ìİ’è/‰ğœ]ƒRƒ}ƒ“ƒh‚©‚çÀs‚³‚ê‚éB
+* @brief	[ãƒ–ãƒ¬ãƒ¼ã‚¯ãƒã‚¤ãƒ³ãƒˆã®è¨­å®š/è§£é™¤]ã‚³ãƒãƒ³ãƒ‰ã‹ã‚‰å®Ÿè¡Œã•ã‚Œã‚‹ã€‚
 * @author	Fukushiro M.
-* @date	2014/09/14(“ú) 07:43:52
+* @date	2014/09/14(æ—¥) 07:43:52
 *
-* @return	‚È‚µ (none)
+* @return	ãªã— (none)
 */
 //********************************************************************************************
 void CDlgSticktrace::OnSceDebugToggleBreakpoint()
@@ -1447,13 +1447,13 @@ void CDlgSticktrace::OnSceDebugToggleBreakpoint()
 
   //********************************************************************************************
   /*!
-  * @brief	[ƒuƒŒ[ƒNƒ|ƒCƒ“ƒg‚Ìİ’è/‰ğœ]ƒRƒ}ƒ“ƒh‚Ì—LŒøE–³Œø‚ğİ’è‚·‚éB
+  * @brief	[ãƒ–ãƒ¬ãƒ¼ã‚¯ãƒã‚¤ãƒ³ãƒˆã®è¨­å®š/è§£é™¤]ã‚³ãƒãƒ³ãƒ‰ã®æœ‰åŠ¹ãƒ»ç„¡åŠ¹ã‚’è¨­å®šã™ã‚‹ã€‚
   * @author	Fukushiro M.
-  * @date	2014/09/14(“ú) 07:43:52
+  * @date	2014/09/14(æ—¥) 07:43:52
   *
-  * @param[out]	CCmdUI*	pCmdUI	ƒRƒ}ƒ“ƒh‚Ìó‘Ô‚ğİ’èB
+  * @param[out]	CCmdUI*	pCmdUI	ã‚³ãƒãƒ³ãƒ‰ã®çŠ¶æ…‹ã‚’è¨­å®šã€‚
   *
-  * @return	‚È‚µ (none)
+  * @return	ãªã— (none)
   */
   //********************************************************************************************
 void CDlgSticktrace::OnUpdateSceDebugToggleBreakpoint(CCmdUI* pCmdUI)
@@ -1463,7 +1463,7 @@ void CDlgSticktrace::OnUpdateSceDebugToggleBreakpoint(CCmdUI* pCmdUI)
 
 //  void CDlgSticktrace::OnTcnSelchangingSceTabScript(NMHDR *pNMHDR, LRESULT *pResult)
 //  {
-//	  // TODO: ‚±‚±‚ÉƒRƒ“ƒgƒ[ƒ‹’Ê’mƒnƒ“ƒhƒ‰[ ƒR[ƒh‚ğ’Ç‰Á‚µ‚Ü‚·B
+//	  // TODO: ã“ã“ã«ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«é€šçŸ¥ãƒãƒ³ãƒ‰ãƒ©ãƒ¼ ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã—ã¾ã™ã€‚
 //	  *pResult = 0;
 //  }
 
@@ -1587,7 +1587,7 @@ LRESULT CDlgSticktrace::OnIdleUpdateCmdUI(WPARAM, LPARAM)
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
 		break;
-//----- 17.10.07 Fukushiro M. íœn ()-----
+//----- 17.10.07 Fukushiro M. å‰Šé™¤å§‹ ()-----
 //	case CDlgSticktrace::Mode::PROCEED_TO_NEXT:
 //		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE))->SetCheck(BST_UNCHECKED);
 //		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK))->SetCheck(BST_CHECKED);
@@ -1600,7 +1600,7 @@ LRESULT CDlgSticktrace::OnIdleUpdateCmdUI(WPARAM, LPARAM)
 //		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
 //		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
 //		break;
-//----- 17.10.07 Fukushiro M. íœI ()-----
+//----- 17.10.07 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 	default:
 		break;
 	}
@@ -1610,7 +1610,7 @@ LRESULT CDlgSticktrace::OnIdleUpdateCmdUI(WPARAM, LPARAM)
 
 void CDlgSticktrace::OnSceDebugContinue()
 {
-	// TODO: ‚±‚±‚ÉƒRƒ}ƒ“ƒh ƒnƒ“ƒhƒ‰[ ƒR[ƒh‚ğ’Ç‰Á‚µ‚Ü‚·B
+	// TODO: ã“ã“ã«ã‚³ãƒãƒ³ãƒ‰ ãƒãƒ³ãƒ‰ãƒ©ãƒ¼ ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã—ã¾ã™ã€‚
 }
 
 
@@ -1624,7 +1624,7 @@ void CDlgSticktrace::OnUpdateSceDebugContinue(CCmdUI *pCmdUI)
 /// </summary>
 void CDlgSticktrace::OnBnClickedSceBtnChangeVariable()
 {
-	// TODO: ‚±‚±‚ÉƒRƒ“ƒgƒ[ƒ‹’Ê’mƒnƒ“ƒhƒ‰[ ƒR[ƒh‚ğ’Ç‰Á‚µ‚Ü‚·B
+	// TODO: ã“ã“ã«ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«é€šçŸ¥ãƒãƒ³ãƒ‰ãƒ©ãƒ¼ ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã—ã¾ã™ã€‚
 }
 
 /// <summary>
@@ -1632,17 +1632,17 @@ void CDlgSticktrace::OnBnClickedSceBtnChangeVariable()
 /// </summary>
 void CDlgSticktrace::OnBnClickedSceBtnAddWatch()
 {
-	// •Ï”–¼‚ğæ“¾B
+	// å¤‰æ•°åã‚’å–å¾—ã€‚
 	std::wstring wstr;
 	UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_VARIABLE_NAME, wstr);
 	UtilString::Trim(wstr);
 	if (!wstr.empty())
 	{
-		// s‚ğ’Ç‰ÁB
+		// è¡Œã‚’è¿½åŠ ã€‚
 		CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
 		const int itemCount = pLsvWatch->GetItemCount();
 
-		// ƒeƒXƒgB
+		// ãƒ†ã‚¹ãƒˆã€‚
 		LVITEM lvi;
 		lvi.mask = LVIF_TEXT | LVIF_IMAGE;
 		lvi.iItem = itemCount;
@@ -1661,7 +1661,7 @@ void CDlgSticktrace::OnBnClickedSceBtnAddWatch()
 			acs.WakeConditionVariable();
 		}
 		*/
-		// ƒEƒHƒbƒ`ƒEƒBƒ“ƒhƒE‚ğXVB
+		// ã‚¦ã‚©ãƒƒãƒã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’æ›´æ–°ã€‚
 		UpdateWatchWindow();
 	}
 }
@@ -1671,7 +1671,7 @@ void CDlgSticktrace::OnBnClickedSceBtnAddWatch()
 /// </summary>
 void CDlgSticktrace::OnBnClickedSceBtnDeleteWatch()
 {
-	// TODO: ‚±‚±‚ÉƒRƒ“ƒgƒ[ƒ‹’Ê’mƒnƒ“ƒhƒ‰[ ƒR[ƒh‚ğ’Ç‰Á‚µ‚Ü‚·B
+	// TODO: ã“ã“ã«ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«é€šçŸ¥ãƒãƒ³ãƒ‰ãƒ©ãƒ¼ ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã—ã¾ã™ã€‚
 }
 
 void CDlgSticktrace::OnNMClickSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult)
@@ -1693,7 +1693,7 @@ void CDlgSticktrace::OnNMClickSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult)
 			lvi.iImage = (lvi.iImage == 1) ? 0 : 1;
 			pLsvWatch->SetItem(&lvi);
 
-			// ƒEƒHƒbƒ`ƒEƒBƒ“ƒhƒE‚ğXVB
+			// ã‚¦ã‚©ãƒƒãƒã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’æ›´æ–°ã€‚
 			UpdateWatchWindow();
 		}
 	}
@@ -1702,14 +1702,14 @@ void CDlgSticktrace::OnNMClickSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult)
 
 //********************************************************************************************
 /*!
-* @brief	CFCDdEditƒRƒ“ƒgƒ[ƒ‹‚ªƒ_ƒuƒ‹ƒNƒŠƒbƒN‚³‚ê‚½‚Æ‚«‚ÉÀs‚³‚ê‚éB
+* @brief	CFCDdEditã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ãŒãƒ€ãƒ–ãƒ«ã‚¯ãƒªãƒƒã‚¯ã•ã‚ŒãŸã¨ãã«å®Ÿè¡Œã•ã‚Œã‚‹ã€‚
 * @author	Fukushiro M.
-* @date	2014/09/12(‹à) 17:53:35
+* @date	2014/09/12(é‡‘) 17:53:35
 *
-* @param[in]	WPARAM	wParam	‘—MŒ³‚ÌƒRƒ“ƒgƒ[ƒ‹IDB
-* @param[in]	LPARAM	–¢g—p
+* @param[in]	WPARAM	wParam	é€ä¿¡å…ƒã®ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«IDã€‚
+* @param[in]	LPARAM	æœªä½¿ç”¨
 *
-* @return	LRESULT	0:CFCDdEdit‚ÅDBLCLK‚ğˆ—‚·‚é/1:ˆ—‚µ‚È‚¢
+* @return	LRESULT	0:CFCDdEditã§DBLCLKã‚’å‡¦ç†ã™ã‚‹/1:å‡¦ç†ã—ãªã„
 */
 //********************************************************************************************
 LRESULT CDlgSticktrace::OnUserDdEditDblClked(WPARAM wParam, LPARAM)
@@ -1724,12 +1724,12 @@ LRESULT CDlgSticktrace::OnUserDdEditDblClked(WPARAM wParam, LPARAM)
 
   //********************************************************************************************
   /*!
-  * @brief	CFCTextEdit‚ÌŒ»İs‚Ì•ÏX‚Ì’Ê’mB
+  * @brief	CFCTextEditã®ç¾åœ¨è¡Œã®å¤‰æ›´ã®é€šçŸ¥ã€‚
   * @author	Fukushiro M.
-  * @date	2014/09/17(…) 21:50:33
+  * @date	2014/09/17(æ°´) 21:50:33
   *
-  * @param[in]	WPARAM	wParam	ControlIdB
-  * @param[in]	LPARAM	lParam	lineIndexB
+  * @param[in]	WPARAM	wParam	ControlIdã€‚
+  * @param[in]	LPARAM	lParam	lineIndexã€‚
   *
   * @return	LRESULT	1
   */

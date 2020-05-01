@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
@@ -62,19 +62,19 @@
 // 3. Return the number of result to Lua.
 
 //
-// ƒ`ƒƒƒ“ƒN‚Æ‚Í
+// ãƒãƒ£ãƒ³ã‚¯ã¨ã¯
 // https://qiita.com/wingsys/items/0be3e4a627622cd5b7c3
-// ƒ`ƒƒƒ“ƒN‚Í•¶‚Ì˜A‘±‚Å‚ ‚èA‰üs‚É‚æ‚Á‚ÄØ‚è—£‚³‚ê‚éB
-// (ƒZƒ~ƒRƒƒ“‚ğ˜A‘Å‚·‚é‚Æ“{‚ç‚ê‚é‚Ì‚Í‚±‚Ì“s‡ã‹ós‚ğ“à•ï‚Å‚«‚È‚¢‚Æ‚¢‚¤–î‚à‚ ‚é)
-// ƒ`ƒƒƒ“ƒN‚Í“à•”“I‚É–³–¼ŠÖ”‚Å‚ ‚éB‚±‚Ì‚½‚ßƒ`ƒƒƒ“ƒN‚Íƒ[ƒJƒ‹•Ï”‚ğ‚Â‚±‚Æ‚à‰Â”\B
+// ãƒãƒ£ãƒ³ã‚¯ã¯æ–‡ã®é€£ç¶šã§ã‚ã‚Šã€æ”¹è¡Œã«ã‚ˆã£ã¦åˆ‡ã‚Šé›¢ã•ã‚Œã‚‹ã€‚
+// (ã‚»ãƒŸã‚³ãƒ­ãƒ³ã‚’é€£æ‰“ã™ã‚‹ã¨æ€’ã‚‰ã‚Œã‚‹ã®ã¯ã“ã®éƒ½åˆä¸Šç©ºè¡Œã‚’å†…åŒ…ã§ããªã„ã¨ã„ã†äº‹æƒ…ã‚‚ã‚ã‚‹)
+// ãƒãƒ£ãƒ³ã‚¯ã¯å†…éƒ¨çš„ã«ç„¡åé–¢æ•°ã§ã‚ã‚‹ã€‚ã“ã®ãŸã‚ãƒãƒ£ãƒ³ã‚¯ã¯ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°ã‚’æŒã¤ã“ã¨ã‚‚å¯èƒ½ã€‚
 //
 
 
 //
-// ƒƒ^ƒe[ƒuƒ‹‚Æ‚ÍH
+// ãƒ¡ã‚¿ãƒ†ãƒ¼ãƒ–ãƒ«ã¨ã¯ï¼Ÿ
 //
-// table B‚ªtable A‚Ìƒƒ^ƒe[ƒuƒ‹‚Ìê‡Atable A‚É‘Î‚·‚é‘€ì‚ğtable B‚Å‹K’è‚Å‚«‚éB
-// —á‚¦‚Î‰º}‚Ìê‡Atable A‚ªdispose‚³‚ê‚é‚É"__gc"‚Éİ’è‚³‚ê‚½c-func1‚ªÀs‚³‚ê‚éB
+// table BãŒtable Aã®ãƒ¡ã‚¿ãƒ†ãƒ¼ãƒ–ãƒ«ã®å ´åˆã€table Aã«å¯¾ã™ã‚‹æ“ä½œã‚’table Bã§è¦å®šã§ãã‚‹ã€‚
+// ä¾‹ãˆã°ä¸‹å›³ã®å ´åˆã€table AãŒdisposeã•ã‚Œã‚‹æ™‚ã«"__gc"ã«è¨­å®šã•ã‚ŒãŸc-func1ãŒå®Ÿè¡Œã•ã‚Œã‚‹ã€‚
 //
 //                                  registry                  +-------------+
 //                               +------------+--------+      |             |
@@ -94,9 +94,9 @@
 //
 //
 //
-// userdata‚É‘Î‚µ‚Ä‚àƒƒ^ƒe[ƒuƒ‹‚ªİ’è‚Å‚«‚éB
-// —á‚¦‚Î‰º}‚Ìê‡Auserdata‚ªdispose‚³‚ê‚é‚É"__gc"‚Éİ’è‚³‚ê‚½c-func1‚ªÀs‚³‚ê‚éB
-// userdata‚É‘Î‚µ‚Ä‚Ì‘€ìA—á‚¦‚Îa=userdata‚Ìê‡Aa:FuncA()Aa:FuncB()‚Åc-func2Ac-func3‚ªÀs‚³‚ê‚éB
+// userdataã«å¯¾ã—ã¦ã‚‚ãƒ¡ã‚¿ãƒ†ãƒ¼ãƒ–ãƒ«ãŒè¨­å®šã§ãã‚‹ã€‚
+// ä¾‹ãˆã°ä¸‹å›³ã®å ´åˆã€userdataãŒdisposeã•ã‚Œã‚‹æ™‚ã«"__gc"ã«è¨­å®šã•ã‚ŒãŸc-func1ãŒå®Ÿè¡Œã•ã‚Œã‚‹ã€‚
+// userdataã«å¯¾ã—ã¦ã®æ“ä½œã€ä¾‹ãˆã°a=userdataã®å ´åˆã€a:FuncA()ã€a:FuncB()ã§c-func2ã€c-func3ãŒå®Ÿè¡Œã•ã‚Œã‚‹ã€‚
 //
 //                              metatable
 //       stack                +------------+   +----------------------------------+
@@ -407,59 +407,59 @@ static StringBuffer OUTPUT_EXPORTFUNC_STREAM;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//----- 20.02.20  •ÏX‘O ()-----
-//// [extern inline TT:TT *& FFF (PPP)]‚ÌTTT:TT *&,FFF,PPP)‚ğ’Šo "^extern\s+inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
+//// [extern inline TT:TT *& FFF (PPP)]ã®TTT:TT *&,FFF,PPP)ã‚’æŠ½å‡º "^extern\s+inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 //static const std::regex FUNC_EXT_INL_XML(R"(^extern\s+inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 //
-//// [extern TT:TT *& FFF (PPP)]‚ÌTTT:TT *&,FFF,PPP)‚ğ’Šo "^extern\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+//// [extern TT:TT *& FFF (PPP)]ã®TTT:TT *&,FFF,PPP)ã‚’æŠ½å‡º "^extern\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 //static const std::regex FUNC_EXT_XML(R"(^extern\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 //
-//// [static inline TT:TT *& FFF (PPP)]‚ÌTTT:TT *&,FFF,PPP)‚ğ’Šo "^static\s+inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+//// [static inline TT:TT *& FFF (PPP)]ã®TTT:TT *&,FFF,PPP)ã‚’æŠ½å‡º "^static\s+inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 //static const std::regex FUNC_STC_INL_XML(R"(^static\s+inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 //
-//// [static TT:TT *& FFF (PPP)]‚ÌTTT:TT *&,FFF,PPP)‚ğ’Šo "^static\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+//// [static TT:TT *& FFF (PPP)]ã®TTT:TT *&,FFF,PPP)ã‚’æŠ½å‡º "^static\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 //static const std::regex FUNC_STC_XML(R"(^static\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 //
-//// [virtual TT:TT *& FFF (PPP)]‚ÌTTT:TT *&,FFF,PPP)‚ğ’Šo "^virtual\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+//// [virtual TT:TT *& FFF (PPP)]ã®TTT:TT *&,FFF,PPP)ã‚’æŠ½å‡º "^virtual\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 //static const std::regex FUNC_VIR_XML(R"(^virtual\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 //
-//// [inline TT:TT *& FFF (PPP)]‚ÌTTT:TT *&,FFF,PPP)‚ğ’Šo "^inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+//// [inline TT:TT *& FFF (PPP)]ã®TTT:TT *&,FFF,PPP)ã‚’æŠ½å‡º "^inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 //static const std::regex FUNC_INL_XML(R"(^inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 //
-//// [TT:TT *& FFF (PPP)]‚ÌTTT:TT *&,FFF,PPP)‚ğ’Šo "^([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+//// [TT:TT *& FFF (PPP)]ã®TTT:TT *&,FFF,PPP)ã‚’æŠ½å‡º "^([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 //static const std::regex FUNC_REGULAR_XML(R"(^([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
-//----- 20.02.20  •ÏXŒã ()-----
-// [extern inline TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP)‚ğ’Šo "^extern\s+inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
+// [extern inline TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPP)ã‚’æŠ½å‡º "^extern\s+inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 static const std::regex FUNC_EXT_INL_XML(R"(^extern\s+inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 
-// [extern TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP)‚ğ’Šo "^extern\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+// [extern TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPP)ã‚’æŠ½å‡º "^extern\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 static const std::regex FUNC_EXT_XML(R"(^extern\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 
-// [static inline TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP)‚ğ’Šo "^static\s+inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+// [static inline TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPP)ã‚’æŠ½å‡º "^static\s+inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 static const std::regex FUNC_STC_INL_XML(R"(^static\s+inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 
-// [static TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP)‚ğ’Šo "^static\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+// [static TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPP)ã‚’æŠ½å‡º "^static\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 static const std::regex FUNC_STC_XML(R"(^static\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 
-// [virtual TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP)‚ğ’Šo "^virtual\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+// [virtual TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPP)ã‚’æŠ½å‡º "^virtual\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 static const std::regex FUNC_VIR_XML(R"(^virtual\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 
-// [inline TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP)‚ğ’Šo "^inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+// [inline TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPP)ã‚’æŠ½å‡º "^inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 static const std::regex FUNC_INL_XML(R"(^inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 
-// [TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP)‚ğ’Šo "^([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
+// [TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPP)ã‚’æŠ½å‡º "^([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 static const std::regex FUNC_REGULAR_XML(R"(^([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 
-//----- 19.11.20 Fukushiro M. •ÏX‘O ()-----
+//----- 19.11.20 Fukushiro M. å¤‰æ›´å‰ ()-----
 //// Extract "std::wstring *&" and "argbBack" from "std::wstring *&argbBack"
 //static const std::regex ARG_XML(R"(^\s*([a-zA-Z_][\w:\*\& ]*)\b([a-zA-Z_]\w*)\s*$)");
-//----- 19.11.20 Fukushiro M. •ÏXŒã ()-----
+//----- 19.11.20 Fukushiro M. å¤‰æ›´å¾Œ ()-----
 // Extract "std::wstring *&" and "argbBack" from "std::wstring *&argbBack"
 // e.g. "std::vector<int> & arg" -> "std::vector<int> & " , "arg"
 // e.g. "std::map<int, string> & arg" -> "std::map<int, string> & " , "arg"
 static const std::regex ARG_XML(R"(^\s*([a-zA-Z_][\w:<>,\*\&\s]*)\b([a-zA-Z_]\w*)\s*$)");
-//----- 19.11.20 Fukushiro M. •ÏXI ()-----
+//----- 19.11.20 Fukushiro M. å¤‰æ›´çµ‚ ()-----
 
 // [const]
 static const std::regex CONST_DEF(R"(\bconst\b)");
@@ -1028,12 +1028,12 @@ struct ClassRec
 
 	int FindClass(const std::string & className) const
 	{
-//----- 19.12.10 Fukushiro M. •ÏX‘O ()-----
+//----- 19.12.10 Fukushiro M. å¤‰æ›´å‰ ()-----
 //		std::vector<std::string> dummy;
 //		return FindClass(UtilString::Split(dummy, className, "::"));
-//----- 19.12.10 Fukushiro M. •ÏXŒã ()-----
+//----- 19.12.10 Fukushiro M. å¤‰æ›´å¾Œ ()-----
 		return FindClass(UtilString::Split(Dummy<std::vector<std::string>>(), className, "::"));
-//----- 19.12.10 Fukushiro M. •ÏXI ()-----
+//----- 19.12.10 Fukushiro M. å¤‰æ›´çµ‚ ()-----
 	}
 
 	int FindClass(const std::vector<std::string> & classNameArray) const
@@ -1168,13 +1168,13 @@ std::string EnumRec::GetFullpathElementCprefix() const
 /// <returns></returns>
 std::string EnumRec::GetFullpathElementLuaprefix() const
 {
-//----- 20.03.01  •ÏX‘O ()-----
+//----- 20.03.01  å¤‰æ›´å‰ ()-----
 //	auto className = ClassRec::Get(parentId).GetFullpathLuaname();
 //	if (enumType == EnumRec::Type::ENUM_CLASS)
 //		return className + "." + enumLuaname + ".";
 //	else
 //		return className + ".";
-//----- 20.03.01  •ÏXŒã ()-----
+//----- 20.03.01  å¤‰æ›´å¾Œ ()-----
 	auto className = ClassRec::Get(parentId).GetFullpathLuaname();
 	if (className.empty())
 		return (enumType == EnumRec::Type::ENUM_CLASS) ?
@@ -1186,7 +1186,7 @@ std::string EnumRec::GetFullpathElementLuaprefix() const
 			className + "." + enumLuaname + "."
 			:
 			className + ".";
-//----- 20.03.01  •ÏXI ()-----
+//----- 20.03.01  å¤‰æ›´çµ‚ ()-----
 }
 
 /// <summary>
@@ -1209,13 +1209,13 @@ std::string EnumRec::GetFullpathCname() const
 /// <returns></returns>
 std::string EnumRec::GetFullpathLuaname() const
 {
-//----- 20.03.01  •ÏX‘O ()-----
+//----- 20.03.01  å¤‰æ›´å‰ ()-----
 //	auto className = ClassRec::Get(parentId).GetFullpathLuaname();
 //	if (enumType == EnumRec::Type::ENUM_CLASS)
 //		return className + "." + enumLuaname;
 //	else
 //		ThrowLeSystemError();
-//----- 20.03.01  •ÏXŒã ()-----
+//----- 20.03.01  å¤‰æ›´å¾Œ ()-----
 	auto className = ClassRec::Get(parentId).GetFullpathLuaname();
 	if (enumType != EnumRec::Type::ENUM_CLASS)
 		ThrowLeSystemError();
@@ -1640,11 +1640,11 @@ static void NormalizeVarTypeSub(
 	// e.g. "const enum class ::A::B::TypeU*&"
 	varType = varRawType;
 
-//----- 20.02.20  íœn ()-----
-// ƒeƒXƒgB
+//----- 20.02.20  å‰Šé™¤å§‹ ()-----
+// ãƒ†ã‚¹ãƒˆã€‚
 //	// e.g. "const enum class ::A::B::TypeU*&" -> "const enum class ::A::B::TypeU*"
 //	varType = UtilString::Replace(varType, "&", "");
-//----- 20.02.20  íœI ()-----
+//----- 20.02.20  å‰Šé™¤çµ‚ ()-----
 
 	// e.g. "const enum class ::A::B::TypeU*" -> "const  class ::A::B::TypeU*"
 	varType = std::regex_replace(varType, REX_ENUM, "");
@@ -2234,14 +2234,14 @@ static void GetLuaToCppConverter(
 		{
 		case PATH_TYPE_1:	// PathType[1]
 			break;
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //		case PATH_TYPE_2:	// PathType[2]
 //			successPath.insert(successPath.end(), { "&", cType_S + '*' });
 //			break;
 //		default: // case PATH_TYPE_3:	// PathType[3]
 //			successPath.insert(successPath.end(), { "*", cType_T + '&' });
 //			break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 		case PATH_TYPE_2:	// PathType[2]
 		{
 			auto lastType = successPath.back();
@@ -2254,7 +2254,7 @@ static void GetLuaToCppConverter(
 			successPath.insert(successPath.end(), { "*", lastType + '&' });
 			break;
 		}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 		}
 	}
 	else if (errorCode != LeError::ErrorCode::NONE)
@@ -3166,7 +3166,7 @@ static void GetCppToLuaConverter(
 				case PATH_TYPE_1:	// PathType[1]
 					successPath.insert(successPath.begin(), { "", "" });
 					break;
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_2:	// PathType[2]
 //					successPath.erase(successPath.begin());
 //					successPath.insert(successPath.begin(), { "", "", cType_S + '*', "*", cType_S + '&' });
@@ -3174,7 +3174,7 @@ static void GetCppToLuaConverter(
 //				default: // case PATH_TYPE_3:	// PathType[3]
 //					successPath.insert(successPath.begin(), { "", "", cType_T, "&" });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_2:	// PathType[2]
 				{
 					auto topType = successPath.front();
@@ -3188,13 +3188,13 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { "", "", topType, "&" });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				}
 				break;
 			case '*':	// Rule-2.
 				switch (pathType)
 				{
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_1:	// PathType[1]
 //					successPath.insert(successPath.begin(), { cType_S, "&" });
 //					break;
@@ -3202,7 +3202,7 @@ static void GetCppToLuaConverter(
 //					successPath.erase(successPath.begin());
 //					successPath.insert(successPath.begin(), { cType_S, "&", cType_S + '*', "*", cType_S + '&' });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front().substr(0, successPath.front().length() - 1);
@@ -3216,7 +3216,7 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType, "&", topType + '*', "*", topType + '&' });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				default: // case PATH_TYPE_3:	// PathType[3]
 					ThrowLeSystemError();
 				}
@@ -3227,18 +3227,18 @@ static void GetCppToLuaConverter(
 				case PATH_TYPE_1:	// PathType[1]
 					successPath.insert(successPath.begin(), { "", "" });
 					break;
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_3:	// PathType[3]
 //					successPath.insert(successPath.begin(), { "", "", cType_T, "&" });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_3:	// PathType[3]
 				{
 					auto topType = successPath.front().substr(0, successPath.front().length() - 1);
 					successPath.insert(successPath.begin(), { "", "", topType, "&" });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				default: // case PATH_TYPE_2:	// PathType[2]
 					ThrowLeSystemError();
 				}
@@ -3251,7 +3251,7 @@ static void GetCppToLuaConverter(
 			case '&':	// Rule-1.
 				switch (pathType)
 				{
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_1:	// PathType[1]
 //					successPath.erase(successPath.begin());
 //					successPath.insert(successPath.begin(), cType_T + '&');
@@ -3263,7 +3263,7 @@ static void GetCppToLuaConverter(
 //				default: // case PATH_TYPE_3:	// PathType[3]
 //					successPath.insert(successPath.begin(), { cType_T + '&', "&" });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front();
@@ -3284,7 +3284,7 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '&', "&" });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				}
 				break;
 			case '*':	// Rule-2.
@@ -3292,12 +3292,12 @@ static void GetCppToLuaConverter(
 				{
 				case PATH_TYPE_1:	// PathType[1]
 					break;
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_2:	// PathType[2]
 //					successPath.erase(successPath.begin());
 //					successPath.insert(successPath.begin(), { cType_S + '*', "*", cType_S + '&' });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_2:	// PathType[2]
 				{
 					auto topType = successPath.front();
@@ -3305,7 +3305,7 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '*', "*", topType + '&' });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				default: // case PATH_TYPE_3:	// PathType[3]
 					ThrowLeSystemError();
 				}
@@ -3315,18 +3315,18 @@ static void GetCppToLuaConverter(
 				{
 				case PATH_TYPE_1:	// PathType[1]
 					break;
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_3:	// PathType[3]
 //					successPath.insert(successPath.begin(), { cType_T, "&" });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_3:	// PathType[3]
 				{
 					auto topType = successPath.front().substr(0, successPath.front().length() - 1);
 					successPath.insert(successPath.begin(), { topType, "&" });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				default: // case PATH_TYPE_2:	// PathType[2]
 					ThrowLeSystemError();
 				}
@@ -3340,7 +3340,7 @@ static void GetCppToLuaConverter(
 			case '&':	// Rule-1.
 				switch (pathType)
 				{
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_1:	// PathType[1]
 //					successPath.erase(successPath.begin());
 //					successPath.insert(successPath.begin(), cType_T + '&');
@@ -3352,7 +3352,7 @@ static void GetCppToLuaConverter(
 //				default: // case PATH_TYPE_3:	// PathType[3]
 //					successPath.insert(successPath.begin(), { cType_T + '&', "&" });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front();
@@ -3373,7 +3373,7 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '&', "&" });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				}
 				break;
 			case '*':	// Rule-2.
@@ -3381,12 +3381,12 @@ static void GetCppToLuaConverter(
 				{
 				case PATH_TYPE_1:	// PathType[1]
 					break;
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_2:	// PathType[2]
 //					successPath.erase(successPath.begin());
 //					successPath.insert(successPath.begin(), { cType_S + '*', "*", cType_S + '&' });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_2:	// PathType[2]
 				{
 					auto topType = successPath.front();
@@ -3394,7 +3394,7 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '*', "*", topType + '&' });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				default: // case PATH_TYPE_3:	// PathType[3]
 					ThrowLeSystemError();
 				}
@@ -3404,18 +3404,18 @@ static void GetCppToLuaConverter(
 				{
 				case PATH_TYPE_1:	// PathType[1]
 					break;
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_3:	// PathType[3]
 //					successPath.insert(successPath.begin(), { cType_T, "&" });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_3:	// PathType[3]
 				{
 					auto topType = successPath.front().substr(0, successPath.front().length() - 1);
 					successPath.insert(successPath.begin(), { topType, "&" });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				default: // case PATH_TYPE_2:	// PathType[2]
 					ThrowLeSystemError();
 				}
@@ -3430,7 +3430,7 @@ static void GetCppToLuaConverter(
 			case '&':	// Rule-1.
 				switch (pathType)
 				{
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_1:	// PathType[1]
 //					successPath.erase(successPath.begin());
 //					successPath.insert(successPath.begin(), cType_T + '&');
@@ -3442,7 +3442,7 @@ static void GetCppToLuaConverter(
 //				default: // case PATH_TYPE_3:	// PathType[3]
 //					successPath.insert(successPath.begin(), { cType_T + '&', "&" });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front();
@@ -3463,13 +3463,13 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '&', "&" });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				}
 				break;
 			case '*':	// Rule-2.
 				switch (pathType)
 				{
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_1:	// PathType[1]
 //					successPath.erase(successPath.begin());
 //					successPath.insert(successPath.begin(), cType_S + "*&");
@@ -3478,7 +3478,7 @@ static void GetCppToLuaConverter(
 //					successPath.erase(successPath.begin());
 //					successPath.insert(successPath.begin(), { cType_S + "*&", "*", cType_S + '&' });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front().substr(0, successPath.front().length() - 1);
@@ -3493,7 +3493,7 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + "*&", "*", topType + '&' });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				default: // case PATH_TYPE_3:	// PathType[3]
 					ThrowLeSystemError();
 				}
@@ -3501,7 +3501,7 @@ static void GetCppToLuaConverter(
 			default:	// Rule-3.
 				switch (pathType)
 				{
-//----- 20.02.20  •ÏX‘O ()-----
+//----- 20.02.20  å¤‰æ›´å‰ ()-----
 //				case PATH_TYPE_1:	// PathType[1]
 //					successPath.erase(successPath.begin());
 //					successPath.insert(successPath.begin(), cType_T + '&');
@@ -3509,7 +3509,7 @@ static void GetCppToLuaConverter(
 //				case PATH_TYPE_3:	// PathType[3]
 //					successPath.insert(successPath.begin(), { cType_T + '&', "&" });
 //					break;
-//----- 20.02.20  •ÏXŒã ()-----
+//----- 20.02.20  å¤‰æ›´å¾Œ ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front();
@@ -3523,7 +3523,7 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '&', "&" });
 					break;
 				}
-//----- 20.02.20  •ÏXI ()-----
+//----- 20.02.20  å¤‰æ›´çµ‚ ()-----
 				default: // case PATH_TYPE_2:	// PathType[2]
 					ThrowLeSystemError();
 				}
@@ -3620,7 +3620,7 @@ static void ParseArgments(
 		// Extract "std::wstring *&" and "argbBack" from "std::wstring *&argbBack"
 		if (std::regex_search(argument, results, ARG_XML))
 		{	//----- results[1] = "std::wstring *&", results[2] = "argbBack"
-			// ƒpƒ‰ƒ[ƒ^[‚ÌŒ^‚Ìæ“ª‚Ì[const]‚ğíœ‚µA&A‹ó”’‚ğíœ‚·‚éi*‚Íc‚·jB—áF[const CString&] -> [CString]
+			// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼ã®å‹ã®å…ˆé ­ã®[const]ã‚’å‰Šé™¤ã—ã€&ã€ç©ºç™½ã‚’å‰Šé™¤ã™ã‚‹ï¼ˆ*ã¯æ®‹ã™ï¼‰ã€‚ä¾‹ï¼š[const CString&] -> [CString]
 			std::string rawCtype;
 			std::string varType;
 			NormalizeVarType(varType, rawCtype, results[1].str(), classRec);
@@ -3633,7 +3633,7 @@ static void ParseArgments(
 			argNameToRawCtype[varName] = rawCtype;
 			// Argument name -> regularized c++ Type.
 			argNameToCtype[varName] = varType;
-			// ƒpƒ‰ƒ[ƒ^[–¼ƒŠƒXƒg‚É’Ç‰ÁB
+			// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼åãƒªã‚¹ãƒˆã«è¿½åŠ ã€‚
 			argNames.emplace_back(varName);
 		}
 		else
@@ -3647,8 +3647,8 @@ static void ParseArgments(
 	}
 
 	for (const auto & argName : argNames)
-	{	//----- ƒpƒ‰ƒ[ƒ^[‚ğƒ‹[ƒv -----
-		// ƒpƒ‰ƒ[ƒ^[–¼‚©‚çƒpƒ‰ƒ[ƒ^[‚Ìin/out‚ğæ“¾B
+	{	//----- ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼ã‚’ãƒ«ãƒ¼ãƒ— -----
+		// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼åã‹ã‚‰ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼ã®in/outã‚’å–å¾—ã€‚
 		const auto io = mpArgNameToIO.find(argName);
 		if (io == mpArgNameToIO.end())
 			ThrowLeException(LeError::INVALID_VARIABLE_IO_DEFINED, argName);
@@ -3684,19 +3684,19 @@ static bool ParseFuncDef(
 )
 {
 	std::smatch results;
-	if (std::regex_search(text, results, FUNC_EXT_INL_XML))		// [extern inline TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP)‚ğ’Šo
+	if (std::regex_search(text, results, FUNC_EXT_INL_XML))		// [extern inline TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPP)ã‚’æŠ½å‡º
 		funcStrType = "extern";
-	else if (std::regex_search(text, results, FUNC_EXT_XML))	// [extern TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP‚ğ’Šo
+	else if (std::regex_search(text, results, FUNC_EXT_XML))	// [extern TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPPã‚’æŠ½å‡º
 		funcStrType = "extern";
-	else if (std::regex_search(text, results, FUNC_STC_INL_XML))	// [static inline TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP)‚ğ’Šo
+	else if (std::regex_search(text, results, FUNC_STC_INL_XML))	// [static inline TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPP)ã‚’æŠ½å‡º
 		funcStrType = "static";
-	else if (std::regex_search(text, results, FUNC_STC_XML))	// [static TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP‚ğ’Šo
+	else if (std::regex_search(text, results, FUNC_STC_XML))	// [static TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPPã‚’æŠ½å‡º
 		funcStrType = "static";
-	else if (std::regex_search(text, results, FUNC_VIR_XML))	// [virtual TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP‚ğ’Šo
+	else if (std::regex_search(text, results, FUNC_VIR_XML))	// [virtual TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPPã‚’æŠ½å‡º
 		funcStrType = "virtual";
-	else if (std::regex_search(text, results, FUNC_INL_XML))	// [inline TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP‚ğ’Šo
+	else if (std::regex_search(text, results, FUNC_INL_XML))	// [inline TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPPã‚’æŠ½å‡º
 		funcStrType = "regular";
-	else if (std::regex_search(text, results, FUNC_REGULAR_XML))	// [TT:TT<T,T> *& FFF (PPP)]‚ÌTT:TT<T,T> *&,FFF,PPP‚ğ’Šo
+	else if (std::regex_search(text, results, FUNC_REGULAR_XML))	// [TT:TT<T,T> *& FFF (PPP)]ã®TT:TT<T,T> *&,FFF,PPPã‚’æŠ½å‡º
 		funcStrType = "regular";
 	else
 		funcStrType.clear();
@@ -3889,7 +3889,7 @@ static bool CheckFunction(
 		);
 		if (!returnCtype.empty())
 		{
-			// returnCtype=–ß‚è‚ÌŒ^B–ß‚è‚ÌŒ^‚Ìæ“ª‚Ì[const]‚ğíœ‚µA‹ó”’‚ğíœ‚·‚éi&,*‚Íc‚·jB—áF[const CString*&] -> [CString*&]
+			// returnCtype=æˆ»ã‚Šã®å‹ã€‚æˆ»ã‚Šã®å‹ã®å…ˆé ­ã®[const]ã‚’å‰Šé™¤ã—ã€ç©ºç™½ã‚’å‰Šé™¤ã™ã‚‹ï¼ˆ&,*ã¯æ®‹ã™ï¼‰ã€‚ä¾‹ï¼š[const CString*&] -> [CString*&]
 			std::string rawCtype;
 			NormalizeVarType(returnCtype, rawCtype, returnCtype, currentClassRec);
 			argNameToCtype["__lstickvar_ret"] = returnCtype;
@@ -4656,7 +4656,7 @@ static bool CheckClass(
 			ThrowLeException(LeError::WRONG_DEFINED_TAG, specifiedRecType);
 
 		classType = ClassRec::Type::NONE;
-//----- 20.01.16 Fukushiro M. •ÏX‘O ()-----
+//----- 20.01.16 Fukushiro M. å¤‰æ›´å‰ ()-----
 //		if (specifiedRecType.empty())
 //		{			// depend on classRealType.
 //			switch (classRealType)
@@ -4722,7 +4722,7 @@ static bool CheckClass(
 //				ThrowLeSystemError();
 //			}
 //		}
-//----- 20.01.16 Fukushiro M. •ÏXŒã ()-----
+//----- 20.01.16 Fukushiro M. å¤‰æ›´å¾Œ ()-----
 		switch (classRealType)
 		{
 		case ClassRealType::CLASS:
@@ -4784,7 +4784,7 @@ static bool CheckClass(
 		default:	// STOP.
 			ThrowLeSystemError();
 		}
-//----- 20.01.16 Fukushiro M. •ÏXI ()-----
+//----- 20.01.16 Fukushiro M. å¤‰æ›´çµ‚ ()-----
 		return true;
 	}
 	else
@@ -5131,7 +5131,7 @@ static void HandleStickTag(
 	specifiedSuper = UtilMisc::FindMapValue(tag.attributes, "super");
 }
 
-//----- 19.11.29 Fukushiro M. ’Ç‰Án ()-----
+//----- 19.11.29 Fukushiro M. è¿½åŠ å§‹ ()-----
 /// <summary>
 /// Handles the luatype tag.
 /// e.g. <sticktype name="boolean" ctype="bool" getfunc="Sticklib::check_lvalue" setfunc="Sticklib::push_lvalue" />
@@ -5199,7 +5199,7 @@ static void RegisterStickconvTag(const UtilXml::Tag & tag, bool isImporting)
 		CTYPE_2TO1_CONVERTER[std::make_pair(type1, type2)] = type2to1;
 	}
 }
-//----- 19.11.29 Fukushiro M. ’Ç‰ÁI ()-----
+//----- 19.11.29 Fukushiro M. è¿½åŠ çµ‚ ()-----
 
 /// <summary>
 /// Handles the luadef tag.
@@ -5209,7 +5209,7 @@ static void RegisterStickdefTag(const UtilXml::Tag & tag)
 {
 	// get xxx from "Type="xxx"
 	auto type = UtilMisc::FindMapValue(tag.attributes, "type");
-//----- 19.12.15 Fukushiro M. íœn ()-----
+//----- 19.12.15 Fukushiro M. å‰Šé™¤å§‹ ()-----
 //	if (type == "c-lua" || type.empty())
 //	{
 //		// get xxx from "ctype="xxx"
@@ -5253,7 +5253,7 @@ static void RegisterStickdefTag(const UtilXml::Tag & tag)
 //			CTYPE1_CTYPE2_TO_C2TOC1[std::make_pair(c_type_1, c_type_2)] = c_2_to_c_1;
 //		}
 //	}
-//----- 19.12.15 Fukushiro M. íœI ()-----
+//----- 19.12.15 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 	if (type == "exception")
 	{
 		// get xxx from "cref="xxx"
@@ -5851,12 +5851,12 @@ static void RegisterEnumConverter(const EnumRec & enumRec)
 	const std::string enumName = enumRec.GetFullpathCname();
 	const std::string i64_to_enum = std::string("Sticklib::int64_to_enumT<") + enumName + ">";
 	const std::string enum_to_i64 = std::string("Sticklib::enumT_to_int64<") + enumName + ">";
-//----- 20.01.19 Fukushiro M. •ÏX‘O ()-----
+//----- 20.01.19 Fukushiro M. å¤‰æ›´å‰ ()-----
 //	CTYPE_1TO2_CONVERTER[std::make_pair("__int64", enumName)] = i64_to_enum;
 //	CTYPE_1TO2_CONVERTER[std::make_pair(enumName, "__int64")] = enum_to_i64;
 //	CTYPE_2TO1_CONVERTER[std::make_pair("__int64", enumName)] = enum_to_i64;
 //	CTYPE_2TO1_CONVERTER[std::make_pair(enumName, "__int64")] = i64_to_enum;
-//----- 20.01.19 Fukushiro M. •ÏXŒã ()-----
+//----- 20.01.19 Fukushiro M. å¤‰æ›´å¾Œ ()-----
 	UtilXml::Tag tag;
 	tag.name = "stickconv";
 	tag.attributes["type1"] = "__int64";
@@ -5865,7 +5865,7 @@ static void RegisterEnumConverter(const EnumRec & enumRec)
 	tag.attributes["type2to1"] = enum_to_i64;
 	// tag.type = UtilXml::Tag::ONESHOT;
 	RegisterStickconvTag(tag, false);
-//----- 20.01.19 Fukushiro M. •ÏXI ()-----
+//----- 20.01.19 Fukushiro M. å¤‰æ›´çµ‚ ()-----
 }
 
 //// <summary>
@@ -5893,12 +5893,12 @@ static void RegisterClassConverter(const ClassRec & classRec)
 	const std::string className = classRec.GetFullpathCname();
 	const std::string object_to_classp = std::string("Sticklib::classobject_to_typeptr<") + className + ">";
 	const std::string classp_to_object = std::string("Sticklib::typeptr_to_classobject<") + className + ">";
-//----- 20.01.19 Fukushiro M. •ÏX‘O ()-----
+//----- 20.01.19 Fukushiro M. å¤‰æ›´å‰ ()-----
 //	CTYPE_1TO2_CONVERTER[std::make_pair("Sticklib::classobject", className + "*")] = object_to_classp;
 //	CTYPE_1TO2_CONVERTER[std::make_pair(className + "*", "Sticklib::classobject")] = classp_to_object;
 //	CTYPE_2TO1_CONVERTER[std::make_pair("Sticklib::classobject", className + "*")] = classp_to_object;
 //	CTYPE_2TO1_CONVERTER[std::make_pair(className + "*", "Sticklib::classobject")] = object_to_classp;
-//----- 20.01.19 Fukushiro M. •ÏXŒã ()-----
+//----- 20.01.19 Fukushiro M. å¤‰æ›´å¾Œ ()-----
 	UtilXml::Tag tag;
 	tag.name = "stickconv";
 	tag.attributes["type1"] = "Sticklib::classobject";
@@ -5907,7 +5907,7 @@ static void RegisterClassConverter(const ClassRec & classRec)
 	tag.attributes["type2to1"] = classp_to_object;
 //	tag.type = UtilXml::Tag::ONESHOT;
 	RegisterStickconvTag(tag, false);
-//----- 20.01.19 Fukushiro M. •ÏXI ()-----
+//----- 20.01.19 Fukushiro M. å¤‰æ›´çµ‚ ()-----
 }
 
 //// <summary>
@@ -5924,7 +5924,7 @@ static void RegisterStructType(const ClassRec & classRec)
 	UtilXml::Tag tag;
 	tag.name = "sticktype";
 
-// 20.01.27 Fukushiro M. 1s•ÏX ()
+// 20.01.27 Fukushiro M. 1è¡Œå¤‰æ›´ ()
 //	const auto uniqClassName = classRec.GetUniqueClassName();
 	const auto fullLuaName = classRec.GetFullpathLuaname();
 	const auto fullCname = classRec.GetFullpathCname();
@@ -5967,7 +5967,7 @@ static void RegisterStructType(const ClassRec & classRec)
 	RegisterSticktypeTag(tag);
 }
 
-//----- 20.03.07  íœn ()-----
+//----- 20.03.07  å‰Šé™¤å§‹ ()-----
 ///// <summary>
 ///// Decide the possibility of xml text.
 ///// text is 3 slash comment.
@@ -5999,7 +5999,7 @@ static void RegisterStructType(const ClassRec & classRec)
 //		(text[0] == '/' && text[1] == '>')
 //		);
 //}
-//----- 20.03.07  íœI ()-----
+//----- 20.03.07  å‰Šé™¤çµ‚ ()-----
 
 /// <summary>
 /// Join continuous "///" comment.
@@ -6026,15 +6026,15 @@ static std::string Join3SlashComment(ReadBufferedFile & readBufferedFile)
 		text = UtilString::SkipSpaceTab(text);
 		if (Skip3Slash(text))
 		{
-//----- 20.03.15  •ÏX‘O ()-----
+//----- 20.03.15  å¤‰æ›´å‰ ()-----
 //			text = UtilString::SkipSpaceTab(text);
 //			commentText += text;
-//----- 20.03.15  •ÏXŒã ()-----
+//----- 20.03.15  å¤‰æ›´å¾Œ ()-----
 			// Skip first one space.
 			if (*text == ' ') text++;
 			commentText += text;
 			commentText += "\r\n";
-//----- 20.03.15  •ÏXI ()-----
+//----- 20.03.15  å¤‰æ›´çµ‚ ()-----
 		}
 		else
 		{
@@ -6084,7 +6084,7 @@ static bool IsContinuousBlock(ReadBufferedFile & readBufferedFile)
 			continue;
 		}
 		else
-		{	//----- ã‹LˆÈŠO‚Ìê‡ -----
+		{	//----- ä¸Šè¨˜ä»¥å¤–ã®å ´åˆ -----
 			ThrowLeException(LeError::UNEXPECTED_CHAR, *text);
 		}
 	}
@@ -6351,7 +6351,7 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 			{
 				if (xmlCommentIsExport)
 				{	//----- Export mode -----
-					// [extern TTT FFF (PPP)]‚ÌTTT,FFF,PPP‚ğ’Šo
+					// [extern TTT FFF (PPP)]ã®TTT,FFF,PPPã‚’æŠ½å‡º
 					if (ParseFuncDef(
 						Dummy< std::string>(),	// funcStrType,
 						Dummy< std::string>(),	// returnCtype,
@@ -6597,7 +6597,7 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 				for (;;)
 				{
 					{
-						// [extern TTT FFF (PPP)]‚ÌTTT,FFF,PPP‚ğ’Šo
+						// [extern TTT FFF (PPP)]ã®TTT,FFF,PPPã‚’æŠ½å‡º
 						FuncRec::Type funcType;
 						std::string funcCname;
 						std::vector<std::string> argNames;
@@ -6836,10 +6836,10 @@ static void CreateDefaultConstructors(ClassRec & classRec)
 				);
 				funcRec.outArgNameToCppToLuaConversionPath["__lstickvar_ret"] = successPath;
 			}
-//----- 19.12.11 Fukushiro M. íœn ()-----
+//----- 19.12.11 Fukushiro M. å‰Šé™¤å§‹ ()-----
 //			if (funcRec.argNameToLuatype.find("__lstickvar_ret") == funcRec.argNameToLuatype.end())
 //				funcRec.argNameToLuatype["__lstickvar_ret"] = LuaType("classobject");
-//----- 19.12.11 Fukushiro M. íœI ()-----
+//----- 19.12.11 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 			funcGroupRec.argCountToFuncId[0] = funcRec.id;
 		}
 	}
@@ -7638,9 +7638,9 @@ static void OutputStructHtml(StringBuffer & buffer, const ClassRec & classRec)
 	//         <h3 class="element-name">PolyJoint<span class="element-name-additional"> table</span></h3>
 	//         <dl class="element-member">
 	//             <dt>type</dt>
-	//             <dd>ƒ^ƒCƒv</dd>
+	//             <dd>ã‚¿ã‚¤ãƒ—</dd>
 	//             <dt>x</dt>
-	//             <dd>xÀ•W</dd>
+	//             <dd>xåº§æ¨™</dd>
 	//         </dl>
 	//         <p class="element-lua-title">Lua</p>
 	//         <pre class="element-lua-form"><code>table value = {
@@ -7778,13 +7778,13 @@ static void OutputModuleHtml(StringBuffer & buffer, const ClassRec & classRec)
 	// e.g. "ABC class"
 	const auto classTitle = (classRec.classType == ClassRec::Type::GLOBAL) ? "Global scope" : classRec.GetFullpathLuaname() + " class";
 
-//----- 20.01.22 Fukushiro M. ’Ç‰Án ()-----
+//----- 20.01.22 Fukushiro M. è¿½åŠ å§‹ ()-----
 	//----- Outputs module structures -----
 	if (classRec.classType == ClassRec::Type::STRUCT)
 	{
 		OutputStructHtml(buffer, classRec);
 	}
-//----- 20.01.22 Fukushiro M. ’Ç‰ÁI ()-----
+//----- 20.01.22 Fukushiro M. è¿½åŠ çµ‚ ()-----
 
 	//----- Outputs module functions -----
 	if (!classRec.staticFuncLuanameToFuncGroupId.empty())
@@ -7930,9 +7930,9 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 		std::vector<std::wstring> sourceFiles;
 		UtilMisc::ParseOptionArgs(optionToValue, sourceFiles, argc, argv);
 		if (optionToValue.find(OPTION_OUT) == optionToValue.end())
-			ThrowLeException(LeError::OPTION_NOT_SPECIFIED, OPTION_OUT);	// ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“ƒIƒvƒVƒ‡ƒ“‚ªw’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB
+			ThrowLeException(LeError::OPTION_NOT_SPECIFIED, OPTION_OUT);	// ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‚ªãƒ—ã‚·ãƒ§ãƒ³ãŒæŒ‡å®šã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚
 		if (sourceFiles.empty())
-			ThrowLeException(LeError::FILE_NOT_SPECIFIED);	// ƒtƒ@ƒCƒ‹‚ªw’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB
+			ThrowLeException(LeError::FILE_NOT_SPECIFIED);	// ãƒ•ã‚¡ã‚¤ãƒ«ãŒæŒ‡å®šã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚
 
 		std::wstring stickrunPath;
 		for (const auto & headFile : sourceFiles)
@@ -7947,7 +7947,7 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 			}
 		}
 		if (stickrunPath.empty())
-			ThrowLeException(LeError::FILE_NOT_SPECIFIED, STICKRUN);	// ƒtƒ@ƒCƒ‹‚ªw’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB
+			ThrowLeException(LeError::FILE_NOT_SPECIFIED, STICKRUN);	// ãƒ•ã‚¡ã‚¤ãƒ«ãŒæŒ‡å®šã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚
 
 		// Output file path. It does not include extension. e.g. "C:\folder1\fileA"
 		const auto outFilePath = optionToValue.find(OPTION_OUT)->second;
@@ -7967,7 +7967,7 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 		auto & classRec = ClassRec::New(-1);
 		classRec.classType = ClassRec::Type::GLOBAL;
 
-		// extern‚ÅéŒ¾‚³‚ê‚½C++‚ÌŠÖ”–¼ƒZƒbƒgBƒOƒ[ƒoƒ‹ŠÖ”–¼B
+		// externã§å®£è¨€ã•ã‚ŒãŸC++ã®é–¢æ•°åã‚»ãƒƒãƒˆã€‚ã‚°ãƒ­ãƒ¼ãƒãƒ«é–¢æ•°åã€‚
 		std::vector<std::string> globalFunction;
 
 		// Current date. __DATE__ is macro, so it is impossible to replace __DATE__ inside of FORMTEXT.

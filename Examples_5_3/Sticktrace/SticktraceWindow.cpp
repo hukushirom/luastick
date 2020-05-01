@@ -1,4 +1,4 @@
-// SticktraceWindow.cpp : DLL ‚Ì‰Šú‰»ƒ‹[ƒ`ƒ“‚Å‚·B
+ï»¿// SticktraceWindow.cpp : DLL ã®åˆæœŸåŒ–ãƒ«ãƒ¼ãƒãƒ³ã§ã™ã€‚
 //
 
 #include "stdafx.h"
@@ -22,10 +22,10 @@ public:
 	bool SetSource(const std::string& name, const std::string& source);
 	bool IsDebugMode();
 	bool IsBreakpoint(const char* name, int lineIndex);
-//----- 17.10.20 Fukushiro M. íœn ()-----
+//----- 17.10.20 Fukushiro M. å‰Šé™¤å§‹ ()-----
 //	bool IsSuspended();
 //	int GetMode();
-//----- 17.10.20 Fukushiro M. íœI ()-----
+//----- 17.10.20 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 	bool OnSuspended();
 	bool OnResumed();
 	bool Jump(const char * name, int lineIndex);
@@ -86,7 +86,7 @@ private:
 	{
 		return m_stickTraceWindow->IsBreakpoint(name, lineIndex);
 	}
-	//----- 17.10.20 Fukushiro M. íœn ()-----
+	//----- 17.10.20 Fukushiro M. å‰Šé™¤å§‹ ()-----
 //	bool IsSuspended()
 //	{
 //		return m_stickTraceWindow->IsSuspended();
@@ -96,7 +96,7 @@ private:
 //	{
 //		return m_stickTraceWindow->GetMode();
 //	}
-//----- 17.10.20 Fukushiro M. íœI ()-----
+//----- 17.10.20 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 
 	bool OnSuspended()
 	{
@@ -172,14 +172,14 @@ void _SticktraceWindow::ThreadFunc()
 	m_stickTraceDlg = new CDlgSticktrace();
 	m_stickTraceDlg->Create(IDD_STICK_TRACE);
 	m_stickTraceDlg->ShowWindow(SW_HIDE);
-	// ƒXƒŒƒbƒhID‚ğİ’èBŒã‚Å‹­§I—¹‚Å‚«‚é‚æ‚¤BCSƒƒbƒN‘O‚È‚Ì‚ÅInterlocked‚Åİ’èB
+	// ã‚¹ãƒ¬ãƒƒãƒ‰IDã‚’è¨­å®šã€‚å¾Œã§å¼·åˆ¶çµ‚äº†ã§ãã‚‹ã‚ˆã†ã€‚CSãƒ­ãƒƒã‚¯å‰ãªã®ã§Interlockedã§è¨­å®šã€‚
 	::InterlockedExchange(&m_threadId, (LONG)::GetCurrentThreadId());
 	while (::InterlockedCompareExchange(&m_threadTerminateFlag, 0, 0) == 0)
 		AfxGetApp()->PumpMessage();
 	m_stickTraceDlg->DestroyWindow();
 	delete m_stickTraceDlg;
 	m_stickTraceDlg = nullptr;
-	// ƒXƒŒƒbƒhID‚ğ‰ğœB
+	// ã‚¹ãƒ¬ãƒƒãƒ‰IDã‚’è§£é™¤ã€‚
 	::InterlockedExchange(&m_threadId, 0);
 	::InterlockedExchange(&m_threadTerminateFlag, 0);
 }
@@ -216,7 +216,7 @@ void _SticktraceWindow::Destroy()
 	{
 		::TerminateThread(threadHandle, 0);
 		::CloseHandle(threadHandle);
-		// delete m_stickTraceDlg ‚Í‚Å‚«‚È‚¢BƒXƒŒƒbƒh‚ğ‹­§’â~‚µ‚½‚½‚ßB
+		// delete m_stickTraceDlg ã¯ã§ããªã„ã€‚ã‚¹ãƒ¬ãƒƒãƒ‰ã‚’å¼·åˆ¶åœæ­¢ã—ãŸãŸã‚ã€‚
 	}
 	m_stickTraceDlg = nullptr;
 	::InterlockedExchange(&m_threadId, 0);
@@ -256,7 +256,7 @@ bool _SticktraceWindow::IsBreakpoint(const char* name, int lineIndex)
 	return m_stickTraceDlg->TC_IsBreakpoint(name, lineIndex);
 }
 
-//----- 17.10.20 Fukushiro M. íœn ()-----
+//----- 17.10.20 Fukushiro M. å‰Šé™¤å§‹ ()-----
 //bool _SticktraceWindow::IsSuspended()
 //{
 //	return m_stickTraceDlg->TC_IsSuspended();
@@ -266,7 +266,7 @@ bool _SticktraceWindow::IsBreakpoint(const char* name, int lineIndex)
 //{
 //	return m_stickTraceDlg->TC_GetMode();
 //}
-//----- 17.10.20 Fukushiro M. íœI ()-----
+//----- 17.10.20 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 
 bool _SticktraceWindow::OnSuspended()
 {

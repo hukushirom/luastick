@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "DlgModelessBase.h"	// Superclass.
 #include "UtilSync.h"
@@ -6,7 +6,7 @@
 #include "DdEdit.h"
 #include "Sticktrace.h"
 
-// CDlgSticktrace ƒ_ƒCƒAƒƒO
+// CDlgSticktrace ãƒ€ã‚¤ã‚¢ãƒ­ã‚°
 
 class CDlgSticktrace : public CFCDlgModelessBase
 {
@@ -26,16 +26,16 @@ public:
 	};
 
 public:
-	CDlgSticktrace();   // •W€ƒRƒ“ƒXƒgƒ‰ƒNƒ^[
+	CDlgSticktrace();   // æ¨™æº–ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ãƒ¼
 	virtual ~CDlgSticktrace();
 
-// ƒ_ƒCƒAƒƒO ƒf[ƒ^
+// ãƒ€ã‚¤ã‚¢ãƒ­ã‚° ãƒ‡ãƒ¼ã‚¿
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_STICK_TRACE };
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV ƒTƒ|[ƒg
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV ã‚µãƒãƒ¼ãƒˆ
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -43,10 +43,10 @@ public:
 	bool TC_SetSource(const std::string& name, const std::string& src);
 	bool TC_IsDebugMode();
 	bool TC_IsBreakpoint(const char* name, int lineIndex);
-//----- 17.10.20 Fukushiro M. íœn ()-----
+//----- 17.10.20 Fukushiro M. å‰Šé™¤å§‹ ()-----
 //	bool TC_IsSuspended();
 //	int TC_GetMode();
-//----- 17.10.20 Fukushiro M. íœI ()-----
+//----- 17.10.20 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 	bool TC_OnSuspended();
 	bool TC_OnResumed();
 	bool TC_Jump(const char * name, int lineIndex);
@@ -61,12 +61,12 @@ private:
 	CFCTextEdit m_textEditor;
 	CFCDdEdit m_output;
 	CFCDdEdit m_errorout;
-	CFont m_font;					// ƒGƒfƒBƒ^[ƒtƒHƒ“ƒgB
-	// BOOL m_bIsDebugMode;				// ƒfƒoƒbƒOƒ‚[ƒhH
-	CImageList m_watchImage;			// ƒEƒHƒbƒ`ƒŠƒXƒg‚ÌƒCƒ[ƒWƒŠƒXƒgB
+	CFont m_font;					// ã‚¨ãƒ‡ã‚£ã‚¿ãƒ¼ãƒ•ã‚©ãƒ³ãƒˆã€‚
+	// BOOL m_bIsDebugMode;				// ãƒ‡ãƒãƒƒã‚°ãƒ¢ãƒ¼ãƒ‰ï¼Ÿ
+	CImageList m_watchImage;			// ã‚¦ã‚©ãƒƒãƒãƒªã‚¹ãƒˆã®ã‚¤ãƒ¡ãƒ¼ã‚¸ãƒªã‚¹ãƒˆã€‚
 
-	BOOL			m_bIsBtnOnPaneBorder;	// ƒyƒCƒ“ƒ{[ƒ_[ã‚Åƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚Ä‚¢‚é‚©H
-	CRect			m_rtBar;				// ƒyƒCƒ“ƒ{[ƒ_[ˆÚ“®’†‚Ìƒ[ƒNBƒ{[ƒ_[ˆÊ’u‚ğ‹L˜^B
+	BOOL			m_bIsBtnOnPaneBorder;	// ãƒšã‚¤ãƒ³ãƒœãƒ¼ãƒ€ãƒ¼ä¸Šã§ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚Œã¦ã„ã‚‹ã‹ï¼Ÿ
+	CRect			m_rtBar;				// ãƒšã‚¤ãƒ³ãƒœãƒ¼ãƒ€ãƒ¼ç§»å‹•ä¸­ã®ãƒ¯ãƒ¼ã‚¯ã€‚ãƒœãƒ¼ãƒ€ãƒ¼ä½ç½®ã‚’è¨˜éŒ²ã€‚
 	HWND			m_hwndWhenBorderMoving;	// Focused window when border moving.
 	
 	/// <summary>

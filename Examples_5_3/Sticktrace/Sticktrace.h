@@ -1,4 +1,4 @@
-// Sticktrace.h
+ï»¿// Sticktrace.h
 //
 
 #pragma once
@@ -185,10 +185,10 @@ private:
 	bool SetSource(const std::string& name, const std::string& source);
 	bool IsDebugMode();
 	bool IsBreakpoint(const char* name, int lineIndex);
-//----- 17.10.20 Fukushiro M. íœn ()-----
+//----- 17.10.20 Fukushiro M. å‰Šé™¤å§‹ ()-----
 //	bool IsSuspended();
 //	int GetMode();
-//----- 17.10.20 Fukushiro M. íœI ()-----
+//----- 17.10.20 Fukushiro M. å‰Šé™¤çµ‚ ()-----
 	bool OnSuspended();
 	bool OnResumed();
 	bool Jump(const char * name, int lineIndex);
@@ -898,7 +898,7 @@ public:
 		TT_NUMBER,
 		TT_TOKEN,
 		TT_OPERATOR_BEGIN,
-		TT_OPE_NEGATIVE,	// -iæ“ªj
+		TT_OPE_NEGATIVE,	// -ï¼ˆå…ˆé ­ï¼‰
 		TT_OPE_ADD,			// +
 		TT_OPE_SUBTRACT,	// -
 		TT_OPE_MULTIPLE,	// *
@@ -956,14 +956,14 @@ public:
 			{
 				// lua_getlocal (lua_State *L, lua_Debug *ar, int n)
 				//
-				// „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢
-				// „ ƒ[ƒJƒ‹•Ï”’l„ <- n‚Åw’è‚³‚ê‚½ƒ[ƒJƒ‹•Ï”‚ğÏ‚Ş
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-				// „               „ 
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-				// „               „ 
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-				// F              F
+				// â”Œâ”€â”€â”€â”€â”€â”€â”€â”
+				// â”‚ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°å€¤â”‚<- nã§æŒ‡å®šã•ã‚ŒãŸãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°ã‚’ç©ã‚€
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+				// â”‚              â”‚
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+				// â”‚              â”‚
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+				// ï¼š              ï¼š
 				//
 				const char* name = ::lua_getlocal(m_lua_state, m_lua_debug, id);
 				if (name == nullptr) break;
@@ -973,18 +973,18 @@ public:
 					m_localVariableNameToId[name] = id;
 				// lua_pop (lua_State *L, int n)
 				//
-				// „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢„Ÿ„¦
-				// „ //////////////„   „ 
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§  „ 
-				// „ //////////////„   „  <- nŒÂ‚Ì—v‘f‚ğæ‚èœ‚­in=3‚Ìê‡j
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§  „ 
-				// „ //////////////„   „ 
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„Ÿ„¨
-				// „               „ 
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-				// F              F
+				// â”Œâ”€â”€â”€â”€â”€â”€â”€â”â”€â”¬
+				// â”‚//////////////â”‚  â”‚
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤  â”‚
+				// â”‚//////////////â”‚  â”‚ <- nå€‹ã®è¦ç´ ã‚’å–ã‚Šé™¤ãï¼ˆn=3ã®å ´åˆï¼‰
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤  â”‚
+				// â”‚//////////////â”‚  â”‚
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤â”€â”´
+				// â”‚              â”‚
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+				// ï¼š              ï¼š
 				//
-				::lua_pop(m_lua_state, 1);	// lua_getlocal‚ÅÏ‚ñ‚¾•Ï”‚ğíœ
+				::lua_pop(m_lua_state, 1);	// lua_getlocalã§ç©ã‚“ã å¤‰æ•°ã‚’å‰Šé™¤
 			}
 		}
 		const auto i = m_localVariableNameToId.find(varname);
@@ -992,14 +992,14 @@ public:
 		{
 			// lua_getlocal (lua_State *L, lua_Debug *ar, int n)
 			//
-			// „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢
-			// „ ƒ[ƒJƒ‹•Ï”’l„ <- n‚Åw’è‚³‚ê‚½ƒ[ƒJƒ‹•Ï”‚ğÏ‚Ş
-			// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-			// „               „ 
-			// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-			// „               „ 
-			// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-			// F              F
+			// â”Œâ”€â”€â”€â”€â”€â”€â”€â”
+			// â”‚ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°å€¤â”‚<- nã§æŒ‡å®šã•ã‚ŒãŸãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°ã‚’ç©ã‚€
+			// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+			// â”‚              â”‚
+			// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+			// â”‚              â”‚
+			// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+			// ï¼š              ï¼š
 			//
 			::lua_getlocal(m_lua_state, m_lua_debug, i->second);
 			return Stickobject(m_lua_state);
@@ -1055,7 +1055,7 @@ public:
 	/// <returns>Token type.</returns>
 	TokenType ExtractToken(const char*& cpTokenBegin, const char*& cpTokenEnd, const char* cpFormula)
 	{
-		// æ“ª‚Ì‹ó”’‚ğƒXƒLƒbƒvB
+		// å…ˆé ­ã®ç©ºç™½ã‚’ã‚¹ã‚­ãƒƒãƒ—ã€‚
 		Stickutil::SkipSpace(cpFormula);
 		if (cpFormula[0] == '\0') return TT_NONE;
 		if ('0' <= cpFormula[0] && cpFormula[0] <= '9')
@@ -1173,7 +1173,7 @@ public:
 	/// <summary>
 	/// Gets the token value.
 	///
-	/// ”š‚©‚çn‚Ü‚éê‡‚Í”’l‚Æ”»’fBu"vu'v‚©‚çn‚Ü‚éê‡‚Í•¶š—ñA‰pš‚©‚çn‚Ü‚éê‡‚Íƒ[ƒh‚Æ‚·‚éB
+	/// æ•°å­—ã‹ã‚‰å§‹ã¾ã‚‹å ´åˆã¯æ•°å€¤ã¨åˆ¤æ–­ã€‚ã€Œ"ã€ã€Œ'ã€ã‹ã‚‰å§‹ã¾ã‚‹å ´åˆã¯æ–‡å­—åˆ—ã€è‹±å­—ã‹ã‚‰å§‹ã¾ã‚‹å ´åˆã¯ãƒ¯ãƒ¼ãƒ‰ã¨ã™ã‚‹ã€‚
 	/// </summary>
 	/// <param name="tokenType">Type of the token.</param>
 	/// <param name="cpTokenBegin">The cp token begin.</param>
@@ -1273,7 +1273,7 @@ public:
 		{
 			str = cpTokenEnd;
 			AnyValue value = GetFormulaValue(str, TT_PARE_RIGHT, 0);
-			// I’[‚ğ‘—‚éB
+			// çµ‚ç«¯ã‚’é€ã‚‹ã€‚
 			tokenType = ExtractToken(cpTokenBegin, cpTokenEnd, str);
 			if (tokenType == TT_PARE_RIGHT) str = cpTokenEnd;
 			return value;
@@ -1316,7 +1316,7 @@ public:
 		{
 			str = cpTokenEnd;
 			AnyValue value = GetFormulaValue(str, TT_ARRAY_RIGHT, 0);
-			// I’[‚ğ‘—‚éB
+			// çµ‚ç«¯ã‚’é€ã‚‹ã€‚
 			tokenType = ExtractToken(cpTokenBegin, cpTokenEnd, str);
 			if (tokenType == TT_ARRAY_RIGHT) str = cpTokenEnd;
 			Stickobject obj1 = obj.GetTableValue(value);
@@ -1329,12 +1329,12 @@ public:
 
 	/// <summary>
 	/// Analyzes the formula and calculates the result of it.
-	/// formula‚Ì—áF" a [ b - 5 ] + 4"
-	/// terminator‚Í®I’[‚ğ•\‚·•¶šB—á‚¦‚Î”z—ñ—v‘fi[]‚Ì’†‚Ì®j‚ğ‰ğÍ‚·‚éê‡‚Í']'‚ªw’è‚³‚ê‚éB
-	/// opeLevel‚Åw’è‚³‚ê‚é‰‰ZqƒŒƒxƒ‹ˆÈ‰º‚Ì‰‰Zq‚ª“oê‚µ‚½“_‚Å®‚Ì‰ğÍ‚Í’†’f‚µA‚»‚±‚Ü‚Å‚Ì’l‚ğ•Ô‚·B
-	/// —áFf = "a + b * c * d / e - f" ‚ğŒvZ‚·‚éê‡AGetFormulaValue(f, '\0', 0)‚ÅŒvZ‚ğŠJn‚·‚éB
-	/// "+"‚Ì‰E‘¤‚ğ–{ŠÖ”‚ÅÄ‹A“I‚É•]‰¿‚·‚é‚ªA‚±‚Ì‚Æ‚«GetFormulaValue(f, '\0', LevelOf('+'))‚ğw’è‚·‚éB
-	/// ‚±‚ê‚É‚æ‚èA"+"‚æ‚è—Dæ“x‚Ì‚‚¢‰‰Zq‚ğŠÜ‚Ş"b * c * d / e"‚Ü‚Å‚Ì’l‚ªæ“¾‚³‚ê‚éB
+	/// formulaã®ä¾‹ï¼š" a [ b - 5 ] + 4"
+	/// terminatorã¯å¼çµ‚ç«¯ã‚’è¡¨ã™æ–‡å­—ã€‚ä¾‹ãˆã°é…åˆ—è¦ç´ ï¼ˆ[]ã®ä¸­ã®å¼ï¼‰ã‚’è§£æã™ã‚‹å ´åˆã¯']'ãŒæŒ‡å®šã•ã‚Œã‚‹ã€‚
+	/// opeLevelã§æŒ‡å®šã•ã‚Œã‚‹æ¼”ç®—å­ãƒ¬ãƒ™ãƒ«ä»¥ä¸‹ã®æ¼”ç®—å­ãŒç™»å ´ã—ãŸæ™‚ç‚¹ã§å¼ã®è§£æã¯ä¸­æ–­ã—ã€ãã“ã¾ã§ã®å€¤ã‚’è¿”ã™ã€‚
+	/// ä¾‹ï¼šf = "a + b * c * d / e - f" ã‚’è¨ˆç®—ã™ã‚‹å ´åˆã€GetFormulaValue(f, '\0', 0)ã§è¨ˆç®—ã‚’é–‹å§‹ã™ã‚‹ã€‚
+	/// "+"ã®å³å´ã‚’æœ¬é–¢æ•°ã§å†å¸°çš„ã«è©•ä¾¡ã™ã‚‹ãŒã€ã“ã®ã¨ãGetFormulaValue(f, '\0', LevelOf('+'))ã‚’æŒ‡å®šã™ã‚‹ã€‚
+	/// ã“ã‚Œã«ã‚ˆã‚Šã€"+"ã‚ˆã‚Šå„ªå…ˆåº¦ã®é«˜ã„æ¼”ç®—å­ã‚’å«ã‚€"b * c * d / e"ã¾ã§ã®å€¤ãŒå–å¾—ã•ã‚Œã‚‹ã€‚
 	/// </summary>
 	/// <param name="formula">The formula. Returns the terminated position.</param>
 	/// <param name="terminator">The terminator.</param>
@@ -1349,11 +1349,11 @@ public:
 			const char* cpTokenEnd;
 			const TokenType tokenType = ExtractToken(cpTokenBegin, cpTokenEnd, formula);
 			if (tokenType == terminator)
-				//----- I’[‚ÉŠ‚Á‚½ê‡ -----
+				//----- çµ‚ç«¯ã«è‡³ã£ãŸå ´åˆ -----
 			{
 				break;
 			}
-			// ƒIƒyƒŒ[ƒ^[ˆÈŠO‚Ìê‡‚ÍƒGƒ‰[B
+			// ã‚ªãƒšãƒ¬ãƒ¼ã‚¿ãƒ¼ä»¥å¤–ã®å ´åˆã¯ã‚¨ãƒ©ãƒ¼ã€‚
 			if (tokenType < TT_OPERATOR_BEGIN || TT_OPERATOR_END < tokenType)
 				throw std::runtime_error("error!");
 			if (LevelOf(tokenType) <= opeLevel) break;
@@ -1753,7 +1753,7 @@ private:
 	SticktraceWindow* m_stickTraceWindow;
 	Stickrun* m_stickrun;
 
-	// ƒeƒXƒgB
+	// ãƒ†ã‚¹ãƒˆã€‚
 	LuaToClassHook<Sticktrace> m_luaToClassHook;
 
 	Sticktrace::ScriptHookFunc m_scriptHookFunc;
@@ -1823,7 +1823,7 @@ private:
 		m_stickTraceWindow->Jump(nullptr, -1);
 	}
 
-	// ƒeƒXƒgB
+	// ãƒ†ã‚¹ãƒˆã€‚
 	void PrintTable(lua_State* L)
 	{
 		lua_pushnil(L);
@@ -1858,14 +1858,14 @@ private:
 			{
 				// lua_getlocal (lua_State *L, lua_Debug *ar, int n)
 				//
-				// „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢
-				// „ ƒ[ƒJƒ‹•Ï”’l„ <- n‚Åw’è‚³‚ê‚½ƒ[ƒJƒ‹•Ï”‚ğÏ‚Ş
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-				// „               „ 
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-				// „               „ 
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-				// F              F
+				// â”Œâ”€â”€â”€â”€â”€â”€â”€â”
+				// â”‚ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°å€¤â”‚<- nã§æŒ‡å®šã•ã‚ŒãŸãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°ã‚’ç©ã‚€
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+				// â”‚              â”‚
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+				// â”‚              â”‚
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+				// ï¼š              ï¼š
 				//
 				const char* name = ::lua_getlocal(L, ar, id);
 				if (name == nullptr) break;
@@ -1875,18 +1875,18 @@ private:
 					localVariableNameToId[name] = id;
 				// lua_pop (lua_State *L, int n)
 				//
-				// „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢„Ÿ„¦
-				// „ //////////////„   „ 
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§  „ 
-				// „ //////////////„   „  <- nŒÂ‚Ì—v‘f‚ğæ‚èœ‚­in=3‚Ìê‡j
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§  „ 
-				// „ //////////////„   „ 
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§„Ÿ„¨
-				// „               „ 
-				// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-				// F              F
+				// â”Œâ”€â”€â”€â”€â”€â”€â”€â”â”€â”¬
+				// â”‚//////////////â”‚  â”‚
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤  â”‚
+				// â”‚//////////////â”‚  â”‚ <- nå€‹ã®è¦ç´ ã‚’å–ã‚Šé™¤ãï¼ˆn=3ã®å ´åˆï¼‰
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤  â”‚
+				// â”‚//////////////â”‚  â”‚
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤â”€â”´
+				// â”‚              â”‚
+				// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+				// ï¼š              ï¼š
 				//
-				::lua_pop(L, 1);	// lua_getlocal‚ÅÏ‚ñ‚¾•Ï”‚ğíœ
+				::lua_pop(L, 1);	// lua_getlocalã§ç©ã‚“ã å¤‰æ•°ã‚’å‰Šé™¤
 			}
 		}
 		const auto i = localVariableNameToId.find(varname);
@@ -1894,14 +1894,14 @@ private:
 		{
 			// lua_getlocal (lua_State *L, lua_Debug *ar, int n)
 			//
-			// „¡„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„¢
-			// „ ƒ[ƒJƒ‹•Ï”’l„ <- n‚Åw’è‚³‚ê‚½ƒ[ƒJƒ‹•Ï”‚ğÏ‚Ş
-			// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-			// „               „ 
-			// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-			// „               „ 
-			// „¥„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„§
-			// F              F
+			// â”Œâ”€â”€â”€â”€â”€â”€â”€â”
+			// â”‚ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°å€¤â”‚<- nã§æŒ‡å®šã•ã‚ŒãŸãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°ã‚’ç©ã‚€
+			// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+			// â”‚              â”‚
+			// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+			// â”‚              â”‚
+			// â”œâ”€â”€â”€â”€â”€â”€â”€â”¤
+			// ï¼š              ï¼š
 			//
 			::lua_getlocal(L, ar, i->second);
 			return Stickobject(L);

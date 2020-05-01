@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 double GetDisplayPPM()
 {
@@ -8,7 +8,7 @@ double GetDisplayPPM()
 		HDC hAttribDC = ::CreateDC(_T("DISPLAY"), NULL, NULL, NULL);
 		if (hAttribDC == NULL) return -1.0;
 		DISPLAY_PPM = (double)GetDeviceCaps(hAttribDC, LOGPIXELSX) / 25.4;
-		// HDC‚ğíœB
+		// HDCã‚’å‰Šé™¤ã€‚
 		::DeleteDC(hAttribDC);
 	}
 	return DISPLAY_PPM;
