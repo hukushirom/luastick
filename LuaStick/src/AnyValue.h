@@ -200,7 +200,9 @@ public:
 		{
 			std::string str;
 			Astrwstr::wstr_to_astr(str, m_wcharp);
-			return str.c_str();
+// 20.05.08  1行変更 ()
+//			return str.c_str();
+			return str;
 		}
 		default:	// case Type::NONE:
 			return "";
@@ -235,7 +237,9 @@ public:
 		{
 			std::wstring wstr;
 			Astrwstr::astr_to_wstr(wstr, m_charp);
-			return wstr.c_str();
+// 20.05.08  1行変更 ()
+//			return wstr.c_str();
+			return wstr;
 		}
 		case Type::WCHARP:
 			return m_wcharp;
