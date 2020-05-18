@@ -6369,19 +6369,36 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 					std::string nextSuperClassName;
 					if (CheckClass(nextClassType, nextClassName, nextSuperClassName, text, xmlCommentClassType))
 					{
+//----- 20.05.18  変更前 ()-----
+//						if (
+//							(
+//								classRec.classType == ClassRec::Type::CLASS ||
+//								classRec.classType == ClassRec::Type::INCONSTRUCTIBLE ||
+//								classRec.classType == ClassRec::Type::STRUCT ||
+//								classRec.classType == ClassRec::Type::STATICCLASS
+//							)
+//							&&
+//							nextClassType == ClassRec::Type::NAMESPACE
+//							)
+//							ThrowLeException(LeError::TAG_OCCURED_UNEXPECTED_PLACE, "Cannot use namespace inside of the class.");
+//						if (classRec.memberClassLuanameSet.find(xmlCommentLuaname.empty() ? nextClassName : xmlCommentLuaname) != classRec.memberClassLuanameSet.end())
+//							ThrowLeException(LeError::REGISTER_SAME_NAME, "Cannot register same class name twice.", xmlCommentLuaname.empty() ? nextClassName : xmlCommentLuaname);
+//----- 20.05.18  変更後 ()-----
 						if (
-							(
-								classRec.classType == ClassRec::Type::CLASS ||
-								classRec.classType == ClassRec::Type::INCONSTRUCTIBLE ||
-								classRec.classType == ClassRec::Type::STRUCT ||
-								classRec.classType == ClassRec::Type::STATICCLASS
+							classRec.classType == ClassRec::Type::CLASS ||
+							classRec.classType == ClassRec::Type::INCONSTRUCTIBLE ||
+							classRec.classType == ClassRec::Type::STRUCT ||
+							classRec.classType == ClassRec::Type::STATICCLASS
 							)
-							&&
-							nextClassType == ClassRec::Type::NAMESPACE
-							)
-							ThrowLeException(LeError::TAG_OCCURED_UNEXPECTED_PLACE, "Cannot use namespace inside of the class.");
-						if (classRec.memberClassLuanameSet.find(xmlCommentLuaname.empty() ? nextClassName : xmlCommentLuaname) != classRec.memberClassLuanameSet.end())
-							ThrowLeException(LeError::REGISTER_SAME_NAME, "Cannot register same class name twice.", xmlCommentLuaname.empty() ? nextClassName : xmlCommentLuaname);
+						{
+							if (nextClassType == ClassRec::Type::NAMESPACE)
+								ThrowLeException(LeError::TAG_OCCURED_UNEXPECTED_PLACE, "Cannot use namespace inside of the class.");
+
+							// class, and struct cannot register twice, except namespace. You can describe same namespace into two or more source files.
+							if (classRec.memberClassLuanameSet.find(xmlCommentLuaname.empty() ? nextClassName : xmlCommentLuaname) != classRec.memberClassLuanameSet.end())
+								ThrowLeException(LeError::REGISTER_SAME_NAME, "Cannot register same class name twice.", xmlCommentLuaname.empty() ? nextClassName : xmlCommentLuaname);
+						}
+//----- 20.05.18  変更終 ()-----
 						if (!xmlCommentSuper.empty())
 						{	//----- If super-class was specified with xml-comment -----
 							if (xmlCommentSuper == "-")
@@ -7090,9 +7107,9 @@ static void OutputStickInitCpp(const ClassRec & classRec)
 	// ${SRCMARKER}
 	// ${topComment}
 	Sticklib::push_table(L, "${classRec.classLuaname}");
-
-	static struct luaL_Reg ${uniqueClassName}Static[] =
 	{
+		static struct luaL_Reg ${uniqueClassName}Static[] =
+		{
 
 )", topComment, classRec.classLuaname, uniqueClassName);
 
@@ -7110,17 +7127,18 @@ static void OutputStickInitCpp(const ClassRec & classRec)
 			wrapperFunCname = funcGroupRec.GetWrapperFunctionName();
 		}
 		OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
-		// ${SRCMARKER}
-		{ "${funcGroupRec.luaname}", ${wrapperFunCname} },
+			// ${SRCMARKER}
+			{ "${funcGroupRec.luaname}", ${wrapperFunCname} },
 
 )", funcGroupRec.luaname, wrapperFunCname);
 	}
 
 	OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
-		// ${SRCMARKER}
-		{ nullptr, nullptr },
-	};
-	Sticklib::set_functions(L, ${uniqueClassName}Static);
+			// ${SRCMARKER}
+			{ nullptr, nullptr },
+		};
+		Sticklib::set_functions(L, ${uniqueClassName}Static);
+	}
 
 
 )", uniqueClassName);

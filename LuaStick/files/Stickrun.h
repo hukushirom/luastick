@@ -913,8 +913,12 @@ protected:
 
 	Stickrun & CancelCall()
 	{
-		lua_settop(m_lua_state, m_callDataStack.back().m_stack_top);
-		m_callDataStack.pop_back();
+		// In some case, CancelCall is called twice. So, check m_callDataStack is empty or not.
+		if (!m_callDataStack.empty())
+		{
+			lua_settop(m_lua_state, m_callDataStack.back().m_stack_top);
+			m_callDataStack.pop_back();
+		}
 		// m_error_message must not be cleared.
 		return *this;
 	}
