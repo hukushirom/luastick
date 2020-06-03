@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <tuple>
+#include <utility>
 #include <string>
 #include <codecvt>
 #include <unordered_set>
@@ -177,18 +179,20 @@ class __declspec(dllimport) SticktraceWindow
 {
 	friend class Sticktrace;
 private:
-	static SticktraceWindow* New();
+	static SticktraceWindow* New(
+		const wchar_t* companyName,
+		const wchar_t* packageName,
+		const wchar_t* applicationName,
+		unsigned int dialogId
+	);
 	static void Delete(SticktraceWindow* mtw);
-	SticktraceWindow() = delete;
+	SticktraceWindow(unsigned int dialogId) = delete;
 	~SticktraceWindow() = delete;
 	bool Show(bool show);
-	bool SetSource(const std::string& name, const std::string& source);
+	bool IsVisible();
+	bool SetSource(const std::string& sandbox, const std::string& name, const std::string& source);
 	bool IsDebugMode();
 	bool IsBreakpoint(const char* name, int lineIndex);
-//----- 17.10.20 Fukushiro M. 削除始 ()-----
-//	bool IsSuspended();
-//	int GetMode();
-//----- 17.10.20 Fukushiro M. 削除終 ()-----
 	bool OnSuspended();
 	bool OnResumed();
 	bool Jump(const char * name, int lineIndex);
@@ -198,8 +202,12 @@ private:
 	bool OutputDebug(const char* message);
 	bool SetWatch(const std::string& data);
 	SticktraceCommand GetCommand(std::string & param, uint32_t waitMilliseconds);
-}; // class __declspec(dllimport) SticktraceWindow.
 
+	void Create(unsigned int dialogId);
+	void Destroy();
+	static void StaticThreadFunc(SticktraceWindow* stickTrace);
+	void ThreadFunc();
+}; // class __declspec(dllimport) SticktraceWindow.
 
 class Sticktrace;
 
@@ -569,7 +577,7 @@ public:
 		//     |----------|   ==>      |----------|      |       | valueX | <- m_ref
 		//   -2|any value |            :          :      +-------+--------+
 		//     |----------|                              :       :        :
-		//     :          :    
+		//     :          :
 		//
 		m_ref = ::luaL_ref(m_lua_state, LUA_REGISTRYINDEX);
 	}
@@ -1488,6 +1496,7 @@ public:
 		STOP = 0,		// Stop.
 		RUN,			// Run.
 		SUSPEND,		// Suspend.
+		SUSPENDING,		// Suspending.
 		PROCEED_NEXT,	// Proceed to next line.
 	};
 
@@ -1501,8 +1510,17 @@ public:
 		);
 
 public:
-	Sticktrace()
-		: m_stickTraceWindow(nullptr)
+	Sticktrace(
+		const wchar_t* companyName,
+		const wchar_t* packageName,
+		const wchar_t* applicationName,
+		unsigned int dialogId
+	)
+		: m_companyName((companyName != nullptr) ? companyName : L"")
+		, m_packageName((packageName != nullptr) ? packageName : L"")
+		, m_applicationName((applicationName != nullptr) ? applicationName : L"")
+		, m_dialogId(dialogId)
+		, m_sticktraceWindow(nullptr)
 		, m_stickrun(nullptr)
 		, m_scriptHookFunc(nullptr)
 		, m_scriptUserData(nullptr)
@@ -1525,7 +1543,7 @@ private:
 	}
 
 	/// <summary>
-	/// 
+	///
 	/// </summary>
 	static int OutputDebugMessage(lua_State* L)
 	{
@@ -1560,24 +1578,39 @@ public:
 	/// <param name="scriptHookInterval">The script hook interval. If scriptHookInterval is set to 10, scriptHookFunc is called once every 10 lines execution.</param>
 	void Initialize()
 	{
-		if (m_stickTraceWindow == nullptr)
+		if (m_sticktraceWindow == nullptr)
 		{
-			m_stickTraceWindow = SticktraceWindow::New();
+			m_sticktraceWindow = SticktraceWindow::New(
+				m_companyName.c_str(),
+				m_packageName.c_str(),
+				m_applicationName.c_str(),
+				m_dialogId
+			);
 			LuaToClassHook<Sticktrace>::Alloc(m_luaToClassHook, this);
 		}
 	}
 
-	void Terminate()
+	/// <summary>
+	/// Terminates this instance.
+	/// Do not terminate the appliation if this function returns false.
+	/// </summary>
+	/// <returns>true:Succeeded/false:Lua script is suspending.</returns>
+	bool Terminate()
 	{
-		if (m_stickTraceWindow != nullptr)
+		if (m_sticktraceWindow != nullptr)
 		{
+			// The process cannot proceed when OnCallLuaHook function is running.
+			// See the comment in OnCallLuaHook function.
+			if (m_suspendMode == Sticktrace::Mode::SUSPENDING)
+				return false;
+
 			LuaToClassHook<Sticktrace>::Free(m_luaToClassHook);
 			m_luaToClassHook.Clear();
-
-			SticktraceWindow::Delete(m_stickTraceWindow);
-			m_stickTraceWindow = nullptr;
+			SticktraceWindow::Delete(m_sticktraceWindow);
+			m_sticktraceWindow = nullptr;
 		}
 		ClearStickrun();
+		return true;
 	}
 
 	/// <summary>
@@ -1656,8 +1689,8 @@ public:
 		{
 			//       STACK
 			//    |         |
-			//    |---------|      +------------+--------+   
-			//  -1|   _G    |----->| Key        | Value  |   
+			//    |---------|      +------------+--------+
+			//  -1|   _G    |----->| Key        | Value  |
 			//    +---------+      |------------|--------|      +--------+--------+
 			//                     |"STICKTRACE"| table  |----->| Key    | Value  |
 			//                     |------------|--------|      |--------|--------|
@@ -1666,8 +1699,8 @@ public:
 
 			//       STACK
 			//    |         |
-			//    |---------|      +------------+--------+   
-			//  -1|   _G    |----->| Key        | Value  |   
+			//    |---------|      +------------+--------+
+			//  -1|   _G    |----->| Key        | Value  |
 			//    +---------+      |------------|--------|
 			//                     :            :        :
 			Sticklib::remove_table_item(m_stickrun->GetLuaState(), "STICKTRACE");
@@ -1686,17 +1719,22 @@ public:
 
 	void ShowWindow(bool show)
 	{
-		m_stickTraceWindow->Show(show);
+		m_sticktraceWindow->Show(show);
+	}
+
+	bool IsWindowVisible()
+	{
+		return m_sticktraceWindow->IsVisible();
 	}
 
 	bool OutputError(const char* message)
 	{
-		return m_stickTraceWindow->OutputError(message);
+		return m_sticktraceWindow->OutputError(message);
 	}
 
 	bool OutputDebug(const char* message)
 	{
-		return m_stickTraceWindow->OutputDebug(message);
+		return m_sticktraceWindow->OutputDebug(message);
 	}
 
 	bool SetScriptMode(Sticktrace::Mode mode)
@@ -1717,7 +1755,7 @@ public:
 				return false;
 			}
 			break;
-		default:
+		default:	// Sticktrace::Mode::SUSPENDING.
 			return false;
 		}
 		m_suspendMode = mode;
@@ -1750,65 +1788,15 @@ public:
 	}
 
 private:
-	SticktraceWindow* m_stickTraceWindow;
-	Stickrun* m_stickrun;
-
-	// テスト。
-	LuaToClassHook<Sticktrace> m_luaToClassHook;
-
-	Sticktrace::ScriptHookFunc m_scriptHookFunc;
-	void* m_scriptUserData;	
-
-	/// <summary>
-	/// Interval when m_scriptHookFunc is called by line executing.
-	/// For example, m_scriptHookInterval = 10 then m_scriptHookFunc is called once every ten lines execution.
-	/// </summary>
-	size_t m_scriptHookInterval;
-	
-	/// <summary>
-	/// Work variable. It's used when line execution.
-	/// </summary>
-	size_t m_scriptHookCount;
-
-	Mode m_suspendMode;
-	
-	/// <summary>
-	/// The required variables.
-	/// -example-----------
-	/// "strA"
-	/// "numB"
-	/// "+tblC"
-	/// " +tblD"
-	/// "  +tblE"
-	/// "tblF"
-	/// "tblF["a"]"
-	/// -return values-----------
-	/// "strA" "string" "hello"
-	/// "numB" "number" 10
-	/// "+tblC" "parentTable" ""
-	/// " strC" "string" "hello"
-	/// " numD" "number" 15
-	/// " +tblD" "parentTable" ""
-	/// "  strE" "string" "hello"
-	/// "  numF" "number" 15
-	/// "  +tblE" "parentTable" ""
-	/// "   strG" "string" "hello"
-	/// "   numH" "number" 15
-	/// "tblF" "parentTable" ""
-	/// "tblF["a"]" "number" 20
-	/// </summary>
-	std::vector<std::string> m_requiredVariables;
-
-private:
 	void OnStartExec(lua_State* L)
 	{
-		if (m_stickTraceWindow->IsDebugMode())
+		if (m_sticktraceWindow->IsDebugMode())
 			::lua_sethook(L, m_luaToClassHook.hook, LUA_MASKLINE, 0);
 
 		
 		LUA_TO_TRACE()[L] = this;
 
-		m_stickTraceWindow->OnStart();
+		m_sticktraceWindow->OnStart();
 		m_suspendMode = Sticktrace::Mode::RUN;
 		m_scriptHookCount = 0;
 	}
@@ -1819,11 +1807,10 @@ private:
 		::lua_sethook(L, nullptr, 0, 0);
 
 		m_suspendMode = Sticktrace::Mode::STOP;
-		m_stickTraceWindow->OnStop();
-		m_stickTraceWindow->Jump(nullptr, -1);
+		m_sticktraceWindow->OnStop();
+		m_sticktraceWindow->Jump(nullptr, -1);
 	}
 
-	// テスト。
 	void PrintTable(lua_State* L)
 	{
 		lua_pushnil(L);
@@ -1957,19 +1944,66 @@ private:
 		}
 		parentTable.EndEnum();
 	}
-	
+
 	/// <summary>
 	/// Called when each one line execution of the lua script.
+	/// This function is called with the following order.
+	///   lua_hook->LuaToClassHook->OnCallLuaHook.
 	/// </summary>
 	/// <param name="L">Lua state object.</param>
 	/// <param name="ar">Lua debug object.</param>
 	void OnCallLuaHook(lua_State* L, lua_Debug* ar)
 	{
+		//
+		//    Application
+		//         |
+		//         |      Create
+		//         |------------------------------------------------------------------------------> SticktraceWindow
+		//         |                                                                                       |
+		//         |      Start                                                                            |
+		//         |---------------> Lua                                                                   |
+		//         :                  |                                                                    |
+		//         :             +--->|                                                                    |
+		//         :             |    |                                                                    |
+		//         :             |    |    Call                                                            |
+		//         :             |    |------------> OnCallLuaHook                                         |
+		//         :             |    :                    |                                               |
+		//         :             |    :                    |                                               |
+		//         :             |    :               +--->|                                               |
+		//         :             |    :               |    |    Call                                       |
+		//         :             |    :               |    |---------------> m_scriptHookFunc              |
+		//         :             |    :               |    :                        |                      |
+		//         :             |    :               |    :      DispatchMessage   |                      |
+		//        A|<------------|----:---------------|----:------------------------V                      |
+		//         |             |    :               |    :                                               |
+		//         |             |    :               |    :                                               |
+		//         |             |    :               |    :                                               |
+		//        B|-------------|----:---------------|--->|                                               |
+		//         :             |    :               |    |                                               |
+		//         :             |    :               |    |      C: Get Command                           |
+		//         :             |    :               |    |---------------------------------------------->|
+		//         :             |    :               |    |                                               |
+		//         :             |    :               +----|                                               |
+		//         :             |    :                    |                                               |
+		//         :             |    |<-------------------V                                               |
+		//         :             |    |                                                                    |
+		//         :             |    |                                                                    |
+		//         :             +----|                                                                    |
+		//         :                  |                                                                    |
+		//
+		//   |                                                                                |  |                    |
+		//   |--------------------------------------------------------------------------------|  |--------------------|
+		//                                 Application thread                                    SticktraceWindow thread
+		//
+		//
+		//  The application can delete SticktraceWindow between A and B, but if it was deleted, C will be failed.
+		//  So, the application must not delete SticktraceWindow between A and B.
+		//
 		if (m_suspendMode == Sticktrace::Mode::STOP)
 			(void)::luaL_error(L, "Script execution was interrupted.");
 		// Check the possibility of the breakpoint existing on the current line. This function responds fast.
 		if (m_suspendMode == Sticktrace::Mode::SUSPEND ||
-			m_stickTraceWindow->IsBreakpoint(nullptr, ar->currentline - 1))
+			m_sticktraceWindow->IsBreakpoint(nullptr, ar->currentline - 1))
 		{
 			// 'n': fills in the field name and namewhat;
 			// 'S': fills in the fields source, short_src, linedefined, lastlinedefined, and what;
@@ -1981,23 +2015,39 @@ private:
 			lua_getinfo(L, "Slnt", ar);
 			// Check the exact breakpoint existing on the current line. This function needs some time.
 			if (m_suspendMode == Sticktrace::Mode::SUSPEND ||
-				m_stickTraceWindow->IsBreakpoint(ar->source, ar->currentline - 1))
+				m_sticktraceWindow->IsBreakpoint(ar->source, ar->currentline - 1))
 			{
-				m_suspendMode = Sticktrace::Mode::SUSPEND;
+				m_suspendMode = Sticktrace::Mode::SUSPENDING;
 				std::string param1;
-				auto command = m_stickTraceWindow->GetCommand(param1, 0);
+				auto command = m_sticktraceWindow->GetCommand(param1, 0);
 				// If Stop command, throw the lua exception and stop the running of the script.
 				if (command == SticktraceCommand::STOP)
 					(void)::luaL_error(L, "Script execution was interrupted.");
 				// Notify the sticktrace window that the script is suspended.
-				m_stickTraceWindow->OnSuspended();
+				m_sticktraceWindow->OnSuspended();
 				// Jump the source code editor to the suspended point.
-				m_stickTraceWindow->Jump(ar->source, ar->currentline - 1);
+				m_sticktraceWindow->Jump(ar->source, ar->currentline - 1);
 
 				Stickvar stickvar(L, ar);
-				for (;;)
+				while (m_suspendMode == Sticktrace::Mode::SUSPENDING)
 				{
-					if (command == SticktraceCommand::GET_VARIABLE)
+					if (m_suspendMode == Sticktrace::Mode::RUN || command == SticktraceCommand::RESUME)
+					{
+						m_suspendMode = Sticktrace::Mode::RUN;
+						command = SticktraceCommand::NONE;
+					}
+					else if (m_suspendMode == Sticktrace::Mode::STOP || command == SticktraceCommand::STOP)
+					{
+						m_suspendMode = Sticktrace::Mode::STOP;
+						command = SticktraceCommand::NONE;
+						(void)::luaL_error(L, "Script execution was interrupted.");
+					}
+					else if (m_suspendMode == Sticktrace::Mode::PROCEED_NEXT || command == SticktraceCommand::PROCEED_NEXT)
+					{
+						m_suspendMode = Sticktrace::Mode::SUSPEND;
+						command = SticktraceCommand::NONE;
+					}
+					else if (command == SticktraceCommand::GET_VARIABLE)
 					{
 						//
 						//  [-]varA
@@ -2024,6 +2074,8 @@ private:
 						//  { "MEMBER",		 "2"	   "varF"	   "string"		"mine"	},
 						//  { "VARIABLE",	 "0"	   "varG"	   "string"		"hello"	},
 						// }
+
+						command = SticktraceCommand::NONE;
 						std::vector<std::tuple<std::string, std::string, std::string, std::string, std::string>> varIconIndentNameTypeValueArray;
 						std::vector<std::string> vTopLevelName;
 						std::unordered_set<std::string> stExpandedName;
@@ -2062,39 +2114,18 @@ private:
 
 						std::string senddata;
 						Stickutil::Serialize(senddata, varIconIndentNameTypeValueArray);
-						m_stickTraceWindow->SetWatch(senddata);
+						m_sticktraceWindow->SetWatch(senddata);
 					}
-					else if (
-						m_suspendMode == Sticktrace::Mode::RUN ||
-						command == SticktraceCommand::RESUME
-						)
+					else
 					{
-						m_suspendMode = Sticktrace::Mode::RUN;
-						break;
+						if (m_scriptHookFunc != nullptr)
+							m_scriptHookFunc(L, ar, m_scriptUserData, m_suspendMode, this);
+						command = m_sticktraceWindow->GetCommand(param1, 100);
 					}
-					else if (
-						m_suspendMode == Sticktrace::Mode::STOP ||
-						command == SticktraceCommand::STOP
-						)
-					{
-						(void)::luaL_error(L, "Script execution was interrupted.");
-					}
-					else if (
-						m_suspendMode == Sticktrace::Mode::PROCEED_NEXT ||
-						command == SticktraceCommand::PROCEED_NEXT
-						)
-					{
-						m_suspendMode = Sticktrace::Mode::SUSPEND;
-						break;
-					}
-					if (m_scriptHookFunc != nullptr)
-						m_scriptHookFunc(L, ar, m_scriptUserData, m_suspendMode, this);
-
-					command = m_stickTraceWindow->GetCommand(param1, 100);
 				}
 				// Notify the sticktrace window that the script is resumed.
-				m_stickTraceWindow->OnResumed();
-				m_stickTraceWindow->Jump(nullptr, -1);
+				m_sticktraceWindow->OnResumed();
+				m_sticktraceWindow->Jump(nullptr, -1);
 			}
 		}
 		if (m_scriptHookFunc != nullptr)
@@ -2111,9 +2142,9 @@ private:
 		}
 	}
 	
-	void SetSource(const char* name, const char* src)
+	void SetSource(const std::string& sandbox, const std::string& name, const std::string& source)
 	{
-		m_stickTraceWindow->SetSource(name, src);
+		m_sticktraceWindow->SetSource(sandbox, name, source);
 	}
 
 private:
@@ -2128,13 +2159,11 @@ private:
 		switch (callbackType)
 		{
 		case Stickrun::CallbackType::ON_LOAD_SCRIPT:
-			if (((std::pair<const char*, const char*>*)data)->first != nullptr &&
-				((std::pair<const char*, const char*>*)data)->second != nullptr)
-				((Sticktrace*)userData)->SetSource(
-					((std::pair<const char*, const char*>*)data)->first,
-					((std::pair<const char*, const char*>*)data)->second
-				);
+		{
+			auto sndbx_name_src = (std::tuple<const std::string&, const std::string&, const std::string&> *)data;
+			((Sticktrace*)userData)->SetSource(std::get<0>(*sndbx_name_src), std::get<1>(*sndbx_name_src), std::get<2>(*sndbx_name_src));
 			break;
+		}
 		case Stickrun::CallbackType::ON_START_EXEC:
 			((Sticktrace*)userData)->OnStartExec(L);
 			break;
@@ -2148,6 +2177,57 @@ private:
 			break;
 		}
 	}
+
+private:
+	std::wstring m_companyName;
+	std::wstring m_packageName;
+	std::wstring m_applicationName;
+	unsigned int m_dialogId;
+	SticktraceWindow* m_sticktraceWindow;
+	Stickrun* m_stickrun;
+	LuaToClassHook<Sticktrace> m_luaToClassHook;
+	Sticktrace::ScriptHookFunc m_scriptHookFunc;
+	void* m_scriptUserData;
+
+	/// <summary>
+	/// Interval when m_scriptHookFunc is called by line executing.
+	/// For example, m_scriptHookInterval = 10 then m_scriptHookFunc is called once every ten lines execution.
+	/// </summary>
+	size_t m_scriptHookInterval;
+	
+	/// <summary>
+	/// Work variable. It's used when line execution.
+	/// </summary>
+	size_t m_scriptHookCount;
+
+	Mode m_suspendMode;
+	
+	/// <summary>
+	/// The required variables.
+	/// -example-----------
+	/// "strA"
+	/// "numB"
+	/// "+tblC"
+	/// " +tblD"
+	/// "  +tblE"
+	/// "tblF"
+	/// "tblF["a"]"
+	/// -return values-----------
+	/// "strA" "string" "hello"
+	/// "numB" "number" 10
+	/// "+tblC" "parentTable" ""
+	/// " strC" "string" "hello"
+	/// " numD" "number" 15
+	/// " +tblD" "parentTable" ""
+	/// "  strE" "string" "hello"
+	/// "  numF" "number" 15
+	/// "  +tblE" "parentTable" ""
+	/// "   strG" "string" "hello"
+	/// "   numH" "number" 15
+	/// "tblF" "parentTable" ""
+	/// "tblF["a"]" "number" 20
+	/// </summary>
+	std::vector<std::string> m_requiredVariables;
 };
 
 #endif // _STICKTRACE

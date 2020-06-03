@@ -36,11 +36,12 @@ Test1 = function()
 	c1["x"] = { [1] = "p", [2] = "q", [3] = "r" }
 	-- local d = {"A"->"B"}
 	b = X.B.New()
-	ii, a = b:Add1()	
+	ii, a = b:Add1()
 	ShowMessage("A::Get=" .. a:Get() .. "\r\n")
 	ShowMessage(X.A.ABC .. "\r\n")
 	local c = X.B.CreateA(15)
 	ShowMessage(c:Get() .. "\r\n")
+	X.B.DeleteA(a)
 	X.B.DeleteA(c)
 	return 5, "abc"
 end
@@ -223,6 +224,7 @@ CStickTestDlg* ToStickTestDlg(void* data)
 CStickTestDlg::CStickTestDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_STICKTEST_DIALOG, pParent)
 	, m_stickrun(nullptr)
+	, m_sticktrace(L"Dynamic Draw Project", L"", L"StickTest", (DWORD)-1)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -258,6 +260,7 @@ BEGIN_MESSAGE_MAP(CStickTestDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_TEST8, &CStickTestDlg::OnBnClickedBtnTest8)
 	ON_BN_CLICKED(IDC_BTN_TEST9, &CStickTestDlg::OnBnClickedBtnTest9)
 	ON_BN_CLICKED(IDC_BTN_INIT_STICKRUN, &CStickTestDlg::OnBnClickedBtnInitStickrun)
+//	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 // CStickTestDlg メッセージ ハンドラー
@@ -906,3 +909,27 @@ tolua_endmodule(tolua_S);
 	 m_stickrun->MakeSandboxEnv("SCR2", true);
 	 m_stickrun->DoSandboxString(&error_message, "SCR2", script2, "script2");
 }
+
+
+ void CStickTestDlg::OnOK()
+ {
+	 if (!m_sticktrace.Terminate())
+	 {
+		 MessageBox(L"You have to stop the script running before you quit the application.");
+		 return;
+	 }
+
+	 CDialogEx::OnOK();
+ }
+
+
+ void CStickTestDlg::OnCancel()
+ {
+	 if (!m_sticktrace.Terminate())
+	 {
+		 MessageBox(L"You have to stop the script running before you quit the application.");
+		 return;
+	 }
+
+	 CDialogEx::OnCancel();
+ }

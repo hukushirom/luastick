@@ -23,6 +23,8 @@ public:
 	CFCDialogBase (	UINT nIDTemplate,
 					CWnd* pParentWnd = nullptr,
 					BOOL isSizable = FALSE);
+public:
+	virtual void SetDialogId (UINT dialogId);
 
 protected:
 	virtual std::wstring	GetRegKeyName () const;
@@ -53,6 +55,7 @@ protected:
 protected:
 	BOOL	m_isSizable;	// サイズ変更可能？
 	DWORD	m_nIDTemplate;	// ダイアログリソースID
+	DWORD	m_dialogId;		// ダイアログID
 
 	IdToDlgLayoutRecMap	m_mpLayoutInfo;	// レイアウト情報。
 	CSize				m_szMinFrame;	// フレームサイズの最小値。
@@ -72,4 +75,5 @@ public:
 	afx_msg void OnDestroy ();
 	afx_msg void OnSize (UINT nType, int cx, int cy);
 	afx_msg void OnGetMinMaxInfo (MINMAXINFO FAR* lpMMI);
+//	virtual void OnOK();
 }; // class CFCDialogBase.

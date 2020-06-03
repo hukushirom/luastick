@@ -19,7 +19,6 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNCREATE(CFCDdEdit, CEdit)
 
 BEGIN_MESSAGE_MAP(CFCDdEdit, BASE_CLASS)
-	ON_WM_CONTEXTMENU()
 	ON_WM_LBUTTONDBLCLK()
 	ON_CONTROL_REFLECT_EX(EN_UPDATE, &CFCDdEdit::OnUpdate)
 	ON_COMMAND(ID_EDIT_UNDO, &CFCDdEdit::OnEditUndo)
@@ -159,73 +158,45 @@ void CFCDdEdit::AddUndoBuffer ()
 	}
 } // CFCDdEdit::AddUndoBuffer.
 
+//----- 20.06.03  削除始 ()-----
+////********************************************************************************************
+///*!
+// * @brief	PreTranslateMessage 関数。
+// *
+// *
+// * @author	Fukushiro M.
+// * @date	2014/09/22(月) 08:23:21
+// *
+// * @param[in,out]	MSG*	pMsg	。
+// *
+// * @return	BOOL	TRUE:成 / FALSE:否
+// */
+////********************************************************************************************
+//BOOL CFCDdEdit::PreTranslateMessage (MSG* pMsg)
+//{
+//	// Baseclass関数。
+//	return BASE_CLASS::PreTranslateMessage(pMsg);
+//} // CFCDdEdit::PreTranslateMessage
+//
 //********************************************************************************************
-/*!
- * @brief	PreTranslateMessage 関数。
- *
- *
- * @author	Fukushiro M.
- * @date	2014/09/22(月) 08:23:21
- *
- * @param[in,out]	MSG*	pMsg	。
- *
- * @return	BOOL	TRUE:成 / FALSE:否
- */
+///*!
+// * @brief	右ボタンクリックで呼び出される。
+// * @author	Fukushiro M.
+// * @date	2014/09/12(金) 09:43:39
+// *
+// * @param[in]	CWnd*	pWnd	ユーザーによってマウスの右ボタンがクリックされた
+// *								ウィンドウのハンドルです。
+// * @param[in]	CPoint	point	ユーザーによってマウスがクリックされたときの、
+// *								カーソルのスクリーン座標位置です。
+// *
+// * @return	なし (none)
+// */
 //********************************************************************************************
-BOOL CFCDdEdit::PreTranslateMessage (MSG* pMsg)
-{
-//----- 14.09.22 Fukushiro M. 削除始 ()-----
-//	TRACE(L"CFCDdEdit::PreTranslateMessage %x %x %x\n", pMsg->message, pMsg->wParam, pMsg->lParam);
-//	// 無制限Undo && キーダウンの場合。
-//	if (m_bIsUndoable && pMsg->message == WM_KEYDOWN)
-//	{
-//		// キーダウン && CTRL-KEYの場合。
-//		if (GetKeyState(VK_CONTROL) < 0)
-//		{
-//			// 仮想キーを実際のキャラクタに変換。
-//			const UINT dwKey = ::MapVirtualKey(pMsg->wParam, 2);
-//			// Ctrl+Z の場合。
-//			if (dwKey == 'Z')
-//			{
-//				// Ctrl+Z によるUndoを無効にする。但し、コンテキストメニューによるUndoは無効にできない。
-//				// コンテキストメニューのUndoをPreTranslationMessageでチェックしたがそれらしきメッセージが存在しない。
-//				// コンテキストメニューを置き換えるしか方法が無い。
-//				// EM_UNDOも渡ってきていない。
-//				// FALSEを返すことで親ダイアログで処理できる。
-//				return FALSE;
-//			}
-//		}
-//	}
-//----- 14.09.22 Fukushiro M. 削除終 ()-----
-	// Baseclass関数。
-	return BASE_CLASS::PreTranslateMessage(pMsg);
-} // CFCDdEdit::PreTranslateMessage
-
-//********************************************************************************************
-/*!
- * @brief	右ボタンクリックで呼び出される。
- * @author	Fukushiro M.
- * @date	2014/09/12(金) 09:43:39
- *
- * @param[in]	CWnd*	pWnd	ユーザーによってマウスの右ボタンがクリックされた
- *								ウィンドウのハンドルです。
- * @param[in]	CPoint	point	ユーザーによってマウスがクリックされたときの、
- *								カーソルのスクリーン座標位置です。
- *
- * @return	なし (none)
- */
-//********************************************************************************************
-void CFCDdEdit::OnContextMenu (CWnd* pWnd, CPoint point)
-{
-//----- 17.09.24 Fukushiro M. 削除始 ()-----
-//	// サブメニューをポップアップ。
-//	if (m_dwMenuId != DWORD(-1))
-//		FFPopupSubmenu(point, m_dwMenuId, m_iSubmenuIndex, GetParent());
-//	else
-//----- 17.09.24 Fukushiro M. 削除終 ()-----
-
-		BASE_CLASS::OnContextMenu(pWnd, point);
-} // CFCDdEdit::OnContextMenu.
+//void CFCDdEdit::OnContextMenu (CWnd* pWnd, CPoint point)
+//{
+//		BASE_CLASS::OnContextMenu(pWnd, point);
+//} // CFCDdEdit::OnContextMenu.
+//----- 20.06.03  削除終 ()-----
 
 //********************************************************************************************
 /*!

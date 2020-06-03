@@ -22,7 +22,7 @@ protected:
 	virtual void AddUndoBuffer ();
 
 protected:
-	virtual BOOL PreTranslateMessage (MSG* pMsg);
+//	virtual BOOL PreTranslateMessage (MSG* pMsg);
 
 protected:
 	DWORD	m_dwMenuId;			// コンテキストメニューID。
@@ -34,7 +34,6 @@ protected:
 
 protected:
 	DECLARE_MESSAGE_MAP()
-	afx_msg void OnContextMenu (CWnd* pWnd, CPoint point);
 	afx_msg void OnLButtonDblClk (UINT nFlags, CPoint point);
 	afx_msg BOOL OnUpdate ();
 	afx_msg void OnEditUndo ();

@@ -45,14 +45,6 @@ extern void MyArrayFunc2(
 	std::vector<std::wstring> & v1
 );
 
-// テスト。
-// enum C;
-// void Func(C * c); のときどう判断する？
-// C c;
-// Func(&c) とするか。
-// 
-// C c[10];
-// Func(c) とするか。
 
 /// <stick export="true"/>
 class X
@@ -452,6 +444,9 @@ public:
 	afx_msg void OnBnClickedBtnTest8();
 	afx_msg void OnBnClickedBtnInitStickrun();
 	afx_msg void OnBnClickedBtnTest9();
+//	afx_msg void OnClose();
+	virtual void OnOK();
+	virtual void OnCancel();
 };
 
 

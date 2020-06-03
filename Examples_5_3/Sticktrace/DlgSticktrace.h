@@ -40,13 +40,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual BOOL OnInitDialog();
-	bool TC_SetSource(const std::string& name, const std::string& src);
+	bool TC_SetSource(const std::string& sandbox, const std::string& name, const std::string& src);
 	bool TC_IsDebugMode();
 	bool TC_IsBreakpoint(const char* name, int lineIndex);
-//----- 17.10.20 Fukushiro M. 削除始 ()-----
-//	bool TC_IsSuspended();
-//	int TC_GetMode();
-//----- 17.10.20 Fukushiro M. 削除終 ()-----
 	bool TC_OnSuspended();
 	bool TC_OnResumed();
 	bool TC_Jump(const char * name, int lineIndex);
@@ -59,6 +55,7 @@ public:
 
 private:
 	CFCTextEdit m_textEditor;
+	std::string m_sandbox;
 	CFCDdEdit m_output;
 	CFCDdEdit m_errorout;
 	CFont m_font;					// エディターフォント。
@@ -93,6 +90,7 @@ private:
 		Command command;
 		std::string strParam1;
 		std::string strParam2;
+		std::string strParam3;
 		__int64 i64Param1;
 
 		InCmd() : command(Command::NONE) {}
@@ -133,7 +131,7 @@ private:
 	} m_debugMode;
 
 	std::vector<std::string> m_sourceNameArray;
-	std::unordered_map<std::string, std::wstring> m_nameToSource;
+	std::unordered_map<std::string, std::pair<std::string, std::wstring>> m_nameToSandSource;
 
 protected:
 	virtual void GetWatchedVariables(std::vector<std::string>& vTopLevelName, std::unordered_set<std::string>& stExpandedName) const;
@@ -144,7 +142,7 @@ protected:
 	virtual void MoveControl(WORD wControlId, const CSize& szMove);
 	virtual void MoveBorder(int dx);
 
-	void SetSource(const std::string & name, const std::wstring & src);
+	void SetSource(const std::string & sandbox, const std::string & name, const std::wstring & src);
 	void Jump(const std::string & name, int lineIndex, CFCTextEdit::MarkerType markerType, bool selectLine);
 	bool JumpErrorLocation();
 	void OnStart();
@@ -162,22 +160,62 @@ public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
-	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnTcnSelchangeSceTabScript(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg LRESULT OnUserCommand(WPARAM, LPARAM);
 	afx_msg LRESULT OnUserBreakpointUpdated(WPARAM, LPARAM);
 	afx_msg LRESULT OnUserTextEditMarkerClicked(WPARAM wParam, LPARAM lParam);
-	afx_msg void OnSceDebugToggleBreakpoint();
-	afx_msg void OnUpdateSceDebugToggleBreakpoint(CCmdUI* pCmdUI);
-//	afx_msg void OnTcnSelchangingSceTabScript(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedSceBtnDebugContinue();
 	afx_msg void OnBnClickedSceBtnDebugBreak();
 	afx_msg void OnBnClickedSceBtnDebugStop();
 	afx_msg void OnBnClickedSceBtnDebugStepToNext();
 	afx_msg LRESULT OnIdleUpdateCmdUI(WPARAM, LPARAM);
+	afx_msg void OnSceEditGotoLine();
+	afx_msg void OnUpdateSceEditGotoLine(CCmdUI *pCmdUI);
+	afx_msg void OnSceWinKeyword();
+	afx_msg void OnUpdateSceWinKeyword(CCmdUI *pCmdUI);
+	afx_msg void OnEditFindNextText();
+	afx_msg void OnUpdateEditFindNextText(CCmdUI *pCmdUI);
+	afx_msg void OnEditFindPrevText();
+	afx_msg void OnUpdateEditFindPrevText(CCmdUI *pCmdUI);
+	afx_msg void OnSceOutwinGotoLocation();
+	afx_msg void OnUpdateSceOutwinGotoLocation(CCmdUI *pCmdUI);
+	afx_msg void OnSceOutwinClear();
+	afx_msg void OnUpdateSceOutwinClear(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugToggleBreakpoint();
+	afx_msg void OnUpdateSceDebugToggleBreakpoint(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugClearBreakpoint();
+	afx_msg void OnUpdateSceDebugClearBreakpoint(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugMode();
+	afx_msg void OnUpdateSceDebugMode(CCmdUI *pCmdUI);
 	afx_msg void OnSceDebugContinue();
 	afx_msg void OnUpdateSceDebugContinue(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugBreak();
+	afx_msg void OnUpdateSceDebugBreak(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugStepToNext();
+	afx_msg void OnUpdateSceDebugStepToNext(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugUntilCaret();
+	afx_msg void OnUpdateSceDebugUntilCaret(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugStop();
+	afx_msg void OnUpdateSceDebugStop(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugChangeVariable();
+	afx_msg void OnUpdateSceDebugChangeVariable(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugAddWatch();
+	afx_msg void OnUpdateSceDebugAddWatch(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugDeleteWatch();
+	afx_msg void OnUpdateSceDebugDeleteWatch(CCmdUI *pCmdUI);
+	afx_msg void OnSceWinError();
+	afx_msg void OnUpdateSceWinError(CCmdUI *pCmdUI);
+	afx_msg void OnSceWinWatch();
+	afx_msg void OnUpdateSceWinWatch(CCmdUI *pCmdUI);
+	afx_msg void OnSceWinOutput();
+	afx_msg void OnUpdateSceWinOutput(CCmdUI *pCmdUI);
+	afx_msg void OnSceWinVariableName();
+	afx_msg void OnUpdateSceWinVariableName(CCmdUI *pCmdUI);
+	afx_msg void OnSceWinVariableValue();
+	afx_msg void OnUpdateSceWinVariableValue(CCmdUI *pCmdUI);
+	afx_msg void OnHelp();
+	afx_msg void OnUpdateHelp(CCmdUI *pCmdUI);
 	afx_msg void OnBnClickedSceBtnChangeVariable();
 	afx_msg void OnBnClickedSceBtnAddWatch();
 	afx_msg void OnBnClickedSceBtnDeleteWatch();
@@ -185,4 +223,6 @@ public:
 	afx_msg LRESULT OnUserDdEditDblClked(WPARAM wParam, LPARAM);
 	afx_msg LRESULT OnUserTextEditCurlineChanged(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnBnClickedSceChkDebugMode();
+	afx_msg void OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu);
+	afx_msg void OnLvnItemchangedSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult);
 };

@@ -149,3 +149,10 @@ void CFCDlgModelessBase::OnCancel ()
 	// デフォルト処理でも非表示になるが、OnShowWindowを実行するため以下。
 	SetWindowVisible(FALSE);
 } // CFCDlgModelessBase::OnCancel.
+
+
+void CFCDlgModelessBase::OnOK()
+{
+	// To avoid to close this window with Enter key, comment out the following call.
+	// CFCDialogBase::OnOK();
+}

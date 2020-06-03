@@ -18,32 +18,40 @@ static char THIS_FILE[] = __FILE__;
 IMPLEMENT_DYNAMIC(CFCDialogBase, CDialogEx)
 
 CFCDialogBase::CFCDialogBase ()
-			:BASE_CLASS()
-			,m_isSizable(FALSE)			// サイズ変更可能？
-			,m_nIDTemplate(DWORD(-1))	// ダイアログリソースID
-			,m_szMinFrame(0,0)			// フレームサイズの最小値。
-
+	: BASE_CLASS()
+	, m_isSizable(FALSE)		// サイズ変更可能？
+	, m_nIDTemplate(DWORD(-1))	// ダイアログリソースID
+	, m_dialogId(DWORD(-1))		// Dialog id. Application identifies this dialog using this ID.
+	, m_szMinFrame(0,0)			// フレームサイズの最小値。
 {
 } // CFCDialogBase::CFCDialogBase.
 
-CFCDialogBase::CFCDialogBase (	LPCTSTR lpszTemplateName,
-								CWnd* pParentWnd)
-			:BASE_CLASS(lpszTemplateName, pParentWnd)
-			,m_isSizable(FALSE)	// サイズ変更可能？
-			,m_nIDTemplate(DWORD(-1))	// ダイアログリソースID
-			,m_szMinFrame(0,0)	// フレームサイズの最小値。
+CFCDialogBase::CFCDialogBase (LPCTSTR lpszTemplateName, CWnd* pParentWnd)
+	: BASE_CLASS(lpszTemplateName, pParentWnd)
+	, m_isSizable(FALSE)		// サイズ変更可能？
+	, m_nIDTemplate(DWORD(-1))	// ダイアログリソースID
+	, m_dialogId(DWORD(-1))		// Dialog id. Application identifies this dialog using this ID.
+	, m_szMinFrame(0, 0)		// フレームサイズの最小値。
 {
 } // CFCDialogBase::CFCDialogBase.
 
-CFCDialogBase::CFCDialogBase (	UINT nIDTemplate,
-								CWnd* pParentWnd,
-								BOOL isSizable)
-			:BASE_CLASS(nIDTemplate, pParentWnd)
-			,m_isSizable(isSizable)		// サイズ変更可能？
-			,m_nIDTemplate(nIDTemplate)	// ダイアログリソースID
-			,m_szMinFrame(0,0)			// フレームサイズの最小値。
+CFCDialogBase::CFCDialogBase (
+	UINT nIDTemplate,
+	CWnd* pParentWnd,
+	BOOL isSizable
+)
+	: BASE_CLASS(nIDTemplate, pParentWnd)
+	, m_isSizable(isSizable)		// サイズ変更可能？
+	, m_nIDTemplate(nIDTemplate)	// ダイアログリソースID
+	, m_dialogId(DWORD(-1))			// Dialog id. Application identifies this dialog using this ID.
+	, m_szMinFrame(0, 0)			// フレームサイズの最小値。
 {
 } // CFCDialogBase::CFCDialogBase.
+
+void CFCDialogBase::SetDialogId (UINT dialogId)
+{
+	m_dialogId = dialogId;
+}
 
 /*************************************************************************
  * <関数>	CFCDialogBase::GetRegKeyName
@@ -59,7 +67,7 @@ CFCDialogBase::CFCDialogBase (	UINT nIDTemplate,
 std::wstring CFCDialogBase::GetRegKeyName () const
 {
 	ASSERT(m_nIDTemplate != DWORD(-1));
-	return UtilString::Format(L"CFCDialogBase-%x", m_nIDTemplate);
+	return UtilString::Format(L"CFCDialogBase-%x", (m_dialogId != DWORD(-1)) ? m_dialogId : m_nIDTemplate);
 } // CFCDialogBase::GetRegKeyName.
 
 //----- 14.08.27 Fukushiro M. 追加始 ()-----
@@ -262,4 +270,3 @@ void CFCDialogBase::OnGetMinMaxInfo (MINMAXINFO FAR* lpMMI)
 	lpMMI->ptMinTrackSize.x = m_szMinFrame.cx;
 	lpMMI->ptMinTrackSize.y = m_szMinFrame.cy;
 } // CFCDialogBase::OnGetMinMaxInfo.
-

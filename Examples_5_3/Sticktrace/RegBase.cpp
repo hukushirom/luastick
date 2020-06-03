@@ -9,9 +9,15 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static const wchar_t* REG_COMPANY_NAME = L"Dynamic Draw Project";
-static const wchar_t* REG_PACKAGE_NAME = L"StickTest";
-static const wchar_t* REG_APPLICATION_NAME = L"StickTest";
+//----- 20.06.02  変更前 ()-----
+//static const wchar_t* REG_COMPANY_NAME = L"Dynamic Draw Project";
+//static const wchar_t* REG_PACKAGE_NAME = L"StickTest";
+//static const wchar_t* REG_APPLICATION_NAME = L"StickTest";
+//----- 20.06.02  変更後 ()-----
+static std::wstring REG_COMPANY_NAME = L"Dynamic Draw Project";
+static std::wstring REG_PACKAGE_NAME = L"Sticktrace";
+static std::wstring REG_APPLICATION_NAME = L"Sticktrace";
+//----- 20.06.02  変更終 ()-----
 
 static const LOGFONT DEFAULT_LOGFONT[] = {
 	{
@@ -48,11 +54,11 @@ static std::wstring myGetCompAppSection (const wchar_t* wcpSection)
 {
 
 	std::wstring name = L"Software";
-	if (REG_COMPANY_NAME != nullptr && REG_COMPANY_NAME[0] != L'\0')
+	if (!REG_COMPANY_NAME.empty())
 		name += std::wstring(L"\\") + REG_COMPANY_NAME;
-	if (REG_PACKAGE_NAME != nullptr && REG_PACKAGE_NAME[0] != L'\0')
+	if (!REG_PACKAGE_NAME.empty())
 		name += std::wstring(L"\\") + REG_PACKAGE_NAME;
-	if (REG_APPLICATION_NAME != nullptr && REG_APPLICATION_NAME[0] != L'\0')
+	if (!REG_APPLICATION_NAME.empty())
 		name += std::wstring(L"\\") + REG_APPLICATION_NAME;
 	if (wcpSection != nullptr && wcpSection[0] != L'\0')
 		name += std::wstring(L"\\") + wcpSection;
@@ -127,20 +133,30 @@ static std::wstring MyIdNameToRegName(const wchar_t* name)
 	return name;
 } // static std::wstring MyIdNameToRegName (const wchar_t* name)
 
-  /*************************************************************************
-  * <関数>	FCRegData::InitRegFont
-  *
-  * <機能>	レジストリから取得した各種のフォント情報に基づき、FONTを
-  *			初期化する。
-  *
-  * <引数>	font		:フォントを初期化して返す。
-  *			nType		:フォントの種類を指定。
-  *			lEscapement	:角度情報を指定。
-  *			dZoom		:ズーム値を指定。デフォルトはFFG_()->dDisplayPPM。
-  *
-  * <履歴>	98.10.30 Fukushiro M. 作成
-  *			99.03.28 Fukushiro M. レジストリ登録方法を変更。
-  *************************************************************************/
+void FCRegBase::SetApplicationInfo(const wchar_t* companyName, const wchar_t* packageName, const wchar_t* applicationName)
+{
+	if (companyName != nullptr && companyName[0] != L'\0')
+		REG_COMPANY_NAME = companyName;
+	if (packageName != nullptr)
+		REG_PACKAGE_NAME = packageName;
+	if (applicationName != nullptr)
+		REG_APPLICATION_NAME = applicationName;
+} // FCRegBase::SetApplicationInfo.
+
+/*************************************************************************
+* <関数>	FCRegData::InitRegFont
+*
+* <機能>	レジストリから取得した各種のフォント情報に基づき、FONTを
+*			初期化する。
+*
+* <引数>	font		:フォントを初期化して返す。
+*			nType		:フォントの種類を指定。
+*			lEscapement	:角度情報を指定。
+*			dZoom		:ズーム値を指定。デフォルトはFFG_()->dDisplayPPM。
+*
+* <履歴>	98.10.30 Fukushiro M. 作成
+*			99.03.28 Fukushiro M. レジストリ登録方法を変更。
+*************************************************************************/
 void FCRegBase::InitRegFont(CFont& font, FDRegFontType nType, long lEscapement, double dZoom)
 {
 	//----- 06.02.26 Fukushiro M. 追加始 ()-----

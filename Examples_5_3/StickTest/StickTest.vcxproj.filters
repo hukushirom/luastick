@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="StickTest.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -74,5 +71,6 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="dummy" />
+    <CustomBuild Include="dummy2" />
   </ItemGroup>
 </Project>

@@ -26,13 +26,14 @@ enum FDRegFontType
 //	FDFT_TOOLBAR_LABEL,			// ツールバーのラベル。
 //	FDFT_TOOLBAR_GROUP_NAME,	// ツールバーのグループ名。
 //----- 17.09.26 Fukushiro M. 削除終 ()-----
-	FDFT_SCRIPT_EDITOR = 0,		// スクリプトエディター。
+	FDFT_SCRIPT_DEBUGGER = 0,	// スクリプトエディター。
 	FDFT_END,
 }; // enum FDRegFontType.
 
 class FCRegBase
 {
 public:
+	static void SetApplicationInfo(const wchar_t* companyName, const wchar_t* packageName, const wchar_t* applicationName);
 	static void InitRegFont(CFont& font, FDRegFontType nType, long lEscapement = 0, double dZoom = -1.0);
 	static void InitRegFont(LOGFONT& logFont, FDRegFontType nType, long lEscapement = 0, double dZoom = -1.0);
 

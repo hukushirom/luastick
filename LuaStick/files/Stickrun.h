@@ -1,5 +1,6 @@
 #pragma once
 
+#include <tuple>
 #include <functional>
 #include <sstream>
 #include <unordered_map>
@@ -63,6 +64,33 @@ protected:
 		}
 	};
 
+	template<typename T> class AutoBackup
+	{
+	public:
+		AutoBackup (T& ver)
+			{
+				m_ver = &ver;
+				m_backup = ver;
+			}
+		AutoBackup (T& ver, const T& newVal)
+			{
+				m_ver = &ver;
+				m_backup = ver;
+				*m_ver = newVal;
+			}
+		~AutoBackup ()
+			{
+				*m_ver = m_backup;
+			}
+		void operator = (const T& newVal)
+			{
+				*m_ver = newVal;
+			}
+	private:
+		T*	m_ver;
+		T	m_backup;
+	}; // template<typename T> class AutoBackup.
+
 public:
 	enum class CallbackType
 	{
@@ -78,7 +106,8 @@ public:
 	/// <para> param callbackType: Specifies callback type.                 </para>
 	/// <para> param data:                                                  </para>
 	/// <para>   If callbackType=ON_ERROR then data returns an error message. (const char*)    </para>
-	/// <para>   If callbackType=ON_LOAD_SCRIPT then data returns script name and source code. (const std::pair＜const char*, const char*＞*)    </para>
+	/// <para>   If callbackType=ON_LOAD_SCRIPT then data returns sandbox name, script name and source code.    </para>
+	/// <para>     (const std::tuple＜const std::string&, const std::string&, const std::string&＞*)    </para>
 	/// <para>   If callbackType=ON_START_EXEC then data returns nullptr.   </para>
 	/// <para>   callbackType=ON_STOP_EXEC then data returns nullptr.       </para>
 	/// <para> param luaState: lua_State object.                            </para>
@@ -86,44 +115,6 @@ public:
 	/// <para> param stickrun: This class object.                           </para>
 	/// </summary>
 	using HookFunc = void (*)(CallbackType callbackType, void* data, lua_State* luaState, void* userData, Stickrun* stickrun);
-	
-//----- 20.01.10 Fukushiro M. 削除始 ()-----
-//	/// <summary>
-//	/// Wrapper for argument value. See the 'CallFunctionX' comments.
-//	/// </summary>
-//	class In
-//	{
-//		friend class Stickrun;
-//	private:
-//		enum class Type
-//		{
-//			NONE,
-//			BOOLEAN,
-//			INT64,
-//			DOUBLE,
-//			STRING,
-//			POINTER,
-//		};
-//	public:
-//		In() : type(In::Type::NONE) {}
-//		In(const bool & v) : type(In::Type::BOOLEAN), boolValue(v) {}
-//		In(const __int32 & v) : type(In::Type::INT64), int64Value(v) {}
-//		In(const __int64 & v) : type(In::Type::INT64), int64Value(v) {}
-//		In(const double & v) : type(In::Type::DOUBLE), doubleValue(v) {}
-//		In(const char * v) : type(In::Type::STRING), charpValue(v) {}
-//		In(void* & v) : type(In::Type::POINTER), ptrValue(v) {}
-//	private:
-//		In::Type type;
-//		union
-//		{
-//			bool boolValue;
-//			__int64 int64Value;
-//			double doubleValue;
-//			const char * charpValue;
-//			void * ptrValue;
-//		};
-//	};
-//----- 20.01.10 Fukushiro M. 削除終 ()-----
 
 	/// <summary>
 	/// Wrapper for return value. See the 'CallFunction' comments.
@@ -196,11 +187,7 @@ public:
 		lua_settop(m_lua_state, top);
 		m_hookFunc = nullptr;
 		m_hookUserData = nullptr;
-//----- 18.06.18 Fukushiro M. 削除始 ( )-----
-//		m_stack_top = -1;
-//		m_arg_count = 0;
-//----- 18.06.18 Fukushiro M. 削除終 ( )-----
-
+		m_is_executing = false;
 		// Initializes Stickrun.
 		luastick_init_func(m_lua_state);
 	}
@@ -259,7 +246,8 @@ public:
 
 public:	
 	/// <summary>
-	/// Loads and run the script.
+	/// <para>Loads and run the script.   </para>
+	/// <para>If you call DoString twice using same name, the first source will be disappeared.     </para>
 	/// </summary>
 	/// <param name="error_message">Returns the error message. If nullptr is specified, the error message will be recorded in the member variable 'm_error_message'.</param>
 	/// <param name="source">The source code.</param>
@@ -267,7 +255,7 @@ public:
 	/// <returns>true:Succeeded/false:failed</returns>
 	bool DoString(std::string* error_message, const std::string& source, const char* name)
 	{
-		return DoSandboxString(error_message, nullptr, source, name);
+		return DoSandboxString(error_message, "", source, name);
 	}
 
 	/// <summary>
@@ -285,35 +273,43 @@ public:
 	template<typename ... Args>
 	bool CallFunction(std::string* error_message, const char* funcname, Args&& ... args)
 	{
-		try
+		const auto is_executing = m_is_executing;
+		const AutoBackup<bool> backup(m_is_executing, true);
+		if (is_executing)
 		{
-			BeginCall();
-			PushFunc(funcname);
+			m_error_message = StickSystemErrorMessage("Application calls script from the inside of script.");
+		}
+		else
+		{
+			try
+			{
+				BeginCall();
+				PushFunc(funcname);
 
-			//   |       |
-			//   |-------|
-			//  5| arg2  |
-			//   |-------|
-			//  4| arg1  |
-			//   |-------|
-			//  3| func  |
-			//   |-------|
-			//   :       :
-			// Stickrun::pusharg(std::move(args)...);
-			m_callDataStack.back().m_arg_count += stick_pusharg(m_lua_state, this, std::move(args)...);
-			EndCall();
+				//   |       |
+				//   |-------|
+				//  5| arg2  |
+				//   |-------|
+				//  4| arg1  |
+				//   |-------|
+				//  3| func  |
+				//   |-------|
+				//   :       :
+				// Stickrun::pusharg(std::move(args)...);
+				m_callDataStack.back().m_arg_count += stick_pusharg(m_lua_state, this, std::move(args)...);
+				EndCall();
+			}
+			catch (std::exception & e)
+			{
+				m_error_message = e.what();
+				CancelCall();
+			}
+			catch (...)
+			{
+				m_error_message = StickSystemErrorMessage();
+				CancelCall();
+			}
 		}
-		catch (std::exception & e)
-		{
-			m_error_message = e.what();
-			CancelCall();
-		}
-		catch (...)
-		{
-			m_error_message = StickSystemErrorMessage();
-			CancelCall();
-		}
-
 		if (!m_error_message.empty())
 		{
 			if (error_message != nullptr)
@@ -337,108 +333,14 @@ public:
 		}
 	}
 
-//----- 20.01.10 Fukushiro M. 削除始 ()-----
-//	/// <summary>
-//	/// Calls the script function.
-//	/// e.g. When there is the following Lua function. "number, string = funcA(number)
-//	/// double A; std::string B;
-//	/// std::vector<Stickrun::Out> out {Stickrun::Out(A), Stickrun::Out(B)};
-//	/// std::vector<Stickrun::In> in {Stickrun::In(12.3)};
-//	/// stickrun.CallFunctionX(nullptr, "funcA", out, in);
-//	/// e.g. If 'funcA' is a member of the table 'tableA'
-//	/// stickrun.CallFunction(nullptr, "tableA.funcA", out, in);
-//	/// </summary>
-//	/// <param name="error_message">Returns the error message. If nullptr is specified, the error message will be recorded in the member variable 'm_error_message'.</param>
-//	/// <param name="funcname">The function name.</param>
-//	/// <param name="resultArray">Variable array to receive the return values.</param>
-//	/// <param name="argArray">Arguments.</param>
-//	/// <returns>true:Succeeded/false:failed</returns>
-//	bool CallFunctionX(
-//		std::string* error_message,
-//		const char* funcname,
-//		std::vector<Stickrun::Out> & resultArray,
-//		const std::vector<Stickrun::In> & argArray
-//		)
-//	{
-//		try
-//		{
-//			BeginCall();
-//			PushFunc(funcname);
-//			m_callDataStack.back().m_results = resultArray;
-//
-//			//   |       |
-//			//   |-------|
-//			//  5| arg2  |
-//			//   |-------|
-//			//  4| arg1  |
-//			//   |-------|
-//			//  3| func  |
-//			//   |-------|
-//			//   :       :
-//			// Stickrun::pusharg(std::move(args)...);
-//			for (const auto & arg : argArray)
-//			{
-//				switch (arg.type)
-//				{
-//				case Stickrun::In::Type::BOOLEAN:
-//					// AddInArg(arg.boolValue);
-//					::lua_pushboolean(m_lua_state, arg.boolValue ? 1 : 0);
-//					m_callDataStack.back().m_arg_count++;
-//					break;
-//				case Stickrun::In::Type::INT64:
-//					::lua_pushinteger(m_lua_state, arg.int64Value);
-//					m_callDataStack.back().m_arg_count++;
-//					break;
-//				case Stickrun::In::Type::DOUBLE:
-//					::lua_pushnumber(m_lua_state, arg.doubleValue);
-//					m_callDataStack.back().m_arg_count++;
-//					break;
-//				case Stickrun::In::Type::STRING:
-//					::lua_pushstring(m_lua_state, arg.charpValue);
-//					m_callDataStack.back().m_arg_count++;
-//					break;
-//				case Stickrun::In::Type::POINTER:
-//					::lua_pushlightuserdata(m_lua_state, arg.ptrValue);
-//					m_callDataStack.back().m_arg_count++;
-//					break;
-//				}
-//			}
-//			EndCall();
-//		}
-//		catch (std::exception & e)
-//		{
-//			m_error_message = e.what();
-//			CancelCall();
-//		}
-//		catch (...)
-//		{
-//			m_error_message = StickSystemErrorMessage();
-//			CancelCall();
-//		}
-//
-//		if (!m_error_message.empty())
-//		{
-//			if (error_message != nullptr)
-//				*error_message = m_error_message;
-//
-//			if (m_hookFunc != nullptr)
-//			{
-//				m_hookFunc(
-//					Stickrun::CallbackType::ON_ERROR,
-//					(void*)m_error_message.c_str(),
-//					m_lua_state,
-//					m_hookUserData,
-//					this
-//				);
-//			}
-//			return false;
-//		}
-//		else
-//		{
-//			return true;
-//		}
-//	}
-//----- 20.01.10 Fukushiro M. 削除終 ()-----
+	/// <summary>
+	/// Check the script is executing or not.
+	/// </summary>
+	/// <returns>true:executing/false:not executing</returns>
+	bool IsExecuting() const
+	{
+		return m_is_executing;
+	}
 
 	/// <summary>
 	/// Makes a table for start a script in a sandbox.
@@ -745,114 +647,125 @@ public:
 	}
 
 	/// <summary>
-	/// Loads and run the script.
-	/// This function executes the script in a sandbox.
+	/// <para>Loads and run the script.                                  </para>
+	/// <para>This function executes the script in a sandbox.            </para>
+	/// <para>If you call DoSandboxString twice using same name, the first source will be disappeared.     </para>
 	/// </summary>
 	/// <param name="error_message">Returns the error message. If nullptr is specified, the error message will be recorded in the member variable 'm_error_message'.</param>
 	/// <param name="sandboxenv">Environment table for the sandbox. You can get it by calling MakeSandboxEnv function.</param>
 	/// <param name="source">Script source.</param>
 	/// <param name="name">Chunk name.</param>
 	/// <returns>true:Succeeded/false:failed</returns>
-	bool DoSandboxString(std::string* error_message, const char * sandboxenv, std::string source, const std::string & name)
+	bool DoSandboxString(std::string* error_message, const std::string & sandboxenv, std::string source, const std::string & name)
 	{
-		try
+		const auto is_executing = m_is_executing;
+		const AutoBackup<bool> backup(m_is_executing, true);
+		if (is_executing)
 		{
-			// Front new line must be erased from source code. Because Lua load function trim the input source automatically.
-			// So if source was not trimed previously, source inside of Lua and inside of editor did not correspond.
-			Util::Trim(source);
-			std::string luaScript;
-			if (sandboxenv == nullptr || *sandboxenv == '\0')
+			m_error_message = StickSystemErrorMessage("Application calls script from the inside of script.");
+		}
+		else
+		{
+			try
 			{
-				luaScript = source;
-			}
-			else
-			{
-				const std::string chunkname = name.empty() ? "nil" : std::string("\"") + name + "\"";
-				luaScript = std::string() +
-					R"(local func, msg1 = load([====[)" + source + R"(]====], )" + chunkname + R"(, 't', )" + sandboxenv + R"()
+				// Front new line must be erased from source code. Because Lua load function trim the input source automatically.
+				// So if source was not trimed previously, source inside of Lua and inside of editor did not correspond.
+				Util::Trim(source);
+				std::string luaScript;
+				if (sandboxenv.empty())
+				{
+					luaScript = source;
+				}
+				else
+				{
+					const std::string chunkname = name.empty() ? "nil" : std::string("\"") + name + "\"";
+					luaScript = std::string() +
+						R"(local func, msg1 = load([====[)" + source + R"(]====], )" + chunkname + R"(, 't', )" + sandboxenv + R"()
 if not func then return msg1 end
 local status, msg2 = pcall(func)
 if not status then return msg2 end
 return ''
 )";
 
-				// i.e.
-				// if variables are:
-				//   source="_OnC11=function() return 5+ end"
-				//   chunkname="_CF"
-				// then luaScript is following.
-				//   ------------[A]---------------------
-				//   local func, msg1 = load([====[_OnC11=function() return 5+ end]====], nil, 't', _CF)
-				//   if not func then return msg1 end
-				//   local status, msg2 = pcall(func)
-				//   if not status then return msg2 end
-				//   return ''
-				//   ------------------------------------
-				//
-				// Even if the script in the variable 'source' includes syntax error,
-				// luaL_loadbufferx and EndCall succeeds.
-				// Because the 'source' script is wrapped and the wrapping script doesn't include any errors.
-			}
-			BeginCall();
+					// i.e.
+					// if variables are:
+					//   source="_OnC11=function() return 5+ end"
+					//   sandbox="_CF"
+					//   name=""
+					// then luaScript is following.
+					//   ------------[A]---------------------
+					//   local func, msg1 = load([====[_OnC11=function() return 5+ end]====], nil, 't', _CF)
+					//   if not func then return msg1 end
+					//   local status, msg2 = pcall(func)
+					//   if not status then return msg2 end
+					//   return ''
+					//   ------------------------------------
+					//
+					// Even if the script in the variable 'source' includes syntax error,
+					// luaL_loadbufferx and EndCall succeeds.
+					// Because the 'source' script is wrapped and the wrapping script doesn't include any errors.
+				}
+				BeginCall();
 
-			//                                    stack
-			//                     succeed   |              |
-			//                     +----->   |--------------|
-			//                     |        1|Lua chunk func| <-- compiled chunk of the loaded code.
-			//       stack         |         +--------------+
-			//  |              | --+
-			//  |              | --+
-			//  +--------------+   |              stack
-			//                     |         |              |
-			//                     +----->   |--------------|
-			//                      error   1|error message |
-			//                               +--------------+
-			auto result = ::luaL_loadbufferx(m_lua_state, luaScript.c_str(), luaScript.length(), name.c_str(), nullptr);
-			if (m_hookFunc != nullptr)
-			{
-				// Set the source code, even if syntax error.
-				m_hookFunc(
-					Stickrun::CallbackType::ON_LOAD_SCRIPT,
-					&std::pair<const char*, const char*>(name.c_str(), source.c_str()),
-					m_lua_state,
-					m_hookUserData,
-					this
-					);
-			}
-			if (result != 0)
-			{	//----- if error -----
-				// If the script was executed in the sandbox, the wrapping script doesn't cause any errors.
-				if (::lua_type(m_lua_state, -1) == LUA_TSTRING)
-					StickThrowScriptError(::lua_tostring(m_lua_state, -1));
+				//                                    stack
+				//                     succeed   |              |
+				//                     +----->   |--------------|
+				//                     |        1|Lua chunk func| <-- compiled chunk of the loaded code.
+				//       stack         |         +--------------+
+				//  |              | --+
+				//  |              | --+
+				//  +--------------+   |              stack
+				//                     |         |              |
+				//                     +----->   |--------------|
+				//                      error   1|error message |
+				//                               +--------------+
+				auto result = ::luaL_loadbufferx(m_lua_state, luaScript.c_str(), luaScript.length(), name.c_str(), nullptr);
+				if (m_hookFunc != nullptr)
+				{
+					// Set the source code, even if syntax error.
+					m_hookFunc(
+						Stickrun::CallbackType::ON_LOAD_SCRIPT,
+						&std::tuple<const std::string&, const std::string&, const std::string&>(sandboxenv, name, source),
+						m_lua_state,
+						m_hookUserData,
+						this
+						);
+				}
+				if (result != 0)
+				{	//----- if error -----
+					// If the script was executed in the sandbox, the wrapping script doesn't cause any errors.
+					if (::lua_type(m_lua_state, -1) == LUA_TSTRING)
+						StickThrowScriptError(::lua_tostring(m_lua_state, -1));
+					else
+						StickThrowSystemError();
+				}
+
+				if (sandboxenv.empty())
+				{	//----- When the script should be executed directly -----
+					// Execute the script.
+					EndCall();
+				}
 				else
-					StickThrowSystemError();
+				{	//----- When the script should be executed in the sandbox -----
+					std::string err_message;
+					// Set a variable to receive the error message. Because the wrapping script returns an error message.
+					AddOutArg(err_message);
+					// Execute the script.
+					EndCall();
+					if (!err_message.empty())
+						m_error_message = err_message;	// Don't throw error because 'CancelCall' is called in the catch statement.
+				}
 			}
-
-			if (sandboxenv == nullptr || *sandboxenv == '\0')
-			{	//----- When the script should be executed directly -----
-				// Execute the script.
-				EndCall();
+			catch (std::exception & e)
+			{
+				m_error_message = e.what();
+				CancelCall();
 			}
-			else
-			{	//----- When the script should be executed in the sandbox -----
-				std::string err_message;
-				// Set a variable to receive the error message. Because the wrapping script returns an error message.
-				AddOutArg(err_message);
-				// Execute the script.
-				EndCall();
-				if (!err_message.empty())
-					m_error_message = err_message;	// Don't throw error because 'CancelCall' is called in the catch statement.
+			catch (...)
+			{
+				m_error_message = StickSystemErrorMessage();
+				CancelCall();
 			}
-		}
-		catch (std::exception & e)
-		{
-			m_error_message = e.what();
-			CancelCall();
-		}
-		catch (...)
-		{
-			m_error_message = StickSystemErrorMessage();
-			CancelCall();
 		}
 
 		if (!m_error_message.empty())
@@ -892,6 +805,7 @@ protected:
 	HookFunc		m_hookFunc;
 	void*			m_hookUserData;
 	std::string		m_error_message;
+	bool			m_is_executing;
 
 	struct CallDataRec
 	{

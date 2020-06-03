@@ -35,10 +35,10 @@ public:
 	virtual void	SetWindowVisible ();
 	virtual void	SetWindowVisible (BOOL bIsVisible);
 
-// オーバーライド関数。
 public:
 	virtual BOOL	Create (UINT nIDTemplate, CWnd* pParentWnd = nullptr, BOOL isSizable = TRUE);
 
+// オーバーライド関数。
 protected:
 	virtual INT_PTR DoModal () override;
 
@@ -68,7 +68,8 @@ protected:
 	virtual void OnCancel();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-}; // class CFCDlgModelessBase.
+	virtual void OnOK();
+ }; // class CFCDlgModelessBase.
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ は前行の直前に追加の宣言を挿入します。

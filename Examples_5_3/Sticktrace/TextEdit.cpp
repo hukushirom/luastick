@@ -196,52 +196,6 @@ void CFCTextEdit::SetCurLineIndex (int lineIndex, bool selectLine)
 	{
 		SetSel(lineTopCharIndex, lineTopCharIndex + LineLength(lineTopCharIndex));
 	}
-
-#if 0
-	if (GetLineCount() == 1) return;
-
-	CPoint pt0 = PosFromChar(LineIndex(0));
-	CPoint pt1 = PosFromChar(LineIndex(1));
-	const int lineHeight = pt1.y - pt0.y;
-
-	CRect rtText;
-	GetRect(rtText);
-
-	CPoint ptTarget = PosFromChar(charIndex);
-
-	if ((ptTarget.y + lineHeight < rtText.top) || (rtText.bottom < ptTarget.y))
-	{
-		int moveY = rtText.CenterPoint().y - (ptTarget.y + lineHeight / 2);
-		int moveLine = moveY / lineHeight;
-
-		LineScroll(moveLine);
-	}
-	// １．１行しかない場合は何もしない。
-	// ２．１行目の文字位置と２行目の文字位置から行の高さを計算。
-	// ３．指定行の先頭文字の座標を取得。
-	// ４．GetRectで取得されるテキスト矩形に先頭文字が収まるようスクロール。
-	// 
-	// 
-	//     ┌──────────────────┐
-	//     │A B C D E F G H I J                 │
-	//     │                                    │
-	//     │A B C D E F G H I J                 │
-	//     │    ┌──────────┐        │
-	//     │A B C D E F G H I J       │        │
-	//     │    │                    │        │
-	//     │A B C D E F G H I J       │        │
-	//     │    │                    │        │
-	//     │A B C D E F G H I J       │        │
-	//     │    │                    │        │
-	//     │A B C D E F G H I J       │        │
-	//     │    └──────────┘        │
-	//     │A B C D E F G H I J                 │
-	//     │                                    │
-	//     │A B C D E F G H I J                 │
-	//     └──────────────────┘
-	//
-#endif//0
-
 } // CFCTextEdit::SetCurLineIndex.
 
 //********************************************************************************************
@@ -795,17 +749,6 @@ END_MESSAGE_MAP()
 BOOL CFCTextEdit::PreTranslateMessage (MSG* pMsg)
 {
 //	TRACE(L"CFCTextEdit::PreTranslateMessage %x %x %x\n", pMsg->message, pMsg->wParam, pMsg->lParam);
-
-//----- 14.09.17 Fukushiro M. 削除始 ()-----
-//	if (pMsg->message == WM_NOTIFY)
-//	{
-//		NMHDR* nm = (NMHDR*)pMsg->lParam;
-//		TRACE(L"CFCTextEdit %x %x\n", pMsg->message, nm->code);
-//	} else
-//	{
-//		TRACE(L"CFCTextEdit %x\n", pMsg->message);
-//	}
-//----- 14.09.17 Fukushiro M. 削除終 ()-----
 	// 選択範囲を取得。
 	int startCharIndex;
 	int endCharIndex;
@@ -1016,18 +959,11 @@ int CFCTextEdit::OnCreate (LPCREATESTRUCT cs)
 //********************************************************************************************
 void CFCTextEdit::OnPaint ()
 {
-//----- 14.09.22 Fukushiro M. 削除始 ()-----
-//// テスト。
-//	CRect rtClip;
-//	GetUpdateRect(rtClip);
-//	TRACE(L"Clip %d %d %d %d\n", rtClip.left, rtClip.top, rtClip.Width(), rtClip.Height());
-//----- 14.09.22 Fukushiro M. 削除終 ()-----
 	// Baseclass関数実行。
 	BASE_CLASS::OnPaint();
 	// マーカーを描画。
 	RedrawMarker();
 } // CFCTextEdit::OnPaint
-//----- 14.09.10 Fukushiro M. 追加終 ()-----
 
 //********************************************************************************************
 /*!
