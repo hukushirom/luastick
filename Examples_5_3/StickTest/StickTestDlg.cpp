@@ -903,6 +903,9 @@ tolua_endmodule(tolua_S);
 	 }
 	 m_stickrun = new Stickrun(luastick_init);
 	 m_sticktrace.SetStickrun(m_stickrun, OnScriptCallback, this, 100);
+
+	 m_stickrun->NewSession();
+
 	 std::string error_message;
 	 m_stickrun->DoString(&error_message, script1, "script1");
 

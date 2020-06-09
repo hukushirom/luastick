@@ -220,7 +220,7 @@ void FCRegBase::SaveListCtrlContents(CWnd* wnd, const wchar_t* name, int list)
 			//----- 列をループ -----
 		{
 			// アイテムのテキストを取得。
-			const std::wstring text = listCtrl->GetItemText(iL, iC);
+			const std::wstring text = (const wchar_t *)listCtrl->GetItemText(iL, iC);
 			// 文字列をつないで一つの文字列にする。
 			UtilStr::AppendString(stream, text.c_str());
 		}
@@ -530,7 +530,7 @@ void FCRegBase::SaveBinary (const BYTE* pData,
 	// レジストリキーの生成・オープンをトライ。
 	HKEY hSubKey;
 	DWORD dwDisposition;
-	if (::RegCreateKeyEx(hKey, wcpSubKey, 0L, L"", REG_OPTION_NON_VOLATILE,
+	if (::RegCreateKeyEx(hKey, wcpSubKey, 0L, (wchar_t *)L"", REG_OPTION_NON_VOLATILE,
 						KEY_ALL_ACCESS, nullptr,
 						&hSubKey, &dwDisposition) != ERROR_SUCCESS) return;
 	// バイナリデータ書き出し。
@@ -656,7 +656,7 @@ void FCRegBase::SaveDWORD(DWORD dwValue,
 	// レジストリキーの生成・オープンをトライ。
 	HKEY hSubKey;
 	DWORD dwDisposition;
-	if (::RegCreateKeyEx(hKey, wcpSubKey, 0L, _T(""), REG_OPTION_NON_VOLATILE,
+	if (::RegCreateKeyEx(hKey, wcpSubKey, 0L, (wchar_t *)_T(""), REG_OPTION_NON_VOLATILE,
 		KEY_ALL_ACCESS, nullptr,
 		&hSubKey, &dwDisposition) != ERROR_SUCCESS) return;
 	// 32ビット値書き出し。

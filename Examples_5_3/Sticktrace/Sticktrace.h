@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <tuple>
 #include <utility>
 #include <string>
 #include <codecvt>
@@ -51,9 +50,35 @@ enum class SticktraceCommand
 {
 	NONE,
 	GET_VARIABLE,
+	SET_VARIABLE,
 	RESUME,
 	STOP,
 	PROCEED_NEXT,
+};
+
+
+
+struct WatchInfo
+{
+	WatchInfo() = default;
+	WatchInfo(
+		const std::string& _icon,
+		const std::string& _indent,
+		const std::string& _name,
+		const std::string& _type,
+		const std::string& _value
+	)
+		: icon(_icon)
+		, indent(_indent)
+		, name(_name)
+		, type(_type)
+		, value(_value)
+	{}
+	std::string icon;
+	std::string indent;
+	std::string name;
+	std::string type;
+	std::string value;
 };
 
 class Stickutil
@@ -77,12 +102,16 @@ public:
 		}
 	} // SkipSpace.
 
+	static void Serialize(std::string & data, const __int32 & v)
+	{
+		data += std::to_string(v) + ' ';
+	}
+
 	static void Serialize(std::string & data, const std::string & v)
 	{
 		data += std::to_string(v.length()) + ' ';
 		data += v + ' ';
 	}
-
 	static void Serialize(std::string & data, const std::vector<std::string>& v)
 	{
 		auto strSize = std::to_string(v.size());
@@ -99,21 +128,33 @@ public:
 			Serialize(data, i);
 	}
 
-	static void Serialize(std::string & data, const std::tuple<std::string, std::string, std::string, std::string, std::string>& v)
+	static void Serialize(
+		std::string & data,
+		const WatchInfo& v
+	)
 	{
-		Serialize(data, std::get<0>(v));
-		Serialize(data, std::get<1>(v));
-		Serialize(data, std::get<2>(v));
-		Serialize(data, std::get<3>(v));
-		Serialize(data, std::get<4>(v));
+		Serialize(data, v.icon);
+		Serialize(data, v.indent);
+		Serialize(data, v.name);
+		Serialize(data, v.type);
+		Serialize(data, v.value);
 	}
 
-	static void Serialize(std::string & data, const std::vector<std::tuple<std::string, std::string, std::string, std::string, std::string>>& v)
+	static void Serialize(
+		std::string & data,
+		const std::vector<WatchInfo>& v
+	)
 	{
 		auto strSize = std::to_string(v.size());
 		data += strSize + ' ';
 		for (const auto & i : v)
 			Serialize(data, i);
+	}
+
+	static void Unserialize(__int32 & v, const char*& data)
+	{
+		v = std::strtol(data, (char**)&data, 10);
+		data++;
 	}
 
 	static void Unserialize(std::string & str, const char*& data)
@@ -148,20 +189,20 @@ public:
 		}
 	}
 
-	static void Unserialize(std::tuple<std::string, std::string, std::string, std::string, std::string>& v, const char*& data)
+	static void Unserialize(WatchInfo& v, const char*& data)
 	{
-		Unserialize(std::get<0>(v), data);
-		Unserialize(std::get<1>(v), data);
-		Unserialize(std::get<2>(v), data);
-		Unserialize(std::get<3>(v), data);
-		Unserialize(std::get<4>(v), data);
+		Unserialize(v.icon, data);
+		Unserialize(v.indent, data);
+		Unserialize(v.name, data);
+		Unserialize(v.type, data);
+		Unserialize(v.value, data);
 	}
 
-	static void Unserialize(std::vector<std::tuple<std::string, std::string, std::string, std::string, std::string>>& v, const char*& data)
+	static void Unserialize(std::vector<WatchInfo>& v, const char*& data)
 	{
 		const auto size = std::strtol(data, (char**)&data, 10);
 		data++;
-		std::tuple<std::string, std::string, std::string, std::string, std::string> elem;
+		WatchInfo elem;
 		for (int i = 0; i != size; i++)
 		{
 			Unserialize(elem, data);
@@ -196,12 +237,14 @@ private:
 	bool OnSuspended();
 	bool OnResumed();
 	bool Jump(const char * name, int lineIndex);
+	bool NewSession();
 	bool OnStart();
 	bool OnStop();
 	bool OutputError(const char* message);
 	bool OutputDebug(const char* message);
 	bool SetWatch(const std::string& data);
-	SticktraceCommand GetCommand(std::string & param, uint32_t waitMilliseconds);
+	bool SetVariableNotify(bool succeeded);
+	SticktraceCommand GetCommand(std::string & paramA, uint32_t waitMilliseconds);
 
 	void Create(unsigned int dialogId);
 	void Destroy();
@@ -211,7 +254,7 @@ private:
 
 class Sticktrace;
 
-template<typename T> struct _AnyValue
+template<typename T> struct _TrAnyValue
 {
 	enum Type
 	{
@@ -229,222 +272,212 @@ template<typename T> struct _AnyValue
 	};
 
 public:
-	class Move
-	{
-	public:
-		Move(_AnyValue & v)
-			: m_value(&v)
-		{}
-		~Move()
-		{
-			m_value = nullptr;
-		}
-	private:
-		friend struct _AnyValue;
-		_AnyValue* m_value;
-	};
+	_TrAnyValue();
 
-	_AnyValue()
-		: type(_AnyValue::NONE)
-		, num(0.0)
-	{}
-
-	_AnyValue(_AnyValue & v)
-		: _AnyValue()
+	_TrAnyValue(_TrAnyValue && v)
+		: _TrAnyValue()
 	{
 		type = v.type;
 		str = v.str;
 		num = v.num;
-		obj = Stickobject::Move(v.obj);
-		v.type = _AnyValue::NONE;
+		obj = std::move(v.obj);
+		v.type = _TrAnyValue::NONE;
 		v.str.clear();
 		v.num = 0.0;
 	}
 
-	_AnyValue(Move && v) = delete;
-
-	_AnyValue(Stickobject & o)
-		:_AnyValue()
+	_TrAnyValue(Stickobject && o)
+		:_TrAnyValue()
 	{
-		Set(o);
+		Set(std::move(o));
 	}
 
-	_AnyValue(const boolean & b)
-		: _AnyValue()
+	_TrAnyValue(const bool & b)
+		: _TrAnyValue()
 	{
-		type = _AnyValue::BOOLEAN;
+		type = _TrAnyValue::BOOLEAN;
 		num = b ? 1.0 : 0.0;
 	}
 
-	_AnyValue(const double & n)
-		: _AnyValue()
+	_TrAnyValue(const bool && b)
+		: _TrAnyValue()
 	{
-		type = _AnyValue::NUMBER;
+		type = _TrAnyValue::BOOLEAN;
+		num = b ? 1.0 : 0.0;
+	}
+
+	_TrAnyValue(const double & n)
+		: _TrAnyValue()
+	{
+		type = _TrAnyValue::NUMBER;
 		num = n;
 	}
 
-	_AnyValue(const char* s)
-		: _AnyValue()
+	_TrAnyValue(const char* s)
+		: _TrAnyValue()
 	{
-		type = _AnyValue::STRING;
+		type = _TrAnyValue::STRING;
 		str = s;
 	}
 
-	~_AnyValue()
+	~_TrAnyValue()
 	{
 		Clear();
 	}
 
 	void Clear()
 	{
-		type = _AnyValue::NONE;
+		type = _TrAnyValue::NONE;
 		str.clear();
 		num = 0.0;
-		obj.Clear();
 	}
 
-	_AnyValue & operator = (const _AnyValue && v) = delete;
-	_AnyValue & operator = (Move && v)
+	_TrAnyValue & operator = (_TrAnyValue && v)
 	{
 		Clear();
-		type = v.m_value->type;
-		str = v.m_value->str;
-		num = v.m_value->num;
-		obj = Stickobject::Move(v.m_value->obj);
-		v.m_value->type = _AnyValue::NONE;
-		v.m_value->str.clear();
-		v.m_value->num = 0.0;
+		type = v.type;
+		str = v.str;
+		num = v.num;
+		obj = std::move(v.obj);
+		v.type = _TrAnyValue::NONE;
+		v.str.clear();
+		v.num = 0.0;
 		return *this;
 	}
 
-	void Set(Stickobject & o)
+	void Set(Stickobject && o)
 	{
 		Clear();
-		obj = Stickobject::Move(o);
+		obj = std::move(o);
 		if (obj.Isnull())
 		{
-			type = _AnyValue::NONE;
+			type = _TrAnyValue::NONE;
 		}
 		else
 		{
 			switch (obj.GetType())
 			{
 			case LUA_TNONE:
-				type = _AnyValue::NONE;
+				type = _TrAnyValue::NONE;
 				break;
 			case LUA_TNIL:
-				type = _AnyValue::NIL;
+				type = _TrAnyValue::NIL;
 				break;
 			case LUA_TBOOLEAN:
-				type = _AnyValue::BOOLEAN;
+				type = _TrAnyValue::BOOLEAN;
 				num = obj.GetBoolean();
 				break;
 			case LUA_TLIGHTUSERDATA:
-				type = _AnyValue::LIGHTUSERDATA;
+				type = _TrAnyValue::LIGHTUSERDATA;
 				break;
 			case LUA_TNUMBER:
-				type = _AnyValue::NUMBER;
+				type = _TrAnyValue::NUMBER;
 				num = obj.GetNumber();
 				break;
 			case LUA_TSTRING:
-				type = _AnyValue::STRING;
+				type = _TrAnyValue::STRING;
 				str = obj.GetString();
 				break;
 			case LUA_TTABLE:
-				type = _AnyValue::TABLE;
+				type = _TrAnyValue::TABLE;
 				break;
 			case LUA_TFUNCTION:
-				type = _AnyValue::FUNCTION;
+				type = _TrAnyValue::FUNCTION;
 				break;
 			case LUA_TUSERDATA:
-				type = _AnyValue::USERDATA;
+				type = _TrAnyValue::USERDATA;
 				break;
 			case LUA_TTHREAD:
-				type = _AnyValue::THREAD;
+				type = _TrAnyValue::THREAD;
 				break;
 			default:
-				type = _AnyValue::NONE;
+				type = _TrAnyValue::NONE;
 				break;
 			}
 		}
 	} // Set(Stickobject & o)
 
-	void Set(const boolean & b)
+	void Set(const bool & b)
 	{
 		Clear();
-		type = _AnyValue::BOOLEAN;
+		type = _TrAnyValue::BOOLEAN;
 		num = b ? 1.0 : 0.0;
+	}
+
+	void Set(const bool && b)
+	{
+		Set((const bool &)b);
 	}
 
 	void Set(const double & n)
 	{
 		Clear();
-		type = _AnyValue::NUMBER;
+		type = _TrAnyValue::NUMBER;
 		num = n;
 	}
 
 	void Set(const char* s)
 	{
 		Clear();
-		type = _AnyValue::STRING;
+		type = _TrAnyValue::STRING;
 		str = s;
 	}
 
 	void SetNil()
 	{
 		Clear();
-		type = _AnyValue::NIL;
+		type = _TrAnyValue::NIL;
 	}
 
-	void Add(const _AnyValue& v)
+	void Add(const _TrAnyValue& v)
 	{
-		if (type == _AnyValue::NUMBER && v.type == _AnyValue::NUMBER)
+		if (type == _TrAnyValue::NUMBER && v.type == _TrAnyValue::NUMBER)
 			num += v.num;
 		else
-			throw std::runtime_error("error!");
+			throw std::runtime_error("Try to add non number.");
 	}
 
-	void Subtract(const _AnyValue& v)
+	void Subtract(const _TrAnyValue& v)
 	{
-		if (type == _AnyValue::NUMBER && v.type == _AnyValue::NUMBER)
+		if (type == _TrAnyValue::NUMBER && v.type == _TrAnyValue::NUMBER)
 			num -= v.num;
 		else
-			throw std::runtime_error("error!");
+			throw std::runtime_error("Try to subtract non number.");
 	}
 
-	void Multiple(const _AnyValue& v)
+	void Multiple(const _TrAnyValue& v)
 	{
-		if (type == _AnyValue::NUMBER && v.type == _AnyValue::NUMBER)
+		if (type == _TrAnyValue::NUMBER && v.type == _TrAnyValue::NUMBER)
 			num *= v.num;
 		else
-			throw std::runtime_error("error!");
+			throw std::runtime_error("Try to multiple non number.");
 	}
 
-	void Divide(const _AnyValue& v)
+	void Divide(const _TrAnyValue& v)
 	{
-		if (type == _AnyValue::NUMBER && v.type == _AnyValue::NUMBER)
+		if (type == _TrAnyValue::NUMBER && v.type == _TrAnyValue::NUMBER)
 			num /= v.num;
 		else
-			throw std::runtime_error("error!");
+			throw std::runtime_error("Try to divide non number.");
 	}
 
-	void Remaind(const _AnyValue& v)
+	void Remain(const _TrAnyValue& v)
 	{
-		if (type == _AnyValue::NUMBER && v.type == _AnyValue::NUMBER)
+		if (type == _TrAnyValue::NUMBER && v.type == _TrAnyValue::NUMBER)
 			num = num - floor(num / v.num) * v.num;
 		else
-			throw std::runtime_error("error!");
+			throw std::runtime_error("Try to calculate the remain of non number.");
 	}
 
-	void Power(const _AnyValue& v)
+	void Power(const _TrAnyValue& v)
 	{
-		if (type == _AnyValue::NUMBER && v.type == _AnyValue::NUMBER)
+		if (type == _TrAnyValue::NUMBER && v.type == _TrAnyValue::NUMBER)
 			num = std::pow(num, v.num);
 		else
-			throw std::runtime_error("error!");
+			throw std::runtime_error("Try to calculate the power of non number.");
 	}
 
-	void Connect(const _AnyValue & v)
+	void Connect(const _TrAnyValue & v)
 	{
 		ToString();
 		// v.ToString();
@@ -453,37 +486,35 @@ public:
 
 	void ToString()
 	{
-		if (type == _AnyValue::NUMBER)
+		if (type == _TrAnyValue::NUMBER)
 		{
-			type = _AnyValue::STRING;
+			type = _TrAnyValue::STRING;
 			char buf[20];
 			sprintf_s(buf, "%.15g", num);
 			str = buf;
 		}
-		else if (type != _AnyValue::STRING)
+		else if (type != _TrAnyValue::STRING)
 		{
-			throw std::runtime_error("error!");
+			throw std::runtime_error("String conversion was failed.");
 		}
 	}
-
-	// WString GetValueAsWString() const;
 
 	std::string GetValueAsString() const
 	{
 		std::string astr;
 		switch (type)
 		{
-		case _AnyValue::NUMBER:
+		case _TrAnyValue::NUMBER:
 		{
 			char buff[30];
 			sprintf_s(buff, "%.15g", num);
 			astr = buff;
 			break;
 		}
-		case _AnyValue::BOOLEAN:
+		case _TrAnyValue::BOOLEAN:
 			astr = (num == 0.0) ? "false" : "true";
 			break;
-		case _AnyValue::STRING:
+		case _TrAnyValue::STRING:
 			astr = std::string("\"") + str + "\"";
 			break;
 		}
@@ -494,31 +525,49 @@ public:
 	{
 		switch (type)
 		{
-		case _AnyValue::NIL:
+		case _TrAnyValue::NIL:
 			return "nil";
-		case _AnyValue::BOOLEAN:
+		case _TrAnyValue::BOOLEAN:
 			return "boolean";
-		case _AnyValue::LIGHTUSERDATA:
+		case _TrAnyValue::LIGHTUSERDATA:
 			return "lightuserdata";
-		case _AnyValue::NUMBER:
+		case _TrAnyValue::NUMBER:
 			return "number";
-		case _AnyValue::STRING:
+		case _TrAnyValue::STRING:
 			return "string";
-		case _AnyValue::TABLE:
+		case _TrAnyValue::TABLE:
 			return "table";
-		case _AnyValue::FUNCTION:
+		case _TrAnyValue::FUNCTION:
 			return "function";
-		case _AnyValue::USERDATA:
+		case _TrAnyValue::USERDATA:
 			return "userdata";
-		case _AnyValue::THREAD:
+		case _TrAnyValue::THREAD:
 			return "thread";
-		case _AnyValue::TOKEN:
+		case _TrAnyValue::TOKEN:
 			return "word";
 		default:
 			return "";
 		}
 	}
-	
+
+	Sticklib::AnyValue ToSticklibAnyValue() const
+	{
+		switch (type)
+		{
+		case _TrAnyValue::NIL:
+			return Sticklib::AnyValue();
+		case _TrAnyValue::BOOLEAN:
+			return Sticklib::AnyValue((num == 0.0) ? false : true);
+		case _TrAnyValue::NUMBER:
+			return Sticklib::AnyValue(num);
+		case _TrAnyValue::STRING:
+		case _TrAnyValue::TOKEN:
+			return Sticklib::AnyValue(str.c_str());
+		default:
+			throw std::runtime_error("System error : AnyValue::ToSticklibAnyValue : Cannot convert to Sticklib::AnyValue.");
+		}
+	}
+
 	void BeginEnum()
 	{
 		obj.BeginEnum();
@@ -529,7 +578,7 @@ public:
 		obj.EndEnum();
 	}
 
-	bool NextEnum(_AnyValue& key, _AnyValue& value)
+	bool NextEnum(_TrAnyValue& key, _TrAnyValue& value)
 	{
 		return obj.NextEnum(key, value);
 	}
@@ -538,25 +587,27 @@ public:
 	std::string str;
 	double num;
 	Stickobject obj;
-}; // struct _AnyValue
+}; // struct _TrAnyValue
 
 class Stickobject
 {
-public:
-	class Move
-	{
-	public:
-		Move(Stickobject & v)
-			: m_value(&v)
-		{}
-		~Move()
-		{
-			m_value = nullptr;
-		}
-	private:
-		friend class Stickobject;
-		Stickobject* m_value;
-	};
+//----- 20.06.04  削除始 ()-----
+//public:
+//	class Move
+//	{
+//	public:
+//		Move(Stickobject & v)
+//			: m_value(&v)
+//		{}
+//		~Move()
+//		{
+//			m_value = nullptr;
+//		}
+//	private:
+//		friend class Stickobject;
+//		Stickobject* m_value;
+//	};
+//----- 20.06.04  削除終 ()-----
 
 public:
 	Stickobject()
@@ -569,6 +620,9 @@ public:
 	{
 		m_lua_state = L;
 		m_type = ::lua_type(m_lua_state, -1);
+
+		//
+		// Move the top value of the stack to the registry.
 		//
 		//        stack                   stack             registry
 		//     |          |            |          |      +-------+--------+
@@ -582,7 +636,7 @@ public:
 		m_ref = ::luaL_ref(m_lua_state, LUA_REGISTRYINDEX);
 	}
 
-	Stickobject(Stickobject & v)
+	Stickobject(Stickobject && v)
 		: Stickobject()
 	{
 		m_lua_state = v.m_lua_state;
@@ -593,7 +647,21 @@ public:
 		v.m_type = -1;
 	}
 
-	Stickobject(Move && v) = delete;
+
+	Stickobject(const Stickobject & v) = delete;
+
+//----- 20.06.04  削除始 ()-----
+//	Stickobject(const Stickobject & v)
+//		: Stickobject()
+//	{
+//		m_lua_state = v.m_lua_state;
+//		m_ref = v.m_ref;
+//		m_type = v.m_type;
+//	}
+//----- 20.06.04  削除終 ()-----
+
+	// 20.06.04  1行削除 ()
+//	Stickobject(Move && v) = delete;
 	/*
 		: Stickobject()
 	{
@@ -612,6 +680,17 @@ public:
 	{
 		if (m_lua_state != nullptr)
 		{
+			//
+			// Remove the value from the registry.
+			//
+			//      registry
+			//   +-------+--------+
+			//   | Key   | Value  |
+			//   |-------|--------|
+			//   |       | valueX | <- m_ref  Remove.
+			//   +-------+--------+
+			//   :       :        :
+			//
 			::luaL_unref(m_lua_state, LUA_REGISTRYINDEX, m_ref);
 			m_lua_state = nullptr;
 			m_ref = -1;
@@ -659,7 +738,7 @@ public:
 		return m_type;
 	}
 	
-	Stickobject GetTableValue(const _AnyValue<void>& name)
+	Stickobject GetTableValue(const _TrAnyValue<void>& name)
 	{
 		if (m_type != LUA_TTABLE)
 			return Stickobject();
@@ -687,18 +766,18 @@ public:
 		//                            :       :        :
 		switch (name.type)
 		{
-		case _AnyValue<void>::NUMBER:
+		case _TrAnyValue<void>::NUMBER:
 			::lua_pushnumber(m_lua_state, name.num);
 			break;
-		case _AnyValue<void>::STRING:
-		case _AnyValue<void>::TOKEN:
+		case _TrAnyValue<void>::STRING:
+		case _TrAnyValue<void>::TOKEN:
 			::lua_pushstring(m_lua_state, name.str.c_str());
 			break;
-		case _AnyValue<void>::BOOLEAN:
+		case _TrAnyValue<void>::BOOLEAN:
 			::lua_pushboolean(m_lua_state, name.num ? true : false);
 			break;
 		default:
-			throw std::runtime_error("error!");
+			throw std::runtime_error("System error : GetTableValue");
 		}
 
 		//        stack         +------------+
@@ -724,6 +803,58 @@ public:
 		lua_remove(m_lua_state, -2);
 
 		return Stickobject(m_lua_state);
+	}
+
+	_TrAnyValue<void> SetTableValue(const _TrAnyValue<void>& name, const _TrAnyValue<void>& value)
+	{
+		if (m_type != LUA_TTABLE)
+			throw std::runtime_error("System error : SetTableValue-1");
+
+		//       stack           registry
+		//    +---------+       +--------+
+		//  -1| tableX  |<---+  | Value  |
+		//    |---------|    |  |--------|
+		//    :         :    +--| tableX | <- m_ref
+		//                      |--------|
+		//                      :        :
+		::lua_rawgeti(m_lua_state, LUA_REGISTRYINDEX, m_ref);
+
+		auto anyName = name.ToSticklibAnyValue();
+		auto anyValue = value.ToSticklibAnyValue();
+
+		//       stack
+		//    +---------+
+		//  -1| anyName |
+		//    |---------|      +---------+---------+
+		//  -2| tableX  |----->| Key     | Value   |
+		//    |---------|      +---------+---------+
+		//    :         :      :         :         :
+		Sticklib::push_lvalue(m_lua_state, anyName);
+
+		//       stack
+		//    +---------+
+		//  -1| anyValue|
+		//    |---------|
+		//  -2| anyName |
+		//    |---------|      +---------+---------+
+		//  -3| tableX  |----->| Key     | Value   |
+		//    |---------|      +---------+---------+
+		//    :         :      :         :         :
+		Sticklib::push_lvalue(m_lua_state, anyValue);
+
+		//       stack
+		//    +---------+      +---------+---------+
+		//  -1| tableX  |----->| Key     | Value   |
+		//    |---------|      +---------+---------+
+		//    :         :      | anyName | anyValue|
+		//                     |---------|---------|
+		//                     :         :         :
+		lua_settable(m_lua_state, -3);
+
+		// Erase tableX from stack.
+		lua_pop(m_lua_state, 1);
+
+		return _TrAnyValue<void>(true);
 	}
 
 	void BeginEnum()
@@ -774,7 +905,7 @@ public:
 		::lua_pop(m_lua_state, 2);
 	}
 
-	bool NextEnum(_AnyValue<void>& key, _AnyValue<void>& value)
+	bool NextEnum(_TrAnyValue<void>& key, _TrAnyValue<void>& value)
 	{
 		if (m_type != LUA_TTABLE) return false;
 
@@ -873,28 +1004,51 @@ public:
 		return true;
 	}
 
+	Stickobject & operator = (const Stickobject & v) = delete;
 
-	Stickobject & operator = (const Stickobject && v) = delete;
-	Stickobject & operator = (Move && v)
+	Stickobject & operator = (Stickobject && v)
 	{
 		Clear();
-		m_lua_state = v.m_value->m_lua_state;
-		m_ref = v.m_value->m_ref;
-		m_type = v.m_value->m_type;
-		v.m_value->m_lua_state = nullptr;
-		v.m_value->m_ref = -1;
-		v.m_value->m_type = -1;
+		m_lua_state = v.m_lua_state;
+		m_ref = v.m_ref;
+		m_type = v.m_type;
+		v.m_lua_state = nullptr;
+		v.m_ref = -1;
+		v.m_type = -1;
 		return *this;
 	}
 
+//----- 20.06.04  削除始 ()-----
+//	Stickobject & operator = (Move && v)
+//	{
+//		Clear();
+//		m_lua_state = v.m_value->m_lua_state;
+//		m_ref = v.m_value->m_ref;
+//		m_type = v.m_value->m_type;
+//		v.m_value->m_lua_state = nullptr;
+//		v.m_value->m_ref = -1;
+//		v.m_value->m_type = -1;
+//		return *this;
+//	}
+//----- 20.06.04  削除終 ()-----
+
 private:
-	friend class Move;
+// 20.06.04  1行削除 ()
+//	friend class Move;
 	lua_State* m_lua_state;
 	int m_ref;
 	int m_type;
 }; // class Stickobject.
 
-using AnyValue = _AnyValue<void>;
+template<typename T>
+_TrAnyValue<T>::_TrAnyValue()
+	: type(_TrAnyValue::NONE)
+	, num(0.0)
+	, obj(Stickobject())
+{}
+
+
+using TrAnyValue = _TrAnyValue<void>;
 
 class Stickvar
 {
@@ -952,7 +1106,7 @@ public:
 		case TT_OPE_CONNECT:
 			return 4;
 		}
-		throw std::runtime_error("error!");
+		throw std::runtime_error("System error : LevelOf");
 	} // LevelOf.
 	
 	Stickobject GetLocalVariable(const std::string & varname)
@@ -964,14 +1118,15 @@ public:
 			{
 				// lua_getlocal (lua_State *L, lua_Debug *ar, int n)
 				//
-				// ┌───────┐
-				// │ローカル変数値│<- nで指定されたローカル変数を積む
-				// ├───────┤
-				// │              │
-				// ├───────┤
-				// │              │
-				// ├───────┤
-				// ：              ：
+				//       Stack
+				// +---------------+
+				// | variable value| <- Push the value of the local variable specified by n.
+				// |---------------|
+				// |               |
+				// |---------------|
+				// |               |
+				// |---------------|
+				// :               :
 				//
 				const char* name = ::lua_getlocal(m_lua_state, m_lua_debug, id);
 				if (name == nullptr) break;
@@ -981,16 +1136,15 @@ public:
 					m_localVariableNameToId[name] = id;
 				// lua_pop (lua_State *L, int n)
 				//
-				// ┌───────┐─┬
-				// │//////////////│  │
-				// ├───────┤  │
-				// │//////////////│  │ <- n個の要素を取り除く（n=3の場合）
-				// ├───────┤  │
-				// │//////////////│  │
-				// ├───────┤─┴
-				// │              │
-				// ├───────┤
-				// ：              ：
+				//       Stack
+				// +---------------+  ---
+				// | variable value|    |<- Remove n items (e.g. n=2)
+				// |---------------|    |
+				// |               |    |
+				// |---------------|  ---
+				// |               |
+				// |---------------|
+				// :               :
 				//
 				::lua_pop(m_lua_state, 1);	// lua_getlocalで積んだ変数を削除
 			}
@@ -1000,14 +1154,15 @@ public:
 		{
 			// lua_getlocal (lua_State *L, lua_Debug *ar, int n)
 			//
-			// ┌───────┐
-			// │ローカル変数値│<- nで指定されたローカル変数を積む
-			// ├───────┤
-			// │              │
-			// ├───────┤
-			// │              │
-			// ├───────┤
-			// ：              ：
+			//       Stack
+			// +---------------+
+			// | variable value| <- Push the value of the local variable specified by n.
+			// |---------------|
+			// |               |
+			// |---------------|
+			// |               |
+			// |---------------|
+			// :               :
 			//
 			::lua_getlocal(m_lua_state, m_lua_debug, i->second);
 			return Stickobject(m_lua_state);
@@ -1018,16 +1173,79 @@ public:
 		}
 	} // GetLocalVariable.
 
-	Stickobject GetGlobalVariable(const char* varname)
+	TrAnyValue SetLocalVariable(const std::string & varname, const TrAnyValue & newValue)
+	{
+		if (m_isFirstLocal)
+		{
+			m_isFirstLocal = false;
+			for (int id = 1;; id++)
+			{
+				// lua_getlocal (lua_State *L, lua_Debug *ar, int n)
+				//
+				//       Stack
+				// +---------------+
+				// | variable value| <- Push the value of the local variable specified by n.
+				// |---------------|
+				// |               |
+				// |---------------|
+				// |               |
+				// |---------------|
+				// :               :
+				//
+				const char* name = ::lua_getlocal(m_lua_state, m_lua_debug, id);
+				if (name == nullptr) break;
+				// Records local variable name to id.
+				// Two or more same name variable can be exist, so override the name to id hash.
+				if (strcmp(name, "(*temporary)") != 0)
+					m_localVariableNameToId[name] = id;
+				// lua_pop (lua_State *L, int n)
+				//
+				//       Stack
+				// +---------------+  ---
+				// | variable value|    |<- Remove n items (e.g. n=2)
+				// |---------------|    |
+				// |               |    |
+				// |---------------|  ---
+				// |               |
+				// |---------------|
+				// :               :
+				//
+				::lua_pop(m_lua_state, 1);	// lua_getlocalで積んだ変数を削除
+			}
+		}
+		const auto i = m_localVariableNameToId.find(varname);
+		if (i != m_localVariableNameToId.end())
+		{
+			auto anyValue = newValue.ToSticklibAnyValue();
+
+			//       stack
+			//    +---------+
+			//  -1| anyValue|
+			//    |---------|
+			//    :         :
+			Sticklib::push_lvalue(m_lua_state, anyValue);
+
+			// Assign the value at the top of the stack to the variable and pop the top of the stack.
+			//
+			::lua_setlocal(m_lua_state, m_lua_debug, i->second);
+			return TrAnyValue(true);
+		}
+		else
+		{
+			return TrAnyValue(false);
+		}
+	} // SetLocalVariable.
+
+	Stickobject GetGlobalVariable(const std::string & varname)
 	{
 		if (m_isFirstGlobal)
 		{
 			m_isFirstGlobal = false;
-			m_ENV = Stickobject::Move(GetLocalVariable("_ENV"));
+			m_ENV = std::move(GetLocalVariable("_ENV"));
 			if (m_ENV.Isnull())
 			{	//----- if "_ENV" is not defined as the local variable -----
 				lua_pushglobaltable(m_lua_state);
-				m_ENV = Stickobject::Move(Stickobject(m_lua_state));
+				m_ENV = std::move(Stickobject(m_lua_state));
 			}
 			else if (m_ENV.GetType() != LUA_TTABLE)
 			{	//----- if "_ENV" is defined as the local variable and its type is not parentTable -----
@@ -1036,16 +1254,45 @@ public:
 		}
 		if (m_ENV.Isnull())
 			return Stickobject();
-		return m_ENV.GetTableValue(AnyValue(varname));
+		return m_ENV.GetTableValue(TrAnyValue(varname.c_str()));
 	}
 
-	Stickobject GetVariableObject(const std::string & varname)
+	TrAnyValue SetGlobalVariable(const std::string & varname, const TrAnyValue & newValue)
 	{
-		auto value = GetLocalVariable(varname);
-		if (value.Isnull())
-			value = Stickobject::Move(GetGlobalVariable(varname.c_str()));
-		return value;
+		if (m_isFirstGlobal)
+		{
+			m_isFirstGlobal = false;
+			m_ENV = std::move(GetLocalVariable("_ENV"));
+			if (m_ENV.Isnull())
+			{	//----- if "_ENV" is not defined as the local variable -----
+				lua_pushglobaltable(m_lua_state);
+				m_ENV = std::move(Stickobject(m_lua_state));
+			}
+			else if (m_ENV.GetType() != LUA_TTABLE)
+			{	//----- if "_ENV" is defined as the local variable and its type is not parentTable -----
+				m_ENV.Clear();
+			}
+		}
+		if (m_ENV.Isnull())
+			return TrAnyValue(false);
+		return m_ENV.SetTableValue(TrAnyValue(varname.c_str()), newValue);
 	}
+
+//----- 20.06.04  変更前 ()-----
+//	Stickobject GetVariableObject(bool is_local, const std::string & varname)
+//	{
+//		auto && value = GetLocalVariable(varname);
+//		if (value.Isnull())
+//		{
+//			if (sandbox.empty())
+//				value = GetGlobalVariable(varname);
+//			else
+//				value = GetGlobalVariable(sandbox);
+//		}
+//		return std::move(value);
+//	}
+//----- 20.06.04  変更後 ()-----
+//----- 20.06.04  変更終 ()-----
 		
 	/// <summary>
 	/// Extracts one token.
@@ -1093,10 +1340,11 @@ public:
 		{
 			cpTokenBegin = cpFormula;
 			const char terminator = cpFormula[0];
-			boolean isEsc = false;
+			bool isEsc = false;
 			for (cpFormula++;; cpFormula++)
 			{
-				if (cpFormula[0] == '\0') throw std::runtime_error("error!");
+				if (cpFormula[0] == '\0')
+					throw std::runtime_error("System error : ExtractToken-1");
 				if (isEsc)
 				{
 					isEsc = false;
@@ -1156,27 +1404,29 @@ public:
 				return TT_PARE_RIGHT;
 			}
 		}
-		throw std::runtime_error("error!");
+		throw std::runtime_error("System error : ExtractToken-2");
 	} // ExtractToken.
 
-	/*
-	Stickobject GetTableValue(const AnyValue& name, Stickobject const& obj) const
-	{
-		if (obj.GetType() != LUA_TTABLE) throw std::runtime_error("error!");
-		switch (name.type)
-		{
-		case AnyValue::NUMBER:
-			return obj[name.num];
-		case AnyValue::STRING:
-		case AnyValue::TOKEN:
-			return obj[name.v];
-		case AnyValue::BOOLEAN:
-			return obj[name.num ? true : false];
-		default:
-			throw std::runtime_error("error!");
-		}
-	} // FCDdLua::GetTableValue
-	*/
+//----- 20.06.04  削除始 ()-----
+//	/*
+//	Stickobject GetTableValue(const TrAnyValue& name, Stickobject const& obj) const
+//	{
+//		if (obj.GetType() != LUA_TTABLE) throw std::runtime_error("error!");
+//		switch (name.type)
+//		{
+//		case TrAnyValue::NUMBER:
+//			return obj[name.num];
+//		case TrAnyValue::STRING:
+//		case TrAnyValue::TOKEN:
+//			return obj[name.v];
+//		case TrAnyValue::BOOLEAN:
+//			return obj[name.num ? true : false];
+//		default:
+//			throw std::runtime_error("error!");
+//		}
+//	} // FCDdLua::GetTableValue
+//	*/
+//----- 20.06.04  削除終 ()-----
 		
 	/// <summary>
 	/// Gets the token value.
@@ -1187,15 +1437,15 @@ public:
 	/// <param name="cpTokenBegin">The cp token begin.</param>
 	/// <param name="cpTokenEnd">The cp token end.</param>
 	/// <returns></returns>
-	AnyValue GetTokenValue(TokenType tokenType, const char* cpTokenBegin, const char* cpTokenEnd) const
+	TrAnyValue GetTokenValue(TokenType tokenType, const char* cpTokenBegin, const char* cpTokenEnd) const
 	{
-		AnyValue value;
+		TrAnyValue value;
 		switch (tokenType)
 		{
 		case TT_STRING:
 		{
-			value.type = AnyValue::STRING;
-			boolean isEsc = false;
+			value.type = TrAnyValue::STRING;
+			bool isEsc = false;
 			for (const char* cp = cpTokenBegin + 1; cp != cpTokenEnd - 1; cp++)
 			{
 				if (isEsc)
@@ -1228,39 +1478,39 @@ public:
 			break;
 		}
 		case TT_NUMBER:
-			value.type = AnyValue::NUMBER;
-			value.num = strtod(cpTokenBegin, NULL);
+			value.type = TrAnyValue::NUMBER;
+			value.num = strtod(cpTokenBegin, nullptr);
 			break;
 		case TT_TOKEN:
 			value.str.assign(cpTokenBegin, cpTokenEnd);
 			if (value.str == "nil")
 			{
-				value.type = AnyValue::NIL;
+				value.type = TrAnyValue::NIL;
 			}
 			else
 				if (value.str == "true")
 				{
-					value.type = AnyValue::BOOLEAN;
+					value.type = TrAnyValue::BOOLEAN;
 					value.num = 1.0;
 				}
 				else
 					if (value.str == "false")
 					{
-						value.type = AnyValue::BOOLEAN;
+						value.type = TrAnyValue::BOOLEAN;
 						value.num = 0.0;
 					}
 					else
 					{
-						value.type = AnyValue::TOKEN;
+						value.type = TrAnyValue::TOKEN;
 					}
 			break;
 		default:
-			throw std::runtime_error("error!");
+			throw std::runtime_error("System error : GetTokenValue");
 		}
 		return value;
 	} // GetTokenValue
 
-	AnyValue GetAtomValue(const char*& str, TokenType terminator)
+	TrAnyValue GetSetAtomValue(bool is_set, bool is_local, const char*& str, TokenType terminator, const TrAnyValue & newValue)
 	{
 		const char* cpTokenBegin;
 		const char* cpTokenEnd;
@@ -1268,19 +1518,20 @@ public:
 		switch (tokenType)
 		{
 		case TT_NONE:
-			return AnyValue();
+			return TrAnyValue();
 		case TT_OPE_SUBTRACT:	// -:
 		{
 			str = cpTokenEnd;
-			AnyValue value = GetFormulaValue(str, terminator, LevelOf(TT_OPE_NEGATIVE));
-			if (value.type != AnyValue::NUMBER) throw std::runtime_error("error!");
+			auto value = GetSetFormulaValue(is_set, is_local, str, terminator, LevelOf(TT_OPE_NEGATIVE), newValue);
+			if (value.type != TrAnyValue::NUMBER)
+				throw std::runtime_error("System error : GetSetAtomValue-1");
 			value.num = -value.num;
 			return value;
 		}
 		case TT_PARE_LEFT:	// (:
 		{
 			str = cpTokenEnd;
-			AnyValue value = GetFormulaValue(str, TT_PARE_RIGHT, 0);
+			auto value = GetSetFormulaValue(is_set, is_local, str, TT_PARE_RIGHT, 0, newValue);
 			// 終端を送る。
 			tokenType = ExtractToken(cpTokenBegin, cpTokenEnd, str);
 			if (tokenType == TT_PARE_RIGHT) str = cpTokenEnd;
@@ -1289,21 +1540,54 @@ public:
 		default:
 		{
 			str = cpTokenEnd;
-			AnyValue value = GetTokenValue(tokenType, cpTokenBegin, cpTokenEnd);
-			if (value.type == AnyValue::STRING) return value;
-			if (value.type == AnyValue::NUMBER) return value;
-			if (value.type == AnyValue::BOOLEAN) return value;
-			if (value.type == AnyValue::TOKEN)
+			auto value = GetTokenValue(tokenType, cpTokenBegin, cpTokenEnd);
+			switch (value.type)
 			{
-				auto obj = GetVariableObject(value.str.c_str());
-				return GetAtomValueX(str, terminator, obj);
+			case TrAnyValue::STRING:
+			case TrAnyValue::NUMBER:
+			case TrAnyValue::BOOLEAN:
+				return value;
+			case TrAnyValue::TOKEN:
+//----- 20.06.04  変更前 ()-----
+//			{
+//				auto && obj = GetVariableObject(is_local, value.str);
+//				return GetSetAtomValueX(is_local, str, terminator, std::move(obj));
+//			}
+//----- 20.06.04  変更後 ()-----
+				if (is_local)
+				{
+					if (is_set && str[0] == '\0')
+					{
+						return SetLocalVariable(value.str, newValue);
+					}
+					else
+					{
+						auto && obj = GetLocalVariable(value.str);
+						return GetSetAtomValueX(is_set, is_local, str, terminator, std::move(obj), newValue);
+					}
+				}
+				else
+				{
+					if (is_set && str[0] == '\0')
+					{
+						return SetGlobalVariable(value.str, newValue);
+					}
+					else
+					{
+						auto && obj = GetGlobalVariable(value.str);
+						return GetSetAtomValueX(is_set, is_local, str, terminator, std::move(obj), newValue);
+					}
+				}
+				//----- 20.06.04  変更終 ()-----
+			default:
+				throw std::runtime_error("System error : GetSetAtomValue-2");
+				break;
 			}
-			throw std::runtime_error("error!");
 		}
 		}
-	} // GetAtomValue
+	} // GetSetAtomValue
 
-	AnyValue GetAtomValueX(const char*& str, TokenType terminator, Stickobject & obj)
+	TrAnyValue GetSetAtomValueX(bool is_set, bool is_local, const char*& str, TokenType terminator, Stickobject && obj, const TrAnyValue & newValue)
 	{
 		const char* cpTokenBegin;
 		const char* cpTokenEnd;
@@ -1315,42 +1599,56 @@ public:
 			str = cpTokenEnd;
 			tokenType = ExtractToken(cpTokenBegin, cpTokenEnd, str);
 			str = cpTokenEnd;
-			AnyValue name = GetTokenValue(tokenType, cpTokenBegin, cpTokenEnd);
-			if (name.type != AnyValue::TOKEN) throw std::runtime_error("error!");
-			Stickobject obj1 = obj.GetTableValue(name);
-			return GetAtomValueX(str, terminator, obj1);
+			auto name = GetTokenValue(tokenType, cpTokenBegin, cpTokenEnd);
+			if (name.type != TrAnyValue::TOKEN)
+				throw std::runtime_error("The token after the period is not a word.");
+			if (is_set && str[0] == '\0')
+			{
+				return obj.SetTableValue(name, newValue);
+			}
+			else
+			{
+				auto && obj1 = obj.GetTableValue(name);
+				return GetSetAtomValueX(is_set, is_local, str, terminator, std::move(obj1), newValue);
+			}
 		}
 		case TT_ARRAY_LEFT:	// [
 		{
 			str = cpTokenEnd;
-			AnyValue value = GetFormulaValue(str, TT_ARRAY_RIGHT, 0);
+			auto value = GetSetFormulaValue(is_set, is_local, str, TT_ARRAY_RIGHT, 0, newValue);
 			// 終端を送る。
 			tokenType = ExtractToken(cpTokenBegin, cpTokenEnd, str);
 			if (tokenType == TT_ARRAY_RIGHT) str = cpTokenEnd;
-			Stickobject obj1 = obj.GetTableValue(value);
-			return GetAtomValueX(str, terminator, obj1);
+//----- 20.06.04  追加始 ()-----
+			if (is_set && str[0] == '\0')
+			{
+				return obj.SetTableValue(value, newValue);
+			}
+//----- 20.06.04  追加終 ()-----
+			auto && obj1 = obj.GetTableValue(value);
+			return GetSetAtomValueX(is_set, is_local, str, terminator, std::move(obj1), newValue);
 		}
 		default:
-			return AnyValue(obj);
+			return TrAnyValue(std::move(obj));
 		}
-	} // GetAtomValueX.
+	} // GetSetAtomValueX.
 
 	/// <summary>
 	/// Analyzes the formula and calculates the result of it.
 	/// formulaの例：" a [ b - 5 ] + 4"
 	/// terminatorは式終端を表す文字。例えば配列要素（[]の中の式）を解析する場合は']'が指定される。
 	/// opeLevelで指定される演算子レベル以下の演算子が登場した時点で式の解析は中断し、そこまでの値を返す。
-	/// 例：f = "a + b * c * d / e - f" を計算する場合、GetFormulaValue(f, '\0', 0)で計算を開始する。
-	/// "+"の右側を本関数で再帰的に評価するが、このときGetFormulaValue(f, '\0', LevelOf('+'))を指定する。
+	/// 例：f = "a + b * c * d / e - f" を計算する場合、GetSetFormulaValue(f, '\0', 0)で計算を開始する。
+	/// "+"の右側を本関数で再帰的に評価するが、このときGetSetFormulaValue(f, '\0', LevelOf('+'))を指定する。
 	/// これにより、"+"より優先度の高い演算子を含む"b * c * d / e"までの値が取得される。
 	/// </summary>
 	/// <param name="formula">The formula. Returns the terminated position.</param>
 	/// <param name="terminator">The terminator.</param>
 	/// <param name="opeLevel">The operator's level.</param>
 	/// <returns></returns>
-	AnyValue GetFormulaValue(const char*& formula, TokenType terminator, int opeLevel)
+	TrAnyValue GetSetFormulaValue(bool is_set, bool is_local, const char*& formula, TokenType terminator, int opeLevel, const TrAnyValue & newValue)
 	{
-		AnyValue left = GetAtomValue(formula, terminator);
+		auto left = GetSetAtomValue(is_set, is_local, formula, terminator, newValue);
 		for (;;)
 		{
 			const char* cpTokenBegin;
@@ -1363,10 +1661,10 @@ public:
 			}
 			// オペレーター以外の場合はエラー。
 			if (tokenType < TT_OPERATOR_BEGIN || TT_OPERATOR_END < tokenType)
-				throw std::runtime_error("error!");
+				throw std::runtime_error("System error : GetSetFormulaValue");
 			if (LevelOf(tokenType) <= opeLevel) break;
 			formula = cpTokenEnd;
-			const AnyValue right = GetFormulaValue(formula, terminator, LevelOf(tokenType));
+			const auto right = GetSetFormulaValue(is_set, is_local, formula, terminator, LevelOf(tokenType), newValue);
 			switch (tokenType)
 			{
 			case TT_OPE_ADD:
@@ -1382,7 +1680,7 @@ public:
 				left.Divide(right);
 				break;
 			case TT_OPE_REMAIND:
-				left.Remaind(right);
+				left.Remain(right);
 				break;
 			case TT_OPE_POWER:
 				left.Power(right);
@@ -1393,12 +1691,18 @@ public:
 			}
 		}
 		return left;
-	} // GetFormulaValue
+	} // GetSetFormulaValue
 
-	AnyValue GetVariableValue(const char* piledName)
+	TrAnyValue GetVariableValue(bool is_local, const char* piledName)
 	{
-		return GetFormulaValue(piledName, TT_NONE, 0);
+		return GetSetFormulaValue(false, is_local, piledName, TT_NONE, 0, (const TrAnyValue &)TrAnyValue());
 	} // GetVariableValue.
+
+	bool SetVariableValue(bool is_local, const char* piledName, const TrAnyValue & newValue)
+	{
+		auto ret = GetSetFormulaValue(true, is_local, piledName, TT_NONE, 0, newValue);
+		return (ret.num != 0.0);
+	} // SetVariableValue.
 
 private:
 	lua_State* m_lua_state;
@@ -1788,6 +2092,11 @@ public:
 	}
 
 private:
+	void NewSession()
+	{
+		m_sticktraceWindow->NewSession();
+	}
+
 	void OnStartExec(lua_State* L)
 	{
 		if (m_sticktraceWindow->IsDebugMode())
@@ -1811,6 +2120,7 @@ private:
 		m_sticktraceWindow->Jump(nullptr, -1);
 	}
 
+#if _DEBUG
 	void PrintTable(lua_State* L)
 	{
 		lua_pushnil(L);
@@ -1818,17 +2128,18 @@ private:
 		while (lua_next(L, -2) != 0)
 		{
 			if (lua_isstring(L, -1))
-				TRACE("Type = string : Key = %s, Value = %s\n", lua_tostring(L, -2), lua_tostring(L, -1));
+				_RPTN(_CRT_WARN, "Type = string : Key = %s, Value = %s\n", lua_tostring(L, -2), lua_tostring(L, -1));
 			else if (lua_isnumber(L, -1))
-				TRACE("Type = number : key = %s, value = %d\n", lua_tostring(L, -2), lua_tonumber(L, -1));
+				_RPTN(_CRT_WARN, "Type = number : key = %s, value = %d\n", lua_tostring(L, -2), lua_tonumber(L, -1));
 			else if (lua_istable(L, -1))
-				TRACE("Type = table : key = %s\n", lua_tostring(L, -2));
+				_RPTN(_CRT_WARN, "Type = table : key = %s\n", lua_tostring(L, -2));
 			else
-				TRACE("Type = unknown : key = %s\n", lua_tostring(L, -2));
+				_RPTN(_CRT_WARN, "Type = unknown : key = %s\n", lua_tostring(L, -2));
 
 			lua_pop(L, 1);
 		}
 	}
+#endif //_DEBUG
 
 	struct VariableRec
 	{
@@ -1837,85 +2148,92 @@ private:
 		std::string value;
 	}; // struct VariableRec
 	
-	Stickobject GetLocalVariable(lua_State* L, lua_Debug* ar, const std::string & varname, std::unordered_map<std::string, int> & localVariableNameToId)
-	{
-		if (localVariableNameToId.empty())
-		{
-			for (int id = 1;; id++)
-			{
-				// lua_getlocal (lua_State *L, lua_Debug *ar, int n)
-				//
-				// ┌───────┐
-				// │ローカル変数値│<- nで指定されたローカル変数を積む
-				// ├───────┤
-				// │              │
-				// ├───────┤
-				// │              │
-				// ├───────┤
-				// ：              ：
-				//
-				const char* name = ::lua_getlocal(L, ar, id);
-				if (name == nullptr) break;
-				// Records local variable name to id.
-				// Two or more same name variable can be exist, so override the name to id hash.
-				if (strcmp(name, "(*temporary)") != 0)
-					localVariableNameToId[name] = id;
-				// lua_pop (lua_State *L, int n)
-				//
-				// ┌───────┐─┬
-				// │//////////////│  │
-				// ├───────┤  │
-				// │//////////////│  │ <- n個の要素を取り除く（n=3の場合）
-				// ├───────┤  │
-				// │//////////////│  │
-				// ├───────┤─┴
-				// │              │
-				// ├───────┤
-				// ：              ：
-				//
-				::lua_pop(L, 1);	// lua_getlocalで積んだ変数を削除
-			}
-		}
-		const auto i = localVariableNameToId.find(varname);
-		if (i != localVariableNameToId.end())
-		{
-			// lua_getlocal (lua_State *L, lua_Debug *ar, int n)
-			//
-			// ┌───────┐
-			// │ローカル変数値│<- nで指定されたローカル変数を積む
-			// ├───────┤
-			// │              │
-			// ├───────┤
-			// │              │
-			// ├───────┤
-			// ：              ：
-			//
-			::lua_getlocal(L, ar, i->second);
-			return Stickobject(L);
-		}
-		else
-		{
-			return Stickobject();
-		}
-	} // GetLocalVariable.
+//----- 20.06.04  削除始 ()-----
+//	Stickobject GetLocalVariable(
+//		lua_State* L,
+//		lua_Debug* ar,
+//		const std::string & varname,
+//		std::unordered_map<std::string, int> & localVariableNameToId
+//	)
+//	{
+//		if (localVariableNameToId.empty())
+//		{
+//			for (int id = 1;; id++)
+//			{
+//				// lua_getlocal (lua_State *L, lua_Debug *ar, int n)
+//				//
+//				// ┌───────┐
+//				// │ローカル変数値│<- nで指定されたローカル変数を積む
+//				// ├───────┤
+//				// │              │
+//				// ├───────┤
+//				// │              │
+//				// ├───────┤
+//				// ：              ：
+//				//
+//				const char* name = ::lua_getlocal(L, ar, id);
+//				if (name == nullptr) break;
+//				// Records local variable name to id.
+//				// Two or more same name variable can be exist, so override the name to id hash.
+//				if (strcmp(name, "(*temporary)") != 0)
+//					localVariableNameToId[name] = id;
+//				// lua_pop (lua_State *L, int n)
+//				//
+//				// ┌───────┐─┬
+//				// │//////////////│  │
+//				// ├───────┤  │
+//				// │//////////////│  │ <- n個の要素を取り除く（n=3の場合）
+//				// ├───────┤  │
+//				// │//////////////│  │
+//				// ├───────┤─┴
+//				// │              │
+//				// ├───────┤
+//				// ：              ：
+//				//
+//				::lua_pop(L, 1);	// lua_getlocalで積んだ変数を削除
+//			}
+//		}
+//		const auto i = localVariableNameToId.find(varname);
+//		if (i != localVariableNameToId.end())
+//		{
+//			// lua_getlocal (lua_State *L, lua_Debug *ar, int n)
+//			//
+//			// ┌───────┐
+//			// │ローカル変数値│<- nで指定されたローカル変数を積む
+//			// ├───────┤
+//			// │              │
+//			// ├───────┤
+//			// │              │
+//			// ├───────┤
+//			// ：              ：
+//			//
+//			::lua_getlocal(L, ar, i->second);
+//			return Stickobject(L);
+//		}
+//		else
+//		{
+//			return Stickobject();
+//		}
+//	} // GetLocalVariable.
+//----- 20.06.04  削除終 ()-----
 
 	void EnumTable(
-		std::vector<std::tuple<std::string, std::string, std::string, std::string, std::string>>& varIconIndentNameTypeValueArray,
+		std::vector<WatchInfo>& varIconIndentNameTypeValueArray,
 		int indent,
 		const std::string& piledName,
-		AnyValue& parentTable,
+		TrAnyValue& parentTable,
 		const std::unordered_set<std::string>& stExpandedName
 	)
 	{
 		std::string icon;
-		AnyValue key;
-		AnyValue value;
+		TrAnyValue key;
+		TrAnyValue value;
 		parentTable.BeginEnum();
 		while (parentTable.NextEnum(key, value))
 		{
 			switch (value.type)
 			{
-			case AnyValue::TABLE:
+			case TrAnyValue::TABLE:
 				if (stExpandedName.find(piledName + '\b' + key.GetValueAsString()) == stExpandedName.end())
 					icon = "CLOSED";
 				else
@@ -1926,13 +2244,14 @@ private:
 				break;
 			}
 			varIconIndentNameTypeValueArray.emplace_back(
-				std::make_tuple(
+				WatchInfo(
 					icon,
 					std::to_string(indent),
 					key.GetValueAsString(),
 					value.GetTypeAsString(),
 					value.GetValueAsString()
-				));
+				)
+			);
 			if (icon == "OPENED")
 				EnumTable(
 					varIconIndentNameTypeValueArray,
@@ -1999,149 +2318,269 @@ private:
 		//  The application can delete SticktraceWindow between A and B, but if it was deleted, C will be failed.
 		//  So, the application must not delete SticktraceWindow between A and B.
 		//
-		if (m_suspendMode == Sticktrace::Mode::STOP)
-			(void)::luaL_error(L, "Script execution was interrupted.");
-		// Check the possibility of the breakpoint existing on the current line. This function responds fast.
-		if (m_suspendMode == Sticktrace::Mode::SUSPEND ||
-			m_sticktraceWindow->IsBreakpoint(nullptr, ar->currentline - 1))
+
+		SticktraceCommand command = SticktraceCommand::NONE;
+		try
 		{
-			// 'n': fills in the field name and namewhat;
-			// 'S': fills in the fields source, short_src, linedefined, lastlinedefined, and what;
-			// 'l': fills in the field currentline;
-			// 't': fills in the field istailcall;
-			// 'u': fills in the fields nups, nparams, and isvararg;
-			// 'f': pushes onto the stack the function that is running at the given level;
-			// 'L': pushes onto the stack a parentTable whose indices are the numbers of the lines that are valid on the function. (A valid line is a line with some associated code, that is, a line where you can put a break point.Non - valid lines include empty lines and comments.)
-			lua_getinfo(L, "Slnt", ar);
-			// Check the exact breakpoint existing on the current line. This function needs some time.
+			if (m_suspendMode == Sticktrace::Mode::STOP)
+				throw std::runtime_error("Script execution was interrupted.");
+
+			// Check the possibility of the breakpoint existing on the current line. This function responds fast.
 			if (m_suspendMode == Sticktrace::Mode::SUSPEND ||
-				m_sticktraceWindow->IsBreakpoint(ar->source, ar->currentline - 1))
+				m_sticktraceWindow->IsBreakpoint(nullptr, ar->currentline - 1))
 			{
-				m_suspendMode = Sticktrace::Mode::SUSPENDING;
-				std::string param1;
-				auto command = m_sticktraceWindow->GetCommand(param1, 0);
-				// If Stop command, throw the lua exception and stop the running of the script.
-				if (command == SticktraceCommand::STOP)
-					(void)::luaL_error(L, "Script execution was interrupted.");
-				// Notify the sticktrace window that the script is suspended.
-				m_sticktraceWindow->OnSuspended();
-				// Jump the source code editor to the suspended point.
-				m_sticktraceWindow->Jump(ar->source, ar->currentline - 1);
-
-				Stickvar stickvar(L, ar);
-				while (m_suspendMode == Sticktrace::Mode::SUSPENDING)
+				// 'n': fills in the field name and namewhat;
+				// 'S': fills in the fields source, short_src, linedefined, lastlinedefined, and what;
+				// 'l': fills in the field currentline;
+				// 't': fills in the field istailcall;
+				// 'u': fills in the fields nups, nparams, and isvararg;
+				// 'f': pushes onto the stack the function that is running at the given level;
+				// 'L': pushes onto the stack a parentTable whose indices are the numbers of the lines that are valid on the function. (A valid line is a line with some associated code, that is, a line where you can put a break point.Non - valid lines include empty lines and comments.)
+				lua_getinfo(L, "Slnt", ar);
+				// Check the exact breakpoint existing on the current line. This function needs some time.
+				if (m_suspendMode == Sticktrace::Mode::SUSPEND ||
+					m_sticktraceWindow->IsBreakpoint(ar->source, ar->currentline - 1))
 				{
-					if (m_suspendMode == Sticktrace::Mode::RUN || command == SticktraceCommand::RESUME)
-					{
-						m_suspendMode = Sticktrace::Mode::RUN;
-						command = SticktraceCommand::NONE;
-					}
-					else if (m_suspendMode == Sticktrace::Mode::STOP || command == SticktraceCommand::STOP)
-					{
-						m_suspendMode = Sticktrace::Mode::STOP;
-						command = SticktraceCommand::NONE;
-						(void)::luaL_error(L, "Script execution was interrupted.");
-					}
-					else if (m_suspendMode == Sticktrace::Mode::PROCEED_NEXT || command == SticktraceCommand::PROCEED_NEXT)
-					{
-						m_suspendMode = Sticktrace::Mode::SUSPEND;
-						command = SticktraceCommand::NONE;
-					}
-					else if (command == SticktraceCommand::GET_VARIABLE)
-					{
-						//
-						//  [-]varA
-						//      |
-						//      +-varB
-						//      |
-						//     [+]varC
-						//      |
-						//     [-]varD
-						//         |
-						//         +-varE
-						//         |
-						//         +-varF
-						//
-						//  [#]varG
-						//
-						// varIconIndentNameTypeValueArray={
-						//		Icon		Indent		Name		Type		Value
-						//  { "OPENED",		 "0"	   "varA"	   "table"		 ""		},
-						//  { "MEMBER",		 "1"	   "varB"	   "number"		 "5.2"	},
-						//  { "CLOSED",		 "1"	   "varC"	   "table"		 ""		},
-						//  { "OPENED",		 "1"	   "varD"	   "table"		 ""		},
-						//  { "MEMBER",		 "2"	   "varE"	   "number"		 "3.1"	},
-						//  { "MEMBER",		 "2"	   "varF"	   "string"		"mine"	},
-						//  { "VARIABLE",	 "0"	   "varG"	   "string"		"hello"	},
-						// }
+					m_suspendMode = Sticktrace::Mode::SUSPENDING;
+					std::string paramA;
+					command = m_sticktraceWindow->GetCommand(paramA, 0);
+					// If Stop command, throw the lua exception and stop the running of the script.
+					if (command == SticktraceCommand::STOP)
+						throw std::runtime_error("Script execution was interrupted.");
+					// Notify the sticktrace window that the script is suspended.
+					m_sticktraceWindow->OnSuspended();
+					// Jump the source code editor to the suspended point.
+					m_sticktraceWindow->Jump(ar->source, ar->currentline - 1);
 
-						command = SticktraceCommand::NONE;
-						std::vector<std::tuple<std::string, std::string, std::string, std::string, std::string>> varIconIndentNameTypeValueArray;
-						std::vector<std::string> vTopLevelName;
-						std::unordered_set<std::string> stExpandedName;
-						auto receivedata = param1.c_str();
-						Stickutil::Unserialize(vTopLevelName, receivedata);
-						Stickutil::Unserialize(stExpandedName, receivedata);
-						for (const auto & topvar : vTopLevelName)
+					Stickvar stickvar(L, ar);
+					while (m_suspendMode == Sticktrace::Mode::SUSPENDING)
+					{
+						if (m_suspendMode == Sticktrace::Mode::RUN || command == SticktraceCommand::RESUME)
 						{
-							auto xxx = stickvar.GetVariableValue(topvar.c_str());
-							std::string icon;
-							switch (xxx.type)
+							m_suspendMode = Sticktrace::Mode::RUN;
+							command = SticktraceCommand::NONE;
+						}
+						else if (m_suspendMode == Sticktrace::Mode::STOP || command == SticktraceCommand::STOP)
+						{
+							m_suspendMode = Sticktrace::Mode::STOP;
+							command = SticktraceCommand::STOP;
+							throw std::runtime_error("Script execution was interrupted.");
+						}
+						else if (m_suspendMode == Sticktrace::Mode::PROCEED_NEXT || command == SticktraceCommand::PROCEED_NEXT)
+						{
+							m_suspendMode = Sticktrace::Mode::SUSPEND;
+							command = SticktraceCommand::NONE;
+						}
+						else if (command == SticktraceCommand::GET_VARIABLE)
+						{
+							//
+							//  [-]varA
+							//      |
+							//      +-varB
+							//      |
+							//     [+]varC
+							//      |
+							//     [-]varD
+							//         |
+							//         +-varE
+							//         |
+							//         +-varF
+							//
+							//  [#]varG
+							//
+							// varIconIndentNameTypeValueArray={
+							//		Icon		Indent		Name		Type		Value
+							//  { "OPENED",		 "0"	   "varA"	   "table"		 ""		},
+							//  { "MEMBER",		 "1"	   "varB"	   "number"		 "5.2"	},
+							//  { "CLOSED",		 "1"	   "varC"	   "table"		 ""		},
+							//  { "OPENED",		 "1"	   "varD"	   "table"		 ""		},
+							//  { "WARN",		 "0"	   "varE"	   "Error"		 "Error message"	},     <--- Case of parsing error.
+							//  { "MEMBER",		 "2"	   "varF"	   "string"		"mine"	},
+							//  { "VARIABLE",	 "0"	   "varG"	   "string"		"hello"	},
+							// }
+
+							command = SticktraceCommand::NONE;
+
+							std::vector<WatchInfo> varIconIndentNameTypeValueArray;
+							std::vector<std::string> vTopLevelName;
+							std::unordered_set<std::string> stExpandedName;
+							std::string sandbox;
+							auto receivedata = paramA.c_str();
+							Stickutil::Unserialize(sandbox, receivedata);
+							Stickutil::Unserialize(vTopLevelName, receivedata);
+							Stickutil::Unserialize(stExpandedName, receivedata);
+							for (size_t number = 0; number != vTopLevelName.size(); number++)
 							{
-							case AnyValue::TABLE:
-								if (stExpandedName.find(topvar) == stExpandedName.end())
-									icon = "CLOSED";
-								else
-									icon = "OPENED";
-								break;
-							default:
-								icon = "VARIABLE";
-								break;
+								const auto strNumber = std::to_string(number);
+								const auto & topvar = vTopLevelName[number];
+
+								// try~catch must be exist inside of for-loop.
+								try
+								{
+									auto xxx = stickvar.GetVariableValue(true, topvar.c_str());
+									if (xxx.type == TrAnyValue::NONE)
+									{
+										if (sandbox.empty())
+											xxx = stickvar.GetVariableValue(false, topvar.c_str());
+										else
+											xxx = stickvar.GetVariableValue(false, (sandbox + "." + topvar).c_str());
+									}
+									std::string icon;
+									switch (xxx.type)
+									{
+									case TrAnyValue::TABLE:
+										if (stExpandedName.find(strNumber + '\b' + topvar) == stExpandedName.end())
+											icon = "CLOSED";
+										else
+											icon = "OPENED";
+										break;
+									default:
+										icon = "VARIABLE";
+										break;
+									}
+									varIconIndentNameTypeValueArray.emplace_back(
+										WatchInfo(
+											icon,
+											"0",
+											topvar,
+											xxx.GetTypeAsString(),
+											xxx.GetValueAsString()
+										)
+									);
+									if (xxx.type == TrAnyValue::TABLE && icon == "OPENED")
+									{
+										EnumTable(varIconIndentNameTypeValueArray, 1, strNumber + '\b' + topvar, xxx, stExpandedName);
+									}
+								}
+								catch (std::exception & e)
+								{
+									varIconIndentNameTypeValueArray.emplace_back(
+										WatchInfo(
+											"WARN",
+											"0",
+											topvar,
+											"Error",
+											std::string("Get variable : ") + e.what()
+										)
+									);
+								}
+								catch (...)
+								{
+									varIconIndentNameTypeValueArray.emplace_back(
+										WatchInfo(
+											"WARN",
+											"0",
+											topvar,
+											"Error",
+											"Unknown error : Get variable"
+										)
+									);
+								}
 							}
-							varIconIndentNameTypeValueArray.emplace_back(
-								std::make_tuple(
-									icon,
-									"0",
-									topvar,
-									xxx.GetTypeAsString(),
-									xxx.GetValueAsString()
-								));
-							if (xxx.type == AnyValue::TABLE && icon == "OPENED")
+
+							std::string senddata;
+							Stickutil::Serialize(senddata, varIconIndentNameTypeValueArray);
+							m_sticktraceWindow->SetWatch(senddata);
+						}
+						else if (command == SticktraceCommand::SET_VARIABLE)
+						{
+							try
 							{
-								EnumTable(varIconIndentNameTypeValueArray, 1, topvar, xxx, stExpandedName);
+								command = SticktraceCommand::NONE;
+
+								std::string sandbox;
+								std::string varName;
+								__int32 type;
+								std::string varValue;
+								auto receivedata = paramA.c_str();
+								Stickutil::Unserialize(sandbox, receivedata);
+								Stickutil::Unserialize(varName, receivedata);
+								Stickutil::Unserialize(type, receivedata);
+								Stickutil::Unserialize(varValue, receivedata);
+
+								TrAnyValue newValue;
+								switch (type)
+								{
+								case LUA_TNIL:
+									newValue.SetNil();
+									break;
+								case LUA_TBOOLEAN:
+								{
+									bool b = (varValue == "true");
+									newValue.Set(b);
+									break;
+								}
+								case LUA_TNUMBER:
+								{
+									double v = strtod(varValue.c_str(), nullptr);
+									newValue.Set(v);
+									break;
+								}
+								case LUA_TSTRING:
+								{
+									newValue.Set(varValue.c_str());
+									break;
+								}
+								default:
+									throw std::runtime_error("System error : SET_VARIABLE");
+								}
+
+								auto ret = stickvar.SetVariableValue(true, varName.c_str(), newValue);
+								if (!ret)
+								{
+									if (sandbox.empty())
+										stickvar.SetVariableValue(false, varName.c_str(), newValue);
+									else
+										stickvar.SetVariableValue(false, (sandbox + "." + varName).c_str(), newValue);
+								}
+								m_sticktraceWindow->SetVariableNotify(true);
+							}
+							catch (std::exception & e)
+							{
+								OutputError((std::string("Set variable : ") + e.what()).c_str());
+								m_sticktraceWindow->SetVariableNotify(false);
+							}
+							catch (...)
+							{
+								OutputError("Unknown error : Set variable");
+								m_sticktraceWindow->SetVariableNotify(false);
 							}
 						}
-
-						std::string senddata;
-						Stickutil::Serialize(senddata, varIconIndentNameTypeValueArray);
-						m_sticktraceWindow->SetWatch(senddata);
+						else
+						{
+							if (m_scriptHookFunc != nullptr)
+								m_scriptHookFunc(L, ar, m_scriptUserData, m_suspendMode, this);
+							command = m_sticktraceWindow->GetCommand(paramA, 100);
+						}
 					}
-					else
-					{
-						if (m_scriptHookFunc != nullptr)
-							m_scriptHookFunc(L, ar, m_scriptUserData, m_suspendMode, this);
-						command = m_sticktraceWindow->GetCommand(param1, 100);
-					}
+					// Notify the sticktrace window that the script is resumed.
+					m_sticktraceWindow->OnResumed();
+					m_sticktraceWindow->Jump(nullptr, -1);
 				}
-				// Notify the sticktrace window that the script is resumed.
-				m_sticktraceWindow->OnResumed();
-				m_sticktraceWindow->Jump(nullptr, -1);
+			}
+			if (m_scriptHookFunc != nullptr)
+			{
+				if (m_scriptHookCount == m_scriptHookInterval)
+				{
+					m_scriptHookFunc(L, ar, m_scriptUserData, m_suspendMode, this);
+					m_scriptHookCount = 0;
+				}
+				else
+				{
+					m_scriptHookCount++;
+				}
 			}
 		}
-		if (m_scriptHookFunc != nullptr)
+		catch (std::exception & e)
 		{
-			if (m_scriptHookCount == m_scriptHookInterval)
-			{
-				m_scriptHookFunc(L, ar, m_scriptUserData, m_suspendMode, this);
-				m_scriptHookCount = 0;
-			}
-			else
-			{
-				m_scriptHookCount++;
-			}
+			luaL_error(L, e.what());
+		}
+		catch (...)
+		{
+			luaL_error(L, "Unknown error : OnCallLuaHook");
 		}
 	}
-	
+
 	void SetSource(const std::string& sandbox, const std::string& name, const std::string& source)
 	{
 		m_sticktraceWindow->SetSource(sandbox, name, source);
@@ -2160,10 +2599,17 @@ private:
 		{
 		case Stickrun::CallbackType::ON_LOAD_SCRIPT:
 		{
-			auto sndbx_name_src = (std::tuple<const std::string&, const std::string&, const std::string&> *)data;
-			((Sticktrace*)userData)->SetSource(std::get<0>(*sndbx_name_src), std::get<1>(*sndbx_name_src), std::get<2>(*sndbx_name_src));
+			auto scriptInfo = (Stickrun::ScriptInfo *)data;
+			((Sticktrace*)userData)->SetSource(
+				scriptInfo->sandbox,
+				scriptInfo->name,
+				scriptInfo->source
+			);
 			break;
 		}
+		case Stickrun::CallbackType::NEW_SESSION:
+			((Sticktrace*)userData)->NewSession();
+			break;
 		case Stickrun::CallbackType::ON_START_EXEC:
 			((Sticktrace*)userData)->OnStartExec(L);
 			break;

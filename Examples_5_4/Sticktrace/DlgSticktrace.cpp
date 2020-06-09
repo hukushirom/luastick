@@ -25,11 +25,15 @@ IMPLEMENT_DYNAMIC(CDlgSticktrace, CFCDlgModelessBase)
 
 CDlgSticktrace::CDlgSticktrace()
 	: BASE_CLASS()
+	, m_accelerator(NULL)
 	, m_bIsBtnOnPaneBorder(FALSE)	// ペインボーダー上でボタンが押されているか？
 	, m_hwndWhenBorderMoving(NULL)
 {
 	m_breakpointFast.suspendMode = (LONG)Mode::STOP;
 	m_breakpointFast.breakpointCount = 0;
+
+	m_breakpointSlow.m_runToCursorLineIndex = -1;
+
 	m_debugMode.debugMode = 0;
 }
 
@@ -85,12 +89,12 @@ BEGIN_MESSAGE_MAP(CDlgSticktrace, BASE_CLASS)
 	ON_UPDATE_COMMAND_UI(ID_SCE_DEBUG_BREAK, &CDlgSticktrace::OnUpdateSceDebugBreak)
 	ON_COMMAND(ID_SCE_DEBUG_STEP_TO_NEXT, &CDlgSticktrace::OnSceDebugStepToNext)
 	ON_UPDATE_COMMAND_UI(ID_SCE_DEBUG_STEP_TO_NEXT, &CDlgSticktrace::OnUpdateSceDebugStepToNext)
-	ON_COMMAND(ID_SCE_DEBUG_UNTIL_CARET, &CDlgSticktrace::OnSceDebugUntilCaret)
-	ON_UPDATE_COMMAND_UI(ID_SCE_DEBUG_UNTIL_CARET, &CDlgSticktrace::OnUpdateSceDebugUntilCaret)
+	ON_COMMAND(ID_SCE_DEBUG_RUN_TO_CURSOR, &CDlgSticktrace::OnSceDebugRunToCursor)
+	ON_UPDATE_COMMAND_UI(ID_SCE_DEBUG_RUN_TO_CURSOR, &CDlgSticktrace::OnUpdateSceDebugRunToCursor)
 	ON_COMMAND(ID_SCE_DEBUG_STOP, &CDlgSticktrace::OnSceDebugStop)
 	ON_UPDATE_COMMAND_UI(ID_SCE_DEBUG_STOP, &CDlgSticktrace::OnUpdateSceDebugStop)
-	ON_COMMAND(ID_SCE_DEBUG_CHANGE_VARIABLE, &CDlgSticktrace::OnSceDebugChangeVariable)
-	ON_UPDATE_COMMAND_UI(ID_SCE_DEBUG_CHANGE_VARIABLE, &CDlgSticktrace::OnUpdateSceDebugChangeVariable)
+	ON_COMMAND(ID_SCE_DEBUG_SET_VARIABLE, &CDlgSticktrace::OnSceDebugSetVariable)
+	ON_UPDATE_COMMAND_UI(ID_SCE_DEBUG_SET_VARIABLE, &CDlgSticktrace::OnUpdateSceDebugSetVariable)
 	ON_COMMAND(ID_SCE_DEBUG_ADD_WATCH, &CDlgSticktrace::OnSceDebugAddWatch)
 	ON_UPDATE_COMMAND_UI(ID_SCE_DEBUG_ADD_WATCH, &CDlgSticktrace::OnUpdateSceDebugAddWatch)
 	ON_COMMAND(ID_SCE_DEBUG_DELETE_WATCH, &CDlgSticktrace::OnSceDebugDeleteWatch)
@@ -107,7 +111,7 @@ BEGIN_MESSAGE_MAP(CDlgSticktrace, BASE_CLASS)
 	ON_UPDATE_COMMAND_UI(ID_SCE_WIN_VARIABLE_VALUE, &CDlgSticktrace::OnUpdateSceWinVariableValue)
 	ON_COMMAND(ID_HELP, &CDlgSticktrace::OnHelp)
 	ON_UPDATE_COMMAND_UI(ID_HELP, &CDlgSticktrace::OnUpdateHelp)
-	ON_BN_CLICKED(IDC_SCE_BTN_CHANGE_VARIABLE, &CDlgSticktrace::OnBnClickedSceBtnChangeVariable)
+	ON_BN_CLICKED(IDC_SCE_BTN_SET_VARIABLE, &CDlgSticktrace::OnBnClickedSceBtnSetVariable)
 	ON_BN_CLICKED(IDC_SCE_BTN_ADD_WATCH, &CDlgSticktrace::OnBnClickedSceBtnAddWatch)
 	ON_BN_CLICKED(IDC_SCE_BTN_DELETE_WATCH, &CDlgSticktrace::OnBnClickedSceBtnDeleteWatch)
 	ON_NOTIFY(NM_CLICK, IDC_SCE_LSV_WATCH, &CDlgSticktrace::OnNMClickSceLsvWatch)
@@ -116,6 +120,7 @@ BEGIN_MESSAGE_MAP(CDlgSticktrace, BASE_CLASS)
 	ON_BN_CLICKED(IDC_SCE_CHK_DEBUG_MODE, &CDlgSticktrace::OnBnClickedSceChkDebugMode)
 	ON_WM_INITMENUPOPUP()
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_SCE_LSV_WATCH, &CDlgSticktrace::OnLvnItemchangedSceLsvWatch)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 // CDlgSticktrace メッセージ ハンドラー。
@@ -147,9 +152,9 @@ BOOL CDlgSticktrace::OnInitDialog()
 	MoveControl(IDC_SCE_LSV_WATCH, szMove);
 	MoveControl(IDC_SCE_EDT_VARIABLE_NAME, szMove);
 	MoveControl(IDC_SCE_EDT_VARIABLE_VALUE, szMove);
-	MoveControl(IDC_SCE_BTN_CHANGE_VARIABLE, szMove);
 	MoveControl(IDC_SCE_BTN_ADD_WATCH, szMove);
 	MoveControl(IDC_SCE_BTN_DELETE_WATCH, szMove);
+	MoveControl(IDC_SCE_BTN_SET_VARIABLE, szMove);
 
 	// レイアウト情報を設定。
 	InitLayoutAll();
@@ -196,7 +201,10 @@ BOOL CDlgSticktrace::OnInitDialog()
 	// テキストエディターにUndo可能を設定。
 	m_textEditor.SetIsUndoable(TRUE);
 	m_textEditor.SetLimitText(640000);
+	m_textEditor.SetContextMenu(IDR_POPUP, 0);
+	m_textEditor.SetAccelerator(IDR_TEXT_EDITOR_ACCELERATOR);
 	m_textEditor.SetReadOnly(TRUE);
+
 	const auto isDebugMode = (::InterlockedCompareExchange(&m_debugMode.debugMode, 0, 0) != 0);
 	m_textEditor.ActivateBreakpoint(isDebugMode);
 	m_textEditor.SetTabSize(2);
@@ -212,11 +220,14 @@ BOOL CDlgSticktrace::OnInitDialog()
 	pLsvWatch->SetExtendedStyle(pLsvWatch->GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 
 	//----- 14.10.02 Fukushiro M. 追加始 ()-----
-	m_watchImage.Create(16, 16, ILC_MASK, 4, 1);
+	m_watchImage.Create(16, 16, ILC_MASK, 6, 1);
 	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_COLLAPSED));		// 閉じている(0)
 	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_EXPANDED));		// 開いている(1)
 	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_VARIABLE));		// 変数(2)
 	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_SUBVARIABLE));	// メンバー変数(3)
+	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_VAR_UNKNOWN));	// 未定変数(4)
+	m_watchImage.Add(AfxGetApp()->LoadIcon(IDI_VAR_WARN));		// 警告変数(5)
+
 	pLsvWatch->SetImageList(&m_watchImage, LVSIL_SMALL);
 	//----- 14.10.02 Fukushiro M. 追加終 ()-----
 
@@ -231,22 +242,22 @@ BOOL CDlgSticktrace::OnInitDialog()
 		rect.Width() / 4,
 	};
 	// 名前。
-	UtilDlg::InsertColumn(pLsvWatch, 0, UtilStr::LoadString(CString(), IDS_NAME), LVCFMT_LEFT, aColumnWidthInit[0]);
+	UtilDlg::InsertColumn(pLsvWatch, 0, UtilStr::LoadString((CString&)CString(), IDS_NAME), LVCFMT_LEFT, aColumnWidthInit[0]);
 	// 値。
-	UtilDlg::InsertColumn(pLsvWatch, 1, UtilStr::LoadString(CString(), IDS_VALUE), LVCFMT_LEFT, aColumnWidthInit[1]);
+	UtilDlg::InsertColumn(pLsvWatch, 1, UtilStr::LoadString((CString&)CString(), IDS_VALUE), LVCFMT_LEFT, aColumnWidthInit[1]);
 	// 型。
-	UtilDlg::InsertColumn(pLsvWatch, 2, UtilStr::LoadString(CString(), IDS_TYPE), LVCFMT_LEFT, aColumnWidthInit[2]);
+	UtilDlg::InsertColumn(pLsvWatch, 2, UtilStr::LoadString((CString&)CString(), IDS_TYPE), LVCFMT_LEFT, aColumnWidthInit[2]);
 	// リストコントロールのカラム境界を設定。
 	FD_RegLoadListCtrlColumnWidth(this, IDC_SCE_LSV_WATCH);
 
 	// タブコントロールにタブを設定。
 	CTabCtrl* tabCtrl = (CTabCtrl*)GetDlgItem(IDC_SCE_TAB_OUTPUT);
 	// エラー出力。
-	tabCtrl->InsertItem(TAB_INDEX_ERROR, UtilStr::LoadString(CString(), IDS_ERROR));
+	tabCtrl->InsertItem(TAB_INDEX_ERROR, UtilStr::LoadString((CString&)CString(), IDS_ERROR));
 	// 変数。
-	tabCtrl->InsertItem(TAB_INDEX_WATCH, UtilStr::LoadString(CString(), IDS_WATCH));
+	tabCtrl->InsertItem(TAB_INDEX_WATCH, UtilStr::LoadString((CString&)CString(), IDS_WATCH));
 	// 出力。
-	tabCtrl->InsertItem(TAB_INDEX_OUTPUT, UtilStr::LoadString(CString(), IDS_OUTPUT));
+	tabCtrl->InsertItem(TAB_INDEX_OUTPUT, UtilStr::LoadString((CString&)CString(), IDS_OUTPUT));
 	// タブ変更を通知。
 	OnTcnSelchangeSceTabOutput(nullptr, nullptr);
 
@@ -257,6 +268,9 @@ BOOL CDlgSticktrace::OnInitDialog()
 
 	// テキスト領域を更新。
 	m_textEditor.UpdateTextRect();
+
+	// アクセラレーター
+	m_accelerator = ::LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_DEBUGGER_ACCELERATOR));
 
 	// Update the display status of script control buttons.
 	PostMessage(WM_IDLEUPDATECMDUI);
@@ -321,11 +335,13 @@ bool CDlgSticktrace::TC_IsBreakpoint(const char * name, int lineIndex)
 		AutoLeaveCS acs(m_breakpointSlow.cs);
 		if ((int)m_breakpointSlow.lineIndexToIsBreak.size() <= lineIndex)
 			return false;
-		if (!m_breakpointSlow.lineIndexToIsBreak[lineIndex])
+		if (m_breakpointSlow.lineIndexToIsBreak[lineIndex] == 0)
 			return false;
 		if (name == nullptr)
 			return true;
 		if (m_breakpointSlow.lineIndexAndSourceNameSet.find(std::make_pair(lineIndex, name)) != m_breakpointSlow.lineIndexAndSourceNameSet.end())
+			return true;
+		if (m_breakpointSlow.m_runToCursorSourceName == name && m_breakpointSlow.m_runToCursorLineIndex == lineIndex)
 			return true;
 	}
 	return false;
@@ -404,6 +420,21 @@ bool CDlgSticktrace::TC_Jump(const char * name, int lineIndex)
 	m_incmd.command = InCmd::Command::JUMP;
 	m_incmd.strParam1 = (name == nullptr) ? "" : name;
 	m_incmd.i64Param1 = lineIndex;
+	PostMessage(WM_USER_COMMAND);
+	// Wait for the command to be accepted by the Sticktrace Window.
+	if (!acs.SleepConditionVariable(10000))
+		return false;
+	return true;
+}
+
+/// <summary>
+/// This function notify the beginning of new session.
+/// </summary>
+/// <returns></returns>
+bool CDlgSticktrace::TC_NewSession()
+{
+	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
+	m_incmd.command = InCmd::Command::NEW_SESSION;
 	PostMessage(WM_USER_COMMAND);
 	// Wait for the command to be accepted by the Sticktrace Window.
 	if (!acs.SleepConditionVariable(10000))
@@ -498,13 +529,29 @@ bool CDlgSticktrace::TC_SetWatch(const std::string& data)
 }
 
 /// <summary>
+/// Notification of variable setting.
+/// </summary>
+/// <param name="succeeded">true:variable was set/false:not set</param>
+bool CDlgSticktrace::TC_SetVariableNotify(bool succeeded)
+{
+	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
+	m_incmd.command = InCmd::Command::SET_VARIABLE_NOTIFY;
+	m_incmd.i64Param1 = succeeded ? 1 : 0;
+	PostMessage(WM_USER_COMMAND);
+	// Wait for the command to be accepted by the Sticktrace Window.
+	if (!acs.SleepConditionVariable(10000))
+		return false;
+	return true;
+}
+
+/// <summary>
 /// Tcs the get command.
 /// This function works at the main application's thread.
 /// </summary>
-/// <param name="param">The parameter.</param>
+/// <param name="paramA">The parameter.</param>
 /// <param name="waitMilliseconds">The wait milliseconds.</param>
 /// <returns></returns>
-SticktraceCommand CDlgSticktrace::TC_GetCommand(std::string & param, uint32_t waitMilliseconds)
+SticktraceCommand CDlgSticktrace::TC_GetCommand(std::string & paramA, uint32_t waitMilliseconds)
 {
 	AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
 	if (m_outcmd.command == SticktraceCommand::NONE)
@@ -513,13 +560,16 @@ SticktraceCommand CDlgSticktrace::TC_GetCommand(std::string & param, uint32_t wa
 		if (!acs.SleepConditionVariable(waitMilliseconds))
 			return SticktraceCommand::NONE;
 	}
-	param = m_outcmd.strParam1;
+	paramA = m_outcmd.strParamA;
 	const auto command = m_outcmd.command;
 	m_outcmd.command = SticktraceCommand::NONE;
 	return command;
 }
 
-void CDlgSticktrace::GetWatchedVariables(std::vector<std::string>& vTopLevelName, std::unordered_set<std::string>& stExpandedName) const
+void CDlgSticktrace::GetWatchedVariables(
+	std::vector<std::string>& vTopLevelName,
+	std::unordered_set<std::string>& stExpandedName
+) const
 {
 	/// <summary>
 	/// CListCtrlの行を順番に検査し、テーブル型変数で「EXPANDED（展開）」のアイコンが設定されている行を
@@ -540,7 +590,16 @@ void CDlgSticktrace::GetWatchedVariables(std::vector<std::string>& vTopLevelName
 	/// <param name="vTopLevelName">レベル0（トップレベル）の変数名。上例では「e」「a」</param>
 	/// <param name="stExpandedName">「EXPANDED」が設定された行の連結変数名。</param>
 	/// <returns></returns>
-	std::function<int(LVITEM&, CListCtrl*, int, int, const char*, std::vector<std::string>&, std::unordered_set<std::string>&)> GetLevelItem = [&GetLevelItem](LVITEM& lvi, CListCtrl* pLsvWatch, int index, int iIndent, const char* wcpPiledVarName, std::vector<std::string>& vTopLevelName, std::unordered_set<std::string>& stExpandedName)
+	std::function<int(LVITEM&, CListCtrl*, int, int, const char*, std::vector<std::string>&, std::unordered_set<std::string>&)>
+		GetLevelItem = [&GetLevelItem](
+			LVITEM& lvi,
+			CListCtrl* pLsvWatch,
+			int index,
+			int iIndent,
+			const char* wcpPiledVarName,
+			std::vector<std::string>& vTopLevelName,
+			std::unordered_set<std::string>& stExpandedName
+		)
 	{
 		// 以下のようなウォッチウィンドウの表示状態の場合、[-]の変数（EXPANDED）をstExpandedNameに集める。
 		// また、トップレベルの変数（e、a）をvTopLevelNameに集める。
@@ -564,27 +623,34 @@ void CDlgSticktrace::GetWatchedVariables(std::vector<std::string>& vTopLevelName
 			// 連結変数名。
 			const std::string wstrNewPiledVarName = (wcpPiledVarName == NULL) ? szText : std::string(wcpPiledVarName) + "\b" + szText;
 			if (lvi.iImage == 0)
-				//----- アイコンがテーブル「COLLAPSED（閉じている）」を表す場合 -----
-			{
+			{	//----- アイコンがテーブル「COLLAPSED（閉じている）」を表す場合 -----
 				// 「COLLAPSED（閉じている）」「EXPANDED（開いている）」は関係なく調べる。通常は開いている場合のみ下位が表示されるが、
 				// マウスクリックにより閉じたときにもここが処理されるため。
 				index = GetLevelItem(lvi, pLsvWatch, index + 1, iIndent + 1, wstrNewPiledVarName.c_str(), vTopLevelName, stExpandedName);
 			}
+			else if (lvi.iImage == 1)
+			{	//----- アイコンがテーブル「EXPANDED（開いている）」を表す場合 -----
+				// 「COLLAPSED（閉じている）」「EXPANDED（開いている）」は関係なく調べる。通常は開いている場合のみ下位が表示されるが、
+				// マウスクリックにより閉じたときにもここが処理されるため。
+				// 「EXPANDED」はstExpandedNameに記録しておく。後で変数を表示する際に、同じ展開状態を復元するため。
+				// stExpandedName にはメンバー変数までを辿る名称（連結変数名）を挿入。
+				// 但し、先頭にはvTopLevelNameのindexを挿入しておく。同じ変数名が２回以上使われた場合に区別するため。
+				// 例
+				// A
+				// B
+				// D
+				// E
+				// |-1
+				// |-2
+				// | |-"abc"  <---「3\bE\b2\b"abc"」
+				//
+				stExpandedName.insert(std::to_string(vTopLevelName.size() - 1) + "\b" + wstrNewPiledVarName);
+				index = GetLevelItem(lvi, pLsvWatch, index + 1, iIndent + 1, wstrNewPiledVarName.c_str(), vTopLevelName, stExpandedName);
+			}
 			else
-				if (lvi.iImage == 1)
-					//----- アイコンがテーブル「EXPANDED（開いている）」を表す場合 -----
-				{
-					// 「COLLAPSED（閉じている）」「EXPANDED（開いている）」は関係なく調べる。通常は開いている場合のみ下位が表示されるが、
-					// マウスクリックにより閉じたときにもここが処理されるため。
-					// 「EXPANDED」はstExpandedNameに記録しておく。後で変数を表示する際に、同じ展開状態を復元するため。
-					// stExpandedName にはメンバー変数までを辿る名称（連結変数名）を挿入。例「e\b1\b"abc"」
-					stExpandedName.insert(wstrNewPiledVarName);
-					index = GetLevelItem(lvi, pLsvWatch, index + 1, iIndent + 1, wstrNewPiledVarName.c_str(), vTopLevelName, stExpandedName);
-				}
-				else
-				{
-					index++;
-				}
+			{
+				index++;
+			}
 		}
 		return index;
 	};
@@ -597,21 +663,7 @@ void CDlgSticktrace::GetWatchedVariables(std::vector<std::string>& vTopLevelName
 	lvi.pszText = textBuff;
 	lvi.cchTextMax = _countof(textBuff);
 
-	std::vector<std::string> vTopLevelNameTmp;
-	std::unordered_set<std::string> stExpandedNameTmp;
-	GetLevelItem(lvi, (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH), 0, 0, nullptr, vTopLevelNameTmp, stExpandedNameTmp);
-	if (m_sandbox.empty())
-	{
-		vTopLevelName = vTopLevelNameTmp;
-		stExpandedName = stExpandedNameTmp;
-	}
-	else
-	{
-		for (const auto & name : vTopLevelNameTmp)
-			vTopLevelName.emplace_back(m_sandbox + "." + name);
-		for (const auto & name : stExpandedNameTmp)
-			stExpandedName.insert(m_sandbox + "." + name);
-	}
+	GetLevelItem(lvi, (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH), 0, 0, nullptr, vTopLevelName, stExpandedName);
 }
 
 void CDlgSticktrace::UpdateWatchWindow()
@@ -624,13 +676,14 @@ void CDlgSticktrace::UpdateWatchWindow()
 	std::unordered_set<std::string> stExpandedName;
 	GetWatchedVariables(vTopLevelName, stExpandedName);
 	std::string data;
+	Stickutil::Serialize(data, m_sandbox);
 	Stickutil::Serialize(data, vTopLevelName);
 	Stickutil::Serialize(data, stExpandedName);
 
 	{
 		AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
 		m_outcmd.command = SticktraceCommand::GET_VARIABLE;
-		m_outcmd.strParam1 = data;
+		m_outcmd.strParamA = data;
 		acs.WakeConditionVariable();
 	}
 
@@ -639,7 +692,7 @@ void CDlgSticktrace::UpdateWatchWindow()
 	// ウォッチウィンドウを一度クリアする。
 	// pLsvWatch->DeleteAllItems();
 
-	// std::function<int(CListCtrl*, int, int, int, LVITEM&, const char*, const char*, const AnyValue&, const std::unordered_set<std::string>&)> f;
+	// std::function<int(CListCtrl*, int, int, int, LVITEM&, const char*, const char*, const TrAnyValue&, const std::unordered_set<std::string>&)> f;
 
 
 }
@@ -722,9 +775,9 @@ void CDlgSticktrace::InitLayoutAll()
 	InitLayout(FCDlgLayoutRec::HOOK_RIGHT | FCDlgLayoutRec::HOOK_BOTTOM,
 		IDC_SCE_EDT_VARIABLE_NAME,
 		IDC_SCE_EDT_VARIABLE_VALUE,
-		IDC_SCE_BTN_CHANGE_VARIABLE,
 		IDC_SCE_BTN_ADD_WATCH,
 		IDC_SCE_BTN_DELETE_WATCH,
+		IDC_SCE_BTN_SET_VARIABLE,
 		IDC_SCE_STC_LINE_NUMBER			// 行番号
 	);
 } // void CDlgSticktrace::InitLayoutAll ()
@@ -922,6 +975,18 @@ bool CDlgSticktrace::JumpErrorLocation()
 }
 
 /// <summary>
+/// This function notify the beginning of new session.
+/// </summary>
+/// <returns></returns>
+void CDlgSticktrace::NewSession()
+{
+	// Clear the error message window.
+	OutputError("");
+	// Clear the error position mark.
+	Jump("", -1, CFCTextEdit::MARKER_NOTIFY, false);
+}
+
+/// <summary>
 /// Called when script starts.
 /// Usually this function is called from the main application asynchronously.
 /// This function works at the Sticktrace Window's thread.
@@ -931,10 +996,12 @@ void CDlgSticktrace::OnStart()
 	::InterlockedExchange(&m_breakpointFast.suspendMode, (LONG)Mode::RUN);
 	// Update the display status of script control buttons.
 	PostMessage(WM_IDLEUPDATECMDUI);
-	// Clear the error message window.
-	OutputError("");
-	// Clear the error position mark.
-	Jump("", -1, CFCTextEdit::MARKER_NOTIFY, false);
+//----- 20.06.05  削除始 ()-----
+//	// Clear the error message window.
+//	OutputError("");
+//	// Clear the error position mark.
+//	Jump("", -1, CFCTextEdit::MARKER_NOTIFY, false);
+//----- 20.06.05  削除終 ()-----
 }
 
 /// <summary>
@@ -958,6 +1025,18 @@ void CDlgSticktrace::OnSuspended()
 {
 	// Set the running state to the suspendMode. Surface of the script buttons depend on the suspendMode variable.
 	::InterlockedCompareExchange(&m_breakpointFast.suspendMode, (LONG)Mode::SUSPEND, (LONG)Mode::RUN);
+
+	{
+		AutoLeaveCS acs(m_breakpointSlow.cs);
+		if (m_breakpointSlow.m_runToCursorLineIndex != -1)
+		{
+			m_breakpointSlow.lineIndexToIsBreak[m_breakpointSlow.m_runToCursorLineIndex]--;
+			m_breakpointSlow.m_runToCursorSourceName.clear();
+			m_breakpointSlow.m_runToCursorLineIndex = -1;
+			::InterlockedExchange(&m_breakpointFast.breakpointCount, (LONG)(m_breakpointSlow.lineIndexAndSourceNameSet.size()));
+		}
+	}
+
 	// Update the display status of script control buttons.
 	PostMessage(WM_IDLEUPDATECMDUI);
 	// Update the watch window.
@@ -1015,18 +1094,8 @@ void CDlgSticktrace::OutputDebug(const std::string & message)
 void CDlgSticktrace::SetWatch(const std::string & data)
 {
 	auto receiveddata = data.c_str();
-	std::vector<std::tuple<std::string, std::string, std::string, std::string, std::string>> varIconIndentNameTypeValueArray;
+	std::vector<WatchInfo> varIconIndentNameTypeValueArray;
 	Stickutil::Unserialize(varIconIndentNameTypeValueArray, receiveddata);
-	if (!m_sandbox.empty())
-	{
-		const auto prefix = m_sandbox + ".";
-		for (auto & item : varIconIndentNameTypeValueArray)
-		{
-			if (strncmp(std::get<2>(item).c_str(), prefix.c_str(), prefix.length()) == 0)
-				std::get<2>(item) = std::get<2>(item).substr(prefix.length());
-		}
-	}
-
 	// ウォッチウィンドウ。
 	CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
 	// ウォッチウィンドウを一度クリアする。
@@ -1042,22 +1111,26 @@ void CDlgSticktrace::SetWatch(const std::string & data)
 	int index = 0;
 	for (const auto & elem : varIconIndentNameTypeValueArray)
 	{
-		int iImage = 1;	// アイコンイメージのインデックス。
-		if (std::get<0>(elem) == "CLOSED")
+		int iImage = 4;	// アイコンイメージのインデックス。
+		if (elem.icon == "CLOSED")
 			iImage = 0;
-		else if (std::get<0>(elem) == "OPENED")
+		else if (elem.icon == "OPENED")
 			iImage = 1;
-		else if (std::get<0>(elem) == "VARIABLE")
+		else if (elem.icon == "VARIABLE")
 			iImage = 2;
-		else if (std::get<0>(elem) == "MEMBER")
+		else if (elem.icon == "MEMBER")
 			iImage = 3;
-		const auto iIndent = std::strtol(std::get<1>(elem).c_str(), nullptr, 10);
+		else if (elem.icon == "UNKNOWN")
+			iImage = 4;
+		else if (elem.icon == "WARN")
+			iImage = 5;
+		const auto iIndent = std::strtol(elem.indent.c_str(), nullptr, 10);
 		std::wstring name;
 		std::wstring type;
 		std::wstring value;
-		Astrwstr::astr_to_wstr(name, std::get<2>(elem));
-		Astrwstr::astr_to_wstr(type, std::get<3>(elem));
-		Astrwstr::astr_to_wstr(value, std::get<4>(elem));
+		Astrwstr::astr_to_wstr(name, elem.name);
+		Astrwstr::astr_to_wstr(type, elem.type);
+		Astrwstr::astr_to_wstr(value, elem.value);
 
 		lvi.iItem = index;
 		lvi.iIndent = iIndent;
@@ -1074,23 +1147,14 @@ void CDlgSticktrace::SetWatch(const std::string & data)
 	}
 }
 
-/*
-void CDlgSticktrace::OnStart()
+/// <summary>
+/// Notification of variable setting.
+/// </summary>
+/// <param name="succeeded">true:variable was set/false:not set</param>
+void CDlgSticktrace::SetVariableNotify(bool succeeded)
 {
-	auto button = (CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE);
-	button->SetCheck(BST_CHECKED);
+	UpdateWatchWindow();
 }
-
-void CDlgSticktrace::OnStop()
-{
-	auto button = (CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE);
-	button->SetCheck(BST_UNCHECKED);
-	button = (CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK);
-	button->SetCheck(BST_UNCHECKED);
-	button = (CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_STOP);
-	button->SetCheck(BST_UNCHECKED);
-}
-*/
 
 void CDlgSticktrace::OnTcnSelchangeSceTabOutput(NMHDR *pNMHDR, LRESULT *pResult)
 {
@@ -1104,18 +1168,18 @@ void CDlgSticktrace::OnTcnSelchangeSceTabOutput(NMHDR *pNMHDR, LRESULT *pResult)
 		GetDlgItem(IDC_SCE_LSV_WATCH)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_NAME)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_VALUE)->ShowWindow(SW_HIDE);
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->ShowWindow(SW_HIDE);
 
 		GetDlgItem(IDC_SCE_EDT_ERROR)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_EDT_OUTPUT)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_LSV_WATCH)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_NAME)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_VALUE)->EnableWindow(FALSE);
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(FALSE);
 		break;
 	case 1:	// 変数。
 		GetDlgItem(IDC_SCE_EDT_ERROR)->ShowWindow(SW_HIDE);
@@ -1123,18 +1187,18 @@ void CDlgSticktrace::OnTcnSelchangeSceTabOutput(NMHDR *pNMHDR, LRESULT *pResult)
 		GetDlgItem(IDC_SCE_LSV_WATCH)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_NAME)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_VALUE)->ShowWindow(SW_SHOW);
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->ShowWindow(SW_SHOW);
 
 		GetDlgItem(IDC_SCE_EDT_ERROR)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_EDT_OUTPUT)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_LSV_WATCH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_NAME)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_VALUE)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(TRUE);
 		break;
 	case 2:	// 出力。
 		GetDlgItem(IDC_SCE_EDT_ERROR)->ShowWindow(SW_HIDE);
@@ -1142,18 +1206,18 @@ void CDlgSticktrace::OnTcnSelchangeSceTabOutput(NMHDR *pNMHDR, LRESULT *pResult)
 		GetDlgItem(IDC_SCE_LSV_WATCH)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_NAME)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_VALUE)->ShowWindow(SW_HIDE);
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->ShowWindow(SW_HIDE);
 
 		GetDlgItem(IDC_SCE_EDT_ERROR)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_EDT_OUTPUT)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_LSV_WATCH)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_NAME)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_EDT_VARIABLE_VALUE)->EnableWindow(FALSE);
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(FALSE);
 		break;
 	}
 	OnIdleUpdateCmdUI(0, 0);
@@ -1244,8 +1308,8 @@ void CDlgSticktrace::OnMouseMove(UINT nFlags, CPoint point)
 		//----- ペインバーの稼働範囲を計算 -----
 		CRect rtScript;		// スクリプトウィンドウ領域
 		CRect rtChange;		// 変更ボタン領域
-		GetDlgItem(IDC_SCE_EDT_SCRIPT)->GetWindowRect(rtScript);	// スクリプトエディター
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->GetWindowRect(rtChange);		// 変更ボタン
+		GetDlgItem(IDC_SCE_EDT_SCRIPT)->GetWindowRect(rtScript);		// スクリプトエディター
+		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->GetWindowRect(rtChange);		// 追加ボタン
 		ScreenToClient(&rtScript);
 		ScreenToClient(&rtChange);
 		// スクリプトウィンドウの幅が100以下にならないよう調整する。右は変更ボタンを隠さないよう。
@@ -1332,6 +1396,9 @@ LRESULT CDlgSticktrace::OnUserCommand(WPARAM, LPARAM)
 		SetSource(strParam1, strParam2, wsrc);
 		break;
 	}
+	case CDlgSticktrace::InCmd::Command::NEW_SESSION:
+		NewSession();
+		break;
 	case CDlgSticktrace::InCmd::Command::ON_START:
 		OnStart();
 		break;
@@ -1356,6 +1423,9 @@ LRESULT CDlgSticktrace::OnUserCommand(WPARAM, LPARAM)
 	case CDlgSticktrace::InCmd::Command::SET_WATCH:
 		SetWatch(strParam1);
 		break;
+	case CDlgSticktrace::InCmd::Command::SET_VARIABLE_NOTIFY:
+		SetVariableNotify(i64Param1 != 0);
+		break;
 	default:
 		break;
 	}
@@ -1372,11 +1442,19 @@ LRESULT CDlgSticktrace::OnUserBreakpointUpdated(WPARAM, LPARAM)
 		for (const auto & bp : breakpoint)
 		{
 			if ((int)m_breakpointSlow.lineIndexToIsBreak.size() <= bp.first.second)
-				m_breakpointSlow.lineIndexToIsBreak.resize(bp.first.second + 1);
-			m_breakpointSlow.lineIndexToIsBreak[bp.first.second] = 1;
+				m_breakpointSlow.lineIndexToIsBreak.resize(bp.first.second + 1, 0);
+			m_breakpointSlow.lineIndexToIsBreak[bp.first.second]++;
 			m_breakpointSlow.lineIndexAndSourceNameSet.insert(std::make_pair(bp.first.second, bp.first.first));
 		}
-		::InterlockedExchange(&m_breakpointFast.breakpointCount, (LONG)m_breakpointSlow.lineIndexAndSourceNameSet.size());
+		if (m_breakpointSlow.m_runToCursorLineIndex != -1)
+		{
+			m_breakpointSlow.lineIndexToIsBreak[m_breakpointSlow.m_runToCursorLineIndex]++;
+			::InterlockedExchange(&m_breakpointFast.breakpointCount, (LONG)(m_breakpointSlow.lineIndexAndSourceNameSet.size() + 1));
+		}
+		else
+		{
+			::InterlockedExchange(&m_breakpointFast.breakpointCount, (LONG)m_breakpointSlow.lineIndexAndSourceNameSet.size());
+		}
 	}
 	return 1;
 }
@@ -1479,9 +1557,9 @@ LRESULT CDlgSticktrace::OnIdleUpdateCmdUI(WPARAM, LPARAM)
 		GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->EnableWindow(FALSE);
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(TRUE);
 		break;
 	case CDlgSticktrace::Mode::STOPPING:
 		((CButton*)GetDlgItem(IDC_SCE_CHK_DEBUG_MODE))->SetCheck(isDebugMode ? BST_CHECKED : BST_UNCHECKED);
@@ -1494,9 +1572,9 @@ LRESULT CDlgSticktrace::OnIdleUpdateCmdUI(WPARAM, LPARAM)
 		GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(TRUE);
 		break;
 	case CDlgSticktrace::Mode::RUN:
 		((CButton*)GetDlgItem(IDC_SCE_CHK_DEBUG_MODE))->SetCheck(isDebugMode ? BST_CHECKED : BST_UNCHECKED);
@@ -1509,9 +1587,9 @@ LRESULT CDlgSticktrace::OnIdleUpdateCmdUI(WPARAM, LPARAM)
 		GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(TRUE);
 		break;
 	case CDlgSticktrace::Mode::SUSPEND:
 		((CButton*)GetDlgItem(IDC_SCE_CHK_DEBUG_MODE))->SetCheck(isDebugMode ? BST_CHECKED : BST_UNCHECKED);
@@ -1524,9 +1602,9 @@ LRESULT CDlgSticktrace::OnIdleUpdateCmdUI(WPARAM, LPARAM)
 		GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_CHANGE_VARIABLE)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(TRUE);
 		break;
 	default:
 		break;
@@ -1673,14 +1751,34 @@ void CDlgSticktrace::OnUpdateSceDebugStepToNext(CCmdUI *pCmdUI)
 	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->IsWindowEnabled());
 } // CDlgSticktrace::OnUpdateSceDebugStepToNext.
 
-void CDlgSticktrace::OnSceDebugUntilCaret()
+void CDlgSticktrace::OnSceDebugRunToCursor()
 {
-} // CDlgSticktrace::OnSceDebugUntilCaret.
+	auto sourceName = m_textEditor.GetContentName();
+	auto lineIndex = m_textEditor.GetCurLineIndex();
+	{
+		AutoLeaveCS acs(m_breakpointSlow.cs);
+		if (m_breakpointSlow.m_runToCursorLineIndex == -1)
+		{
+			m_breakpointSlow.m_runToCursorSourceName = sourceName;
+			m_breakpointSlow.m_runToCursorLineIndex = lineIndex;
+			if ((int)m_breakpointSlow.lineIndexToIsBreak.size() <= m_breakpointSlow.m_runToCursorLineIndex)
+				m_breakpointSlow.lineIndexToIsBreak.resize(m_breakpointSlow.m_runToCursorLineIndex + 1, 0);
+			m_breakpointSlow.lineIndexToIsBreak[m_breakpointSlow.m_runToCursorLineIndex]++;
+			::InterlockedExchange(&m_breakpointFast.breakpointCount, (LONG)(m_breakpointSlow.lineIndexAndSourceNameSet.size() + 1));
+		}
+	}
+	{
+		AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
+		m_outcmd.command = SticktraceCommand::RESUME;
+		acs.WakeConditionVariable();
+	}
+} // CDlgSticktrace::OnSceDebugRunToCursor.
 
-void CDlgSticktrace::OnUpdateSceDebugUntilCaret(CCmdUI *pCmdUI)
+void CDlgSticktrace::OnUpdateSceDebugRunToCursor(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(FALSE);
-} // CDlgSticktrace::OnUpdateSceDebugUntilCaret.
+	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
+	pCmdUI->Enable(mode == Mode::SUSPEND);
+} // CDlgSticktrace::OnUpdateSceDebugRunToCursor.
 
 void CDlgSticktrace::OnSceDebugStop()
 {
@@ -1692,31 +1790,34 @@ void CDlgSticktrace::OnUpdateSceDebugStop(CCmdUI *pCmdUI)
 	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->IsWindowEnabled());
 } // CDlgSticktrace::OnUpdateSceDebugStop.
 
-void CDlgSticktrace::OnSceDebugChangeVariable()
+void CDlgSticktrace::OnSceDebugSetVariable()
 {
-} // CDlgSticktrace::OnSceDebugChangeVariable.
+	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_BTN_SET_VARIABLE, BN_CLICKED), 0);
+} // CDlgSticktrace::OnSceDebugSetVariable.
 
-void CDlgSticktrace::OnUpdateSceDebugChangeVariable(CCmdUI *pCmdUI)
+void CDlgSticktrace::OnUpdateSceDebugSetVariable(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(FALSE);
-} // CDlgSticktrace::OnUpdateSceDebugChangeVariable.
+	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->IsWindowEnabled());
+} // CDlgSticktrace::OnUpdateSceDebugSetVariable.
 
 void CDlgSticktrace::OnSceDebugAddWatch()
 {
+	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_BTN_ADD_WATCH, BN_CLICKED), 0);
 } // CDlgSticktrace::OnSceDebugAddWatch.
 
 void CDlgSticktrace::OnUpdateSceDebugAddWatch(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(FALSE);
+	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->IsWindowEnabled());
 } // CDlgSticktrace::OnUpdateSceDebugAddWatch.
 
 void CDlgSticktrace::OnSceDebugDeleteWatch()
 {
+	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_BTN_DELETE_WATCH, BN_CLICKED), 0);
 } // CDlgSticktrace::OnSceDebugDeleteWatch.
 
 void CDlgSticktrace::OnUpdateSceDebugDeleteWatch(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(FALSE);
+	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->IsWindowEnabled());
 } // CDlgSticktrace::OnUpdateSceDebugDeleteWatch.
 
 void CDlgSticktrace::OnSceWinError()
@@ -1798,9 +1899,74 @@ void CDlgSticktrace::OnUpdateHelp(CCmdUI *pCmdUI)
 /// <summary>
 /// Called when [the change variable button clicked].
 /// </summary>
-void CDlgSticktrace::OnBnClickedSceBtnChangeVariable()
+void CDlgSticktrace::OnBnClickedSceBtnSetVariable()
 {
-	// TODO: ここにコントロール通知ハンドラー コードを追加します。
+	// Get the variable name.
+	std::string varName;
+	UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_VARIABLE_NAME, varName);
+	UtilString::Trim(varName);
+	// Get the value of variable.
+	std::string varValue;
+	UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_VARIABLE_VALUE, varValue);
+	UtilString::Trim(varValue);
+
+	if (varName.empty())
+	{
+		::MessageBox(GetSafeHwnd(), L"Variable name is not filled.", nullptr, MB_OK);
+		return;
+	}
+	if (varValue.empty())
+	{
+		::MessageBox(GetSafeHwnd(), L"Variable value is not filled.", nullptr, MB_OK);
+		return;
+	}
+
+	__int32 varType;
+	std::string newValue;
+	if (_stricmp(varValue.c_str(), "nil") == 0)
+	{
+		varType = LUA_TNIL;
+		newValue = "";
+	}
+	else if (_stricmp(varValue.c_str(), "true") == 0)
+	{
+		varType = LUA_TBOOLEAN;
+		newValue = "true";
+	}
+	else if (_stricmp(varValue.c_str(), "false") == 0)
+	{
+		varType = LUA_TBOOLEAN;
+		newValue = "false";
+	}
+	else if (1 < varValue.length() && varValue.front() == '\"' && varValue.back() == '\"')
+	{
+		varType = LUA_TSTRING;
+		newValue = varValue.substr(1, varValue.length() - 2);
+	}
+	else
+	{
+		// Assume it is a numeric.
+		char* endPtr;
+		(void)::strtod(varValue.c_str(), &endPtr);
+		if (endPtr[0] != '\0')
+		{
+			::MessageBox(GetSafeHwnd(), L"Form of the variable value is wrong.", nullptr, MB_OK);
+			return;
+		}
+		varType = LUA_TNUMBER;
+		newValue = varValue;
+	}
+	std::string data;
+	Stickutil::Serialize(data, m_sandbox);
+	Stickutil::Serialize(data, varName);
+	Stickutil::Serialize(data, varType);
+	Stickutil::Serialize(data, newValue);
+	{
+		AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
+		m_outcmd.command = SticktraceCommand::SET_VARIABLE;
+		m_outcmd.strParamA = data;
+		acs.WakeConditionVariable();
+	}
 }
 
 /// <summary>
@@ -1823,7 +1989,7 @@ void CDlgSticktrace::OnBnClickedSceBtnAddWatch()
 		lvi.iItem = itemCount;
 		lvi.iSubItem = 0;
 		lvi.pszText = (wchar_t*)wstr.c_str();
-		lvi.iImage = 0;
+		lvi.iImage = 4;
 		pLsvWatch->InsertItem(&lvi);
 
 		// ウォッチウィンドウを更新。
@@ -1836,12 +2002,53 @@ void CDlgSticktrace::OnBnClickedSceBtnAddWatch()
 /// </summary>
 void CDlgSticktrace::OnBnClickedSceBtnDeleteWatch()
 {
-	// 行を追加。
+	// e.g.
+	//
+	// X      indent=0
+	// A      indent=0
+	// |-B    indent=1
+	// |-C    indent=1  <-- curSel
+	// |-D    indent=1
+	// Z      indent=0
+	//
 	CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
 	auto curSel = UtilDlg::GetCurSel(pLsvWatch);
 	if (curSel != -1)
 	{
-		pLsvWatch->DeleteItem(curSel);
+		LVITEM item;
+		memset(&item, 0, sizeof(item));
+		item.mask = LVIF_INDENT;
+
+		// Move curSel upward until indent=0
+		//
+		// X      indent=0
+		// A      indent=0  <-- curSel
+		// |-B    indent=1
+		// |-C    indent=1
+		// |-D    indent=1
+		// Z      indent=0
+		//
+		for (;;)
+		{
+			item.iItem = curSel;
+			pLsvWatch->GetItem(&item);
+			if (item.iIndent == 0) break;
+			curSel--;
+		}
+
+		// Delete curSel item until indent=0
+		//
+		// X      indent=0
+		// Z      indent=0  <-- curSel
+		//
+		for (;;)
+		{
+			pLsvWatch->DeleteItem(curSel);
+			if (curSel == pLsvWatch->GetItemCount()) break;
+			item.iItem = curSel;
+			pLsvWatch->GetItem(&item);
+			if (item.iIndent == 0) break;
+		}
 	}
 }
 
@@ -1947,8 +2154,7 @@ void CDlgSticktrace::OnBnClickedSceChkDebugMode()
 
 void CDlgSticktrace::OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu)
 {
-	CFCDlgModelessBase::OnInitMenuPopup(pPopupMenu, nIndex, bSysMenu);
-	CString str;
+	BASE_CLASS::OnInitMenuPopup(pPopupMenu, nIndex, bSysMenu);
 	for (int i = 0; i != pPopupMenu->GetMenuItemCount(); i++)
 	{
 		auto id = pPopupMenu->GetMenuItemID(i);
@@ -1959,22 +2165,106 @@ void CDlgSticktrace::OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMe
 		state.m_nIndex = (UINT)i;
 		state.m_nID = id;
 		OnCmdMsg(state.m_nID, CN_UPDATE_COMMAND_UI, &state, nullptr);
-
-
-		pPopupMenu->GetMenuString(i, str, MF_BYPOSITION);
 	}
 	// TODO: ここにメッセージ ハンドラー コードを追加します。
 }
 
+/// <summary>
+/// Called when any item of watch-window has been changed. Catch the selection of watch-window too.
+/// </summary>
+/// <param name="pNMHDR"></param>
+/// <param name="pResult"></param>
 void CDlgSticktrace::OnLvnItemchangedSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	if (pNMLV->uChanged & LVIF_STATE && pNMLV->uNewState & LVIS_SELECTED)
-	{
+	{	//----- If selection was changed -----
 		CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
-		SetDlgItemText(IDC_SCE_EDT_VARIABLE_NAME, pLsvWatch->GetItemText(pNMLV->iItem, 0));
-		SetDlgItemText(IDC_SCE_EDT_VARIABLE_VALUE, pLsvWatch->GetItemText(pNMLV->iItem, 1));
+		// e.g.
+		//
+		// X       indent=0
+		// A       indent=0
+		// |-"B"   indent=1
+		// |-"C"   indent=1
+		// |  |-1  indent=2
+		// |  |-2  indent=2  <-- curSel
+		// |  |-3  indent=2
+		// Z       indent=0
+		//
+		// text="2", indent=2
+		//
+		// The text of the selection is '2', but variable name must be 'A["C"][2]'.
+		// The steps below makes a variable name "A["C"][2]"
+		//
+		auto curSel = pNMLV->iItem;
+		std::wstring varName;
+		std::wstring varValue;
+		if (curSel != -1)
+		{
+			LVITEM item;
+			wchar_t buff[1000];
+			memset(&item, 0, sizeof(item));
+			// Get indent and text.
+			item.mask = LVIF_TEXT|LVIF_INDENT;
+			item.pszText = buff;
+			item.cchTextMax = _countof(buff);
+			int indent = INT_MIN;
+			std::vector<std::wstring> memberStack;
+			// Move curSel upward until indent=0
+			//
+			// X       indent=0
+			// A       indent=0  <-- curSel
+			// |-"B"   indent=1        A
+			// |-"C"   indent=1        |
+			// |  |-1  indent=2        |
+			// |  |-2  indent=2        +
+			// |  |-3  indent=2
+			// Z       indent=0
+			//
+			// memberStack={"2",""C"","A"}
+			//
+			for (;;)
+			{
+				item.iItem = curSel;
+				pLsvWatch->GetItem(&item);
+				if (indent != item.iIndent)
+					memberStack.emplace_back(item.pszText);
+				indent = item.iIndent;
+				if (item.iIndent == 0) break;
+				curSel--;
+			}
+			varName = memberStack.back();
+			memberStack.pop_back();
+			while (!memberStack.empty())
+			{
+				varName += L'[';
+				varName += memberStack.back();
+				memberStack.pop_back();
+				varName += L']';
+			}
+			varValue = (const wchar_t*)pLsvWatch->GetItemText(pNMLV->iItem, 1);
+		}
+		SetDlgItemText(IDC_SCE_EDT_VARIABLE_NAME, varName.c_str());
+		SetDlgItemText(IDC_SCE_EDT_VARIABLE_VALUE, varValue.c_str());
 	}
 
 	*pResult = 0;
+}
+
+BOOL CDlgSticktrace::PreTranslateMessage(MSG* pMsg)
+{
+	// コントロールにCtrl+C,Ctrl+V,Ctrl+X,Ctrl+Zを配信する。
+	if (m_accelerator != NULL && ::TranslateAccelerator(m_hWnd, m_accelerator, pMsg))
+		return TRUE;
+	else
+		return BASE_CLASS::PreTranslateMessage(pMsg);
+}
+
+
+void CDlgSticktrace::OnDestroy()
+{
+	BASE_CLASS::OnDestroy();
+
+	::DestroyAcceleratorTable(m_accelerator);
+	m_accelerator = NULL;
 }

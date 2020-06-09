@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "resource.h"
 #include "UtilStr.h"	// CompText.
 #include "UtilWin.h"	// For FFGetWindowText
 #include "UtilDlg.h"	// For FFUndoEdit.
@@ -25,6 +26,20 @@ BEGIN_MESSAGE_MAP(CFCDdEdit, BASE_CLASS)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, &CFCDdEdit::OnUpdateEditUndo)
 	ON_COMMAND(ID_EDIT_REDO, &CFCDdEdit::OnEditRedo)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, &CFCDdEdit::OnUpdateEditRedo)
+	ON_COMMAND(ID_EDIT_CUT, &CFCDdEdit::OnEditCut)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, &CFCDdEdit::OnUpdateEditCut)
+	ON_COMMAND(ID_EDIT_COPY, &CFCDdEdit::OnEditCopy)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CFCDdEdit::OnUpdateEditCopy)
+	ON_COMMAND(ID_EDIT_PASTE, &CFCDdEdit::OnEditPaste)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, &CFCDdEdit::OnUpdateEditPaste)
+	ON_COMMAND(ID_EDIT_DELETE, &CFCDdEdit::OnEditDelete)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, &CFCDdEdit::OnUpdateEditDelete)
+	ON_COMMAND(ID_EDIT_SELECT_ALL, &CFCDdEdit::OnEditSelectAll)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECT_ALL, &CFCDdEdit::OnUpdateEditSelectAll)
+	ON_MESSAGE(WM_USER_DDEDIT_SETTEXT_NOTIFY, &CFCDdEdit::OnUserSettextNotify)
+	ON_WM_CONTEXTMENU()
+//	ON_WM_CREATE()
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 //********************************************************************************************
@@ -37,10 +52,11 @@ END_MESSAGE_MAP()
  */
 //********************************************************************************************
 CFCDdEdit::CFCDdEdit ()
-		:m_dwMenuId(DWORD(-1))
-		,m_iSubmenuIndex(-1)
-		,m_bIsUndoable(FALSE)
-		,m_iCurUndoBuffer(0)	// Undoバッファー現在位置。
+	: m_accelerator(NULL)
+	, m_dwMenuId(DWORD(-1))
+	, m_iSubmenuIndex(-1)
+	, m_bIsUndoable(FALSE)
+	, m_iCurUndoBuffer(0)	// Undoバッファー現在位置。
 {
 } // CFCDdEdit::CFCDdEdit
 
@@ -131,6 +147,13 @@ void CFCDdEdit::SetContextMenu (DWORD menuId, int submenuIndex)
 	m_dwMenuId = menuId;
 	m_iSubmenuIndex = submenuIndex;
 } // CFCDdEdit::SetContextMenu.
+
+void CFCDdEdit::SetAccelerator (DWORD accelId)
+{
+	if (m_accelerator != NULL)
+		::DestroyAcceleratorTable(m_accelerator);
+	m_accelerator = ::LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(accelId));
+}
 
 //********************************************************************************************
 /*!
@@ -235,7 +258,6 @@ void CFCDdEdit::OnLButtonDblClk (UINT nFlags, CPoint point)
 //********************************************************************************************
 BOOL CFCDdEdit::OnUpdate ()
 {
-	// 無制限Undoの場合はUndoバッファを設定。
 	if (m_bIsUndoable)
 	{
 		// 標準のUndoバッファをクリア。
@@ -260,8 +282,7 @@ BOOL CFCDdEdit::OnUpdate ()
 void CFCDdEdit::OnEditUndo ()
 {
 	if (m_bIsUndoable)
-	//----- 無制限Undoの場合 -----
-	{
+	{	//----- 無制限Undoの場合 -----
 		// 一時的に無制限Undoを不可にする。FFUndoEdit中でReplaceSelを実行するが、これがEN_UPDATEを発生させOnUpdateを実行するため。
 		m_bIsUndoable = FALSE;
 		m_iCurUndoBuffer = UtilDlg::UndoEdit(this, m_vUndoBuffer, m_iCurUndoBuffer);
@@ -289,6 +310,14 @@ void CFCDdEdit::OnEditUndo ()
 //********************************************************************************************
 void CFCDdEdit::OnUpdateEditUndo (CCmdUI* pCmdUI)
 {
+	if (m_bIsUndoable)
+	{	//----- 無制限Undoの場合 -----
+		pCmdUI->Enable(!IsFlagged(GetStyle(), ES_READONLY) && m_iCurUndoBuffer != 0);
+	}
+	else
+	{
+		pCmdUI->Enable(CanUndo());
+	}
 } // CFCDdEdit::OnUpdateEditUndo
 
 //********************************************************************************************
@@ -334,4 +363,149 @@ void CFCDdEdit::OnEditRedo ()
 //********************************************************************************************
 void CFCDdEdit::OnUpdateEditRedo (CCmdUI* pCmdUI)
 {
+	if (m_bIsUndoable)
+	{	//----- 無制限Undoの場合 -----
+		pCmdUI->Enable(!IsFlagged(GetStyle(), ES_READONLY) && m_iCurUndoBuffer < (int)m_vUndoBuffer.size());
+	}
+	else
+	{
+		pCmdUI->Enable(CanUndo());
+	}
 } // CFCDdEdit::OnUpdateEditRedo
+
+void CFCDdEdit::OnEditCut()
+{
+	BASE_CLASS::Cut();
+} // CFCDdEdit::OnEditCut.
+
+void CFCDdEdit::OnUpdateEditCut (CCmdUI* pCmdUI)
+{
+	int startChar, endChar;
+	GetSel(startChar, endChar);
+	pCmdUI->Enable(!IsFlagged(GetStyle(), ES_READONLY) && startChar < endChar);
+} // CFCDdEdit::OnUpdateEditCut.
+
+void CFCDdEdit::OnEditCopy()
+{
+	BASE_CLASS::Copy();
+} // CFCDdEdit::OnEditCopy.
+
+void CFCDdEdit::OnUpdateEditCopy (CCmdUI* pCmdUI)
+{
+	int startChar, endChar;
+	GetSel(startChar, endChar);
+	pCmdUI->Enable(startChar < endChar);
+} // CFCDdEdit::OnUpdateEditCopy.
+
+void CFCDdEdit::OnEditPaste()
+{
+	BASE_CLASS::Paste();
+} // CFCDdEdit::OnEditPaste.
+
+void CFCDdEdit::OnUpdateEditPaste (CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(!IsFlagged(GetStyle(), ES_READONLY) && IsClipboardFormatAvailable(CF_TEXT));
+} // CFCDdEdit::OnUpdateEditPaste.
+
+void CFCDdEdit::OnEditDelete()
+{
+	SendMessage(WM_KEYDOWN, VK_DELETE, 0);
+} // CFCDdEdit::OnEditDelete.
+
+void CFCDdEdit::OnUpdateEditDelete (CCmdUI* pCmdUI)
+{
+	int startChar, endChar;
+	GetSel(startChar, endChar);
+	pCmdUI->Enable(!IsFlagged(GetStyle(), ES_READONLY) && startChar != GetWindowTextLength());
+} // CFCDdEdit::OnUpdateEditDelete.
+
+void CFCDdEdit::OnEditSelectAll()
+{
+	SetSel(0, -1);
+} // CFCDdEdit::OnEditSelectAll.
+
+void CFCDdEdit::OnUpdateEditSelectAll (CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(GetWindowTextLength() != 0);
+} // CFCDdEdit::OnUpdateEditSelectAll.
+
+LRESULT CFCDdEdit::OnUserSettextNotify(WPARAM, LPARAM)
+{
+	// 標準のUndoバッファをクリア。
+	EmptyUndoBuffer();
+	if (m_bIsUndoable)
+	{
+		// 無制限Undoバッファをクリア。
+		ResetUndoBuffer();
+	}
+
+	return 1;
+} // CFCDdEdit::OnUserSettextNotify.
+
+void CFCDdEdit::OnContextMenu(CWnd* pWnd, CPoint point)
+{
+	if (m_dwMenuId != DWORD(-1) && m_iSubmenuIndex != -1)
+	{
+		CMenu menu;
+		menu.LoadMenu(m_dwMenuId);
+		auto subMenu = menu.GetSubMenu(m_iSubmenuIndex);
+
+		for (int i = 0; i != subMenu->GetMenuItemCount(); i++)
+		{
+			auto id = subMenu->GetMenuItemID(i);
+			CCmdUI state;
+			state.m_pMenu = subMenu;
+			state.m_pOther = this;
+			state.m_nIndexMax = subMenu->GetMenuItemCount();
+			state.m_nIndex = (UINT)i;
+			state.m_nID = id;
+			OnCmdMsg(state.m_nID, CN_UPDATE_COMMAND_UI, &state, nullptr);
+		}
+
+		// ClientToScreen(&point);
+		subMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
+	}
+	else
+	{
+		BASE_CLASS::OnContextMenu(pWnd, point);
+	}
+}
+
+
+//int CFCDdEdit::OnCreate(LPCREATESTRUCT lpCreateStruct)
+//{
+//	if (CEdit::OnCreate(lpCreateStruct) == -1)
+//		return -1;
+//
+//
+//	return 0;
+//}
+
+
+void CFCDdEdit::OnDestroy()
+{
+	BASE_CLASS::OnDestroy();
+
+	if (m_accelerator != NULL)
+		::DestroyAcceleratorTable(m_accelerator);
+	m_accelerator = NULL;
+}
+
+
+BOOL CFCDdEdit::PreTranslateMessage(MSG* pMsg)
+{
+	// コントロールにCtrl+C,Ctrl+V,Ctrl+X,Ctrl+Zを配信する。
+	if (m_accelerator != NULL && ::TranslateAccelerator(m_hWnd, m_accelerator, pMsg))
+		return TRUE;
+	else
+		return BASE_CLASS::PreTranslateMessage(pMsg);
+}
+
+
+LRESULT CFCDdEdit::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	if (message == WM_SETTEXT)
+		PostMessage(WM_USER_DDEDIT_SETTEXT_NOTIFY);
+
+	return BASE_CLASS::WindowProc(message, wParam, lParam);
+}

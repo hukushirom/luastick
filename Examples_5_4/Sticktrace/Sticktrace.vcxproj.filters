@@ -193,13 +193,16 @@
     <Image Include="res\find.ico">
       <Filter>リソース ファイル</Filter>
     </Image>
-    <Image Include="res\run.ico">
-      <Filter>リソース ファイル</Filter>
-    </Image>
     <Image Include="res\subvar.ico">
       <Filter>リソース ファイル</Filter>
     </Image>
     <Image Include="res\var.ico">
+      <Filter>リソース ファイル</Filter>
+    </Image>
+    <Image Include="res\var_unknown.ico">
+      <Filter>リソース ファイル</Filter>
+    </Image>
+    <Image Include="res\var_warn.ico">
       <Filter>リソース ファイル</Filter>
     </Image>
   </ItemGroup>

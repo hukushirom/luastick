@@ -611,7 +611,7 @@ void CFCTextEdit::OutMarkerStream (std::wstring& wstrStream) const
 		UtilStr::AppendDWORD(wstrStream, (DWORD)mpMarker->size());
 		for (const auto & i : *mpMarker)
 		{
-			UtilStr::AppendString(wstrStream, Astrwstr::astr_to_wstr(std::wstring{},  i.first.first).c_str());
+			UtilStr::AppendString(wstrStream, Astrwstr::astr_to_wstr((std::wstring&)std::wstring{},  i.first.first).c_str());
 			UtilStr::AppendDWORD(wstrStream, (DWORD)i.first.second);
 			UtilStr::AppendString(wstrStream, i.second.c_str());
 		}
@@ -640,7 +640,7 @@ void CFCTextEdit::InMarkerStream (std::wstring& wstrStream)
 		const int markersCount = (int)UtilStr::ExtractDWORD(wstrStream);
 		for (int i = 0; i != markersCount; i++)
 		{
-			const std::string contentName = Astrwstr::wstr_to_astr(std::string{}, UtilStr::ExtractString(wstrStream));
+			const std::string contentName = Astrwstr::wstr_to_astr((std::string&)std::string{}, UtilStr::ExtractString(wstrStream));
 			const int lineIndex = (int)UtilStr::ExtractDWORD(wstrStream);
 			const std::wstring lineText = UtilStr::ExtractString(wstrStream);
 			(*mpMarker)[std::make_pair(contentName, lineIndex)] = lineText;
@@ -652,6 +652,11 @@ void CFCTextEdit::InMarkerStream (std::wstring& wstrStream)
 void CFCTextEdit::SetContentName(const std::string & name)
 {
 	m_contentName = name;
+}
+
+const std::string & CFCTextEdit::GetContentName() const
+{
+	return m_contentName;
 }
 
 const std::map<std::pair<std::string, int>, std::wstring>& CFCTextEdit::GetBreakpoint() const
@@ -748,7 +753,8 @@ END_MESSAGE_MAP()
 //********************************************************************************************
 BOOL CFCTextEdit::PreTranslateMessage (MSG* pMsg)
 {
-//	TRACE(L"CFCTextEdit::PreTranslateMessage %x %x %x\n", pMsg->message, pMsg->wParam, pMsg->lParam);
+	// TRACE(L"CFCTextEdit::PreTranslateMessage %x %x %x\n", pMsg->message, pMsg->wParam, pMsg->lParam);
+
 	// 選択範囲を取得。
 	int startCharIndex;
 	int endCharIndex;

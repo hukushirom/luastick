@@ -19,9 +19,9 @@ public:
 	enum class Mode : LONG
 	{
 		STOP = 0,
-		STOPPING,
+		STOPPING,			// Just issued Stop command to main thread.
 		RUN,
-		SUSPEND,		// Suspended.
+		SUSPEND,			// Suspended.
 		// PROCEED_NEXT,	// Proceed to next line.
 	};
 
@@ -46,14 +46,17 @@ public:
 	bool TC_OnSuspended();
 	bool TC_OnResumed();
 	bool TC_Jump(const char * name, int lineIndex);
+	bool TC_NewSession();
 	bool TC_OnStart();
 	bool TC_OnStop();
 	bool TC_OutputError(const char * message);
 	bool TC_OutputDebug(const char * message);
 	bool TC_SetWatch(const std::string& data);
-	SticktraceCommand TC_GetCommand(std::string & param, uint32_t waitMilliseconds);
+	bool TC_SetVariableNotify(bool succeeded);
+	SticktraceCommand TC_GetCommand(std::string & paramA, uint32_t waitMilliseconds);
 
 private:
+	HACCEL	m_accelerator;
 	CFCTextEdit m_textEditor;
 	std::string m_sandbox;
 	CFCDdEdit m_output;
@@ -75,6 +78,7 @@ private:
 		{
 			NONE,
 			SET_SOURCE,
+			NEW_SESSION,
 			ON_START,
 			ON_STOP,
 			ON_SUSPENDED,
@@ -83,6 +87,7 @@ private:
 			OUTPUT_ERROR,
 			OUTPUT_DEBUG,
 			SET_WATCH,
+			SET_VARIABLE_NOTIFY,
 		};
 
 		AutoCS cs;	// Locking object to protect this area.
@@ -106,23 +111,44 @@ private:
 		AutoCS cs;	// Locking object to protect this area.
 		AutoCV cv;	// Locking object to protect this area.
 		SticktraceCommand command;
-		std::string strParam1;
+		std::string strParamA;
 
 		OutCmd() : command(SticktraceCommand::NONE) {}
 		~OutCmd() = default;
 	} m_outcmd;
 
+	/// <summary>
+	/// Check the breakpoint status fast.
+	/// Member variables are refered from main thread and dialog thread both, using Interlocked function.
+	/// Application can confirm that breakpoints exist or not.
+	/// </summary>
 	struct
 	{
-		LONG suspendMode;
-		LONG breakpointCount;
+		LONG suspendMode;		// CDlgSticktrace::Mode::XXXX.
+		LONG breakpointCount;	// Total number of breakpoints.
 	} m_breakpointFast;
 
+	/// <summary>
+	/// Check the line number of breakpoint.
+	/// Member variables are refered from main thread and dialog thread both, using AutoCS.
+	/// It is not fast.
+	/// </summary>
 	struct
 	{
 		AutoCS cs;
 		std::vector<__int8> lineIndexToIsBreak;
 		std::set<std::pair<int, std::string>> lineIndexAndSourceNameSet;
+
+		/// <summary>
+		/// Source name of run-to-cursor.
+		/// </summary>
+		std::string m_runToCursorSourceName;
+
+		/// <summary>
+		/// Line number of run-to-cursor.
+		/// -1: Run-to-cursor is not set.
+		/// </summary>
+		int m_runToCursorLineIndex;
 	} m_breakpointSlow;
 
 	struct
@@ -145,6 +171,7 @@ protected:
 	void SetSource(const std::string & sandbox, const std::string & name, const std::wstring & src);
 	void Jump(const std::string & name, int lineIndex, CFCTextEdit::MarkerType markerType, bool selectLine);
 	bool JumpErrorLocation();
+	void NewSession();
 	void OnStart();
 	void OnStop();
 	void OnSuspended();
@@ -152,8 +179,7 @@ protected:
 	void OutputError(const std::string & message);
 	void OutputDebug(const std::string & message);
 	void SetWatch(const std::string & data);
-	// void OnStart();
-	// void OnStop();
+	void SetVariableNotify(bool succeeded);
 
 public:
 	afx_msg void OnTcnSelchangeSceTabOutput(NMHDR *pNMHDR, LRESULT *pResult);
@@ -194,12 +220,12 @@ public:
 	afx_msg void OnUpdateSceDebugBreak(CCmdUI *pCmdUI);
 	afx_msg void OnSceDebugStepToNext();
 	afx_msg void OnUpdateSceDebugStepToNext(CCmdUI *pCmdUI);
-	afx_msg void OnSceDebugUntilCaret();
-	afx_msg void OnUpdateSceDebugUntilCaret(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugRunToCursor();
+	afx_msg void OnUpdateSceDebugRunToCursor(CCmdUI *pCmdUI);
 	afx_msg void OnSceDebugStop();
 	afx_msg void OnUpdateSceDebugStop(CCmdUI *pCmdUI);
-	afx_msg void OnSceDebugChangeVariable();
-	afx_msg void OnUpdateSceDebugChangeVariable(CCmdUI *pCmdUI);
+	afx_msg void OnSceDebugSetVariable();
+	afx_msg void OnUpdateSceDebugSetVariable(CCmdUI *pCmdUI);
 	afx_msg void OnSceDebugAddWatch();
 	afx_msg void OnUpdateSceDebugAddWatch(CCmdUI *pCmdUI);
 	afx_msg void OnSceDebugDeleteWatch();
@@ -216,7 +242,7 @@ public:
 	afx_msg void OnUpdateSceWinVariableValue(CCmdUI *pCmdUI);
 	afx_msg void OnHelp();
 	afx_msg void OnUpdateHelp(CCmdUI *pCmdUI);
-	afx_msg void OnBnClickedSceBtnChangeVariable();
+	afx_msg void OnBnClickedSceBtnSetVariable();
 	afx_msg void OnBnClickedSceBtnAddWatch();
 	afx_msg void OnBnClickedSceBtnDeleteWatch();
 	afx_msg void OnNMClickSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult);
@@ -225,4 +251,6 @@ public:
 	afx_msg void OnBnClickedSceChkDebugMode();
 	afx_msg void OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu);
 	afx_msg void OnLvnItemchangedSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnDestroy();
 };

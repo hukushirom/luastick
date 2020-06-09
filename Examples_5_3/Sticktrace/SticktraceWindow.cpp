@@ -32,12 +32,14 @@ private:
 	bool OnSuspended();
 	bool OnResumed();
 	bool Jump(const char * name, int lineIndex);
+	bool NewSession();
 	bool OnStart();
 	bool OnStop();
 	bool OutputError(const char* message);
 	bool OutputDebug(const char* message);
 	bool SetWatch(const std::string& data);
-	SticktraceCommand GetCommand(std::string & param, uint32_t waitMilliseconds);
+	bool SetVariableNotify(bool succeeded);
+	SticktraceCommand GetCommand(std::string & paramA, uint32_t waitMilliseconds);
 
 	void Create(unsigned int dialogId);
 	void Destroy();
@@ -197,6 +199,11 @@ bool SticktraceWindow::Jump(const char * name, int lineIndex)
 	return m_stickTraceDlg->TC_Jump(name, lineIndex);
 }
 
+bool SticktraceWindow::NewSession()
+{
+	return m_stickTraceDlg->TC_NewSession();
+}
+
 bool SticktraceWindow::OnStart()
 {
 	return m_stickTraceDlg->TC_OnStart();
@@ -222,8 +229,12 @@ bool SticktraceWindow::SetWatch(const std::string& data)
 	return m_stickTraceDlg->TC_SetWatch(data);
 }
 
-
-SticktraceCommand SticktraceWindow::GetCommand(std::string & param, uint32_t waitMilliseconds)
+bool SticktraceWindow::SetVariableNotify(bool succeeded)
 {
-	return m_stickTraceDlg->TC_GetCommand(param, waitMilliseconds);
+	return m_stickTraceDlg->TC_SetVariableNotify(succeeded);
+}
+
+SticktraceCommand SticktraceWindow::GetCommand(std::string & paramA, uint32_t waitMilliseconds)
+{
+	return m_stickTraceDlg->TC_GetCommand(paramA, waitMilliseconds);
 }

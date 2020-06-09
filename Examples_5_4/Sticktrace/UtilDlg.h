@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "Astrwstr.h"
+
 struct FCDiffRecW;
 
 /*************************************************************************
@@ -89,6 +91,15 @@ public:
 		pWnd->GetDlgItemText(dwCtrl, str);
 		wstr = str;
 		return wstr;
+	}
+
+	// UTF-8で文字列を取得。
+	static std::string& GetDlgItemText(const CWnd* pWnd, DWORD dwCtrl, std::string& astr)
+	{
+		std::wstring wstr;
+		UtilDlg::GetDlgItemText(pWnd, dwCtrl, wstr);
+		Astrwstr::wstr_to_astr(astr, wstr);
+		return astr;
 	}
 
 	static int UndoEdit(CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, int iCurUndoBuffer);

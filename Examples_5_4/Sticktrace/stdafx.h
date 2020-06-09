@@ -48,6 +48,7 @@
 enum : UINT
 {
 	WM_USER_DDEDIT_DBLCLKED = WM_USER + 100,
+	WM_USER_DDEDIT_SETTEXT_NOTIFY,
 	WM_USER_TEXT_EDIT_INPUT_TAB,
 	WM_USER_TEXT_EDIT_MARKER_CLICKED,
 	WM_USER_TEXT_EDIT_CURLINE_CHANGED,
@@ -58,3 +59,10 @@ enum : UINT
 constexpr auto FD_COLREF_ULTLA_LIGHT_GRAY = RGB(0xe8, 0xe8, 0xe8);
 
 extern double GetDisplayPPM();
+
+template<typename S, typename T>
+bool IsFlagged(S value, T flag)
+{
+	return ((value & flag) == flag);
+}
+

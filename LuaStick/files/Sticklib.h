@@ -148,6 +148,7 @@ public:
 	using classobject = void *;
 
 	using charConstP = char const *;
+	using charP = char *;
 	using voidp = void *;
 
 public:
@@ -205,6 +206,26 @@ public:
 		{
 			type = Type::NIL;
 			*this = value;
+		}
+
+		AnyValue (AnyValue && value)
+		{
+			type = value.type;
+			switch (value.type)
+			{
+			case AnyValue::Type::NIL:
+				break;
+			case AnyValue::Type::DOUBLE:
+				doubleValue = value.doubleValue;
+				break;
+			case AnyValue::Type::BOOL:
+				boolValue = value.boolValue;
+				break;
+			case AnyValue::Type::CHARP:
+				charpValue = value.charpValue;
+				break;
+			}
+			value.type = Type::NIL;
 		}
 
 		AnyValue & operator = (const AnyValue & value)
@@ -1015,6 +1036,12 @@ public:
 
 	template<>
 	static void push_lvalue<charConstP>(lua_State * L, charConstP const & value)
+	{
+		lua_pushstring(L, value);
+	}
+
+	template<>
+	static void push_lvalue<charP>(lua_State * L, charP const & value)
 	{
 		lua_pushstring(L, value);
 	}

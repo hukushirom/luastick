@@ -60,6 +60,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;LIBMBA_API=extern;FD_ENGLISH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\lua-5.3.5\src;..\..\LuaStick\src;..\..\LuaStick\files;libmba-0.9.1\src</AdditionalIncludeDirectories>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -86,6 +87,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBMBA_API=extern;FD_ENGLISH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\lua-5.3.5\src;..\..\LuaStick\src;..\..\LuaStick\files;libmba-0.9.1\src</AdditionalIncludeDirectories>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -186,10 +188,11 @@
     <Image Include="res\expanded.ico" />
     <Image Include="res\find.ico" />
     <Image Include="res\notify.ico" />
-    <Image Include="res\run.ico" />
     <Image Include="res\scarrow.ico" />
     <Image Include="res\subvar.ico" />
     <Image Include="res\var.ico" />
+    <Image Include="res\var_unknown.ico" />
+    <Image Include="res\var_warn.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

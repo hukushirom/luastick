@@ -57,6 +57,7 @@ public:
 	virtual void OutMarkerStream (std::wstring& wstrStream) const;
 	virtual void InMarkerStream (std::wstring& wstrStream);
 	virtual void SetContentName(const std::string& name);
+	virtual const std::string& GetContentName() const;
 	const std::map<std::pair<std::string, int>, std::wstring>& GetBreakpoint() const;
 
 protected:

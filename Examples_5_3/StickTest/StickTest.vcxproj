@@ -150,14 +150,14 @@
     <CustomBuild Include="dummy2">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo &gt; dummy2
-copy ..\Sticktrace\$(Configuration)\Sticktrace.dll .\$(Configuration)
-copy ..\Sticktrace\$(Configuration)\Sticktrace.pdb .\$(Configuration)</Command>
+copy ..\Sticktrace\$(Configuration)\Sticktrace.dll $(TargetDir)
+copy ..\Sticktrace\$(Configuration)\Sticktrace.pdb $(TargetDir)</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo &gt; dummy2
-copy ..\Sticktrace\$(Configuration)\Sticktrace.dll .\$(Configuration)
-copy ..\Sticktrace\$(Configuration)\Sticktrace.pdb .\$(Configuration)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\$(Configuration)\Sticktrace.dll;.\$(Configuration)\Sticktrace.pdb;%(Outputs)</Outputs>
+copy ..\Sticktrace\$(Configuration)\Sticktrace.dll $(TargetDir)
+copy ..\Sticktrace\$(Configuration)\Sticktrace.pdb $(TargetDir)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(TargetDir)Sticktrace.dll;$(TargetDir)Sticktrace.pdb;%(Outputs)</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\Sticktrace\$(Configuration)\Sticktrace.dll;..\Sticktrace\$(Configuration)\Sticktrace.pdb;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\$(Configuration)\Sticktrace.dll;.\$(Configuration)\Sticktrace.pdb;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(TargetDir)Sticktrace.dll;$(TargetDir)Sticktrace.pdb;%(Outputs)</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\Sticktrace\$(Configuration)\Sticktrace.dll;..\Sticktrace\$(Configuration)\Sticktrace.pdb;%(AdditionalInputs)</AdditionalInputs>
     </CustomBuild>
     <None Include="res\StickTest.rc2" />

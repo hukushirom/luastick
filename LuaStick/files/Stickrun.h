@@ -1,6 +1,5 @@
 #pragma once
 
-#include <tuple>
 #include <functional>
 #include <sstream>
 #include <unordered_map>
@@ -94,11 +93,30 @@ protected:
 public:
 	enum class CallbackType
 	{
+		NEW_SESSION,		// Notify the beginning of new session to the callback function.
 		ON_LOAD_SCRIPT,		// Called when script script was loaded.
 		ON_START_EXEC,		// Called when script is going to start.
 		ON_STOP_EXEC,		// Called when script was stopped.
 		ON_ERROR,			// Called when script running encounter the error.
-		// OUTPUT_DEBUG,		//
+	};
+
+	/// <summary>
+	/// Callback data for Stickrun::CallbackType::ON_LOAD_SCRIPT command.
+	/// </summary>
+	struct ScriptInfo
+	{
+		ScriptInfo(
+			const std::string& _sandbox,
+			const std::string& _name,
+			const std::string& _source
+		)
+			: sandbox(_sandbox)
+			, name(_name)
+			, source(_source)
+		{}
+		const std::string& sandbox;
+		const std::string& name;
+		const std::string& source;
 	};
 
 	/// <summary>
@@ -107,7 +125,7 @@ public:
 	/// <para> param data:                                                  </para>
 	/// <para>   If callbackType=ON_ERROR then data returns an error message. (const char*)    </para>
 	/// <para>   If callbackType=ON_LOAD_SCRIPT then data returns sandbox name, script name and source code.    </para>
-	/// <para>     (const std::tupleÅÉconst std::string&, const std::string&, const std::string&ÅÑ*)    </para>
+	/// <para>     (const ScriptInfo*)                                      </para>
 	/// <para>   If callbackType=ON_START_EXEC then data returns nullptr.   </para>
 	/// <para>   callbackType=ON_STOP_EXEC then data returns nullptr.       </para>
 	/// <para> param luaState: lua_State object.                            </para>
@@ -244,7 +262,25 @@ public:
 		m_error_message.clear();
 	}
 
-public:	
+public:
+	/// <summary>
+	/// Notify the beginning of new session to the callback function.
+	/// e.g. The callback function reset the error message window when getting this notification.
+	/// </summary>
+	void NewSession()
+	{
+		if (m_hookFunc != nullptr)
+		{
+			m_hookFunc(
+				Stickrun::CallbackType::NEW_SESSION,
+				nullptr,
+				m_lua_state,
+				m_hookUserData,
+				this
+			);
+		}
+	}
+
 	/// <summary>
 	/// <para>Loads and run the script.   </para>
 	/// <para>If you call DoString twice using same name, the first source will be disappeared.     </para>
@@ -725,7 +761,7 @@ return ''
 					// Set the source code, even if syntax error.
 					m_hookFunc(
 						Stickrun::CallbackType::ON_LOAD_SCRIPT,
-						&std::tuple<const std::string&, const std::string&, const std::string&>(sandboxenv, name, source),
+						&ScriptInfo(sandboxenv, name, source),
 						m_lua_state,
 						m_hookUserData,
 						this
