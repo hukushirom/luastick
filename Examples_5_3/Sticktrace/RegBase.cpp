@@ -135,10 +135,15 @@ static std::wstring MyIdNameToRegName(const wchar_t* name)
 
 void FCRegBase::SetApplicationInfo(const wchar_t* companyName, const wchar_t* packageName, const wchar_t* applicationName)
 {
+	// REG_COMPANY_NAME must be filled. If companyName is empty, REG_COMPANY_NAME keeps default value.
 	if (companyName != nullptr && companyName[0] != L'\0')
 		REG_COMPANY_NAME = companyName;
+
+	// REG_PACKAGE_NAME can be empty.
 	if (packageName != nullptr)
 		REG_PACKAGE_NAME = packageName;
+
+	// REG_APPLICATION_NAME can be empty.
 	if (applicationName != nullptr)
 		REG_APPLICATION_NAME = applicationName;
 } // FCRegBase::SetApplicationInfo.

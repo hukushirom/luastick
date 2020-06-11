@@ -19,13 +19,19 @@ private:
 		const wchar_t* companyName,
 		const wchar_t* packageName,
 		const wchar_t* applicationName,
-		unsigned int dialogId
+		unsigned int dialogId,
+		SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc,
+		void* debuggerCallbackData
 	);
 	static void Delete(SticktraceWindow* mtw);
-	SticktraceWindow(unsigned int dialogId);
+	SticktraceWindow(
+		unsigned int dialogId,
+		SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc,
+		void* debuggerCallbackData
+	);
 	~SticktraceWindow();
 	bool Show(bool show);
-	bool IsVisible();
+	bool IsVisible(bool & isVisible);
 	bool SetSource(const std::string& sandbox, const std::string& name, const std::string& source);
 	bool IsDebugMode();
 	bool IsBreakpoint(const char* name, int lineIndex);
@@ -39,12 +45,22 @@ private:
 	bool OutputDebug(const char* message);
 	bool SetWatch(const std::string& data);
 	bool SetVariableNotify(bool succeeded);
-	SticktraceCommand GetCommand(std::string & paramA, uint32_t waitMilliseconds);
+	SticktraceDef::SuspendCommand WaitCommandIsSet(std::string & paramA, uint32_t waitMilliseconds);
 
-	void Create(unsigned int dialogId);
+// 20.06.10  1行削除 ()
+//	void Create(unsigned int dialogId);
 	void Destroy();
-	static void StaticThreadFunc(SticktraceWindow* stickTrace, unsigned int dialogId);
-	void ThreadFunc(unsigned int dialogId);
+	static void StaticThreadFunc(
+		SticktraceWindow* stickTrace,
+		unsigned int dialogId,
+		SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc,
+		void* debuggerCallbackData
+	);
+	void ThreadFunc(
+		unsigned int dialogId,
+		SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc,
+		void* debuggerCallbackData
+	);
 
 private:
 	CDlgSticktrace* m_stickTraceDlg;
@@ -57,11 +73,13 @@ SticktraceWindow* SticktraceWindow::New(
 	const wchar_t* companyName,
 	const wchar_t* packageName,
 	const wchar_t* applicationName,
-	unsigned int dialogId
+	unsigned int dialogId,
+	SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc,
+	void* debuggerCallbackData
 )
 {
 	FCRegBase::SetApplicationInfo(companyName, packageName, applicationName);
-	return new SticktraceWindow(dialogId);
+	return new SticktraceWindow(dialogId, DGT_debuggerCallbackFunc, debuggerCallbackData);
 }
 
 void SticktraceWindow::Delete(SticktraceWindow* mtw)
@@ -69,12 +87,19 @@ void SticktraceWindow::Delete(SticktraceWindow* mtw)
 	delete mtw;
 }
 
-SticktraceWindow::SticktraceWindow(unsigned int dialogId)
-	:m_stickTraceDlg(nullptr)
-	,m_threadId(0)
-	,m_threadTerminateFlag(0)
+SticktraceWindow::SticktraceWindow(
+	unsigned int dialogId,
+	SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc,
+	void* debuggerCallbackData
+)
+	: m_stickTraceDlg(nullptr)
+	, m_threadId(0)
+	, m_threadTerminateFlag(0)
 {
-	Create(dialogId);
+	if (::InterlockedCompareExchange(&m_threadId, 0, 0) != 0) return;
+	std::thread{ SticktraceWindow::StaticThreadFunc, this, dialogId, DGT_debuggerCallbackFunc, debuggerCallbackData }.detach();
+	for (int i = 0; i != 100 && ::InterlockedCompareExchange(&m_threadId, 0, 0) == 0; i++)
+		::Sleep(10);
 }
 
 SticktraceWindow::~SticktraceWindow()
@@ -82,15 +107,25 @@ SticktraceWindow::~SticktraceWindow()
 	Destroy();
 }
 
-void SticktraceWindow::StaticThreadFunc(SticktraceWindow* stickTrace, unsigned int dialogId)
+void SticktraceWindow::StaticThreadFunc(
+	SticktraceWindow* stickTrace,
+	unsigned int dialogId,
+	SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc,
+	void* debuggerCallbackData
+)
 {
-	stickTrace->ThreadFunc(dialogId);
+	stickTrace->ThreadFunc(dialogId, DGT_debuggerCallbackFunc, debuggerCallbackData);
 }
 
-void SticktraceWindow::ThreadFunc(unsigned int dialogId)
+void SticktraceWindow::ThreadFunc(
+	unsigned int dialogId,
+	SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc,
+	void* debuggerCallbackData
+)
 {
 	m_stickTraceDlg = new CDlgSticktrace();
 	m_stickTraceDlg->SetDialogId(dialogId);
+	m_stickTraceDlg->SetDebuggerCallback(DGT_debuggerCallbackFunc, debuggerCallbackData);
 	m_stickTraceDlg->Create(IDD_STICK_TRACE);
 	m_stickTraceDlg->ShowWindow(SW_HIDE);
 	// スレッドIDを設定。後で強制終了できるよう。CSロック前なのでInterlockedで設定。
@@ -105,13 +140,15 @@ void SticktraceWindow::ThreadFunc(unsigned int dialogId)
 	::InterlockedExchange(&m_threadTerminateFlag, 0);
 }
 
-void SticktraceWindow::Create(unsigned int dialogId)
-{
-	if (::InterlockedCompareExchange(&m_threadId, 0, 0) != 0) return;
-	std::thread{ SticktraceWindow::StaticThreadFunc, this, dialogId }.detach();
-	for (int i = 0; i != 100 && ::InterlockedCompareExchange(&m_threadId, 0, 0) == 0; i++)
-		::Sleep(10);
-}
+//----- 20.06.10  削除始 ()-----
+//void SticktraceWindow::Create(unsigned int dialogId)
+//{
+//	if (::InterlockedCompareExchange(&m_threadId, 0, 0) != 0) return;
+//	std::thread{ SticktraceWindow::StaticThreadFunc, this, dialogId }.detach();
+//	for (int i = 0; i != 100 && ::InterlockedCompareExchange(&m_threadId, 0, 0) == 0; i++)
+//		::Sleep(10);
+//}
+//----- 20.06.10  削除終 ()-----
 
 void SticktraceWindow::Destroy()
 {
@@ -146,95 +183,81 @@ void SticktraceWindow::Destroy()
 
 bool SticktraceWindow::Show(bool show)
 {
-	auto threadId = (DWORD)::InterlockedCompareExchange(&m_threadId, 0, 0);
-	if (threadId == 0) return false;
-	if (show)
-	{
-		if (::IsWindow(m_stickTraceDlg->GetSafeHwnd()) && !m_stickTraceDlg->IsWindowVisible())
-			m_stickTraceDlg->ShowWindow(SW_SHOW);
-	}
-	else
-	{
-		if (::IsWindow(m_stickTraceDlg->GetSafeHwnd()) && m_stickTraceDlg->IsWindowVisible())
-			m_stickTraceDlg->ShowWindow(SW_HIDE);
-	}
-	return true;
+	return m_stickTraceDlg->APT_Show(show);
 }
 
-bool SticktraceWindow::IsVisible()
+bool SticktraceWindow::IsVisible(bool & isVisible)
 {
-	auto threadId = (DWORD)::InterlockedCompareExchange(&m_threadId, 0, 0);
-	if (threadId == 0) return false;
-	return (::IsWindow(m_stickTraceDlg->GetSafeHwnd()) && m_stickTraceDlg->IsWindowVisible()) ? true : false;
+	if (m_stickTraceDlg == nullptr) return false;
+	return m_stickTraceDlg->APT_IsVisible(isVisible);
 }
 
 bool SticktraceWindow::SetSource(const std::string& sandbox, const std::string& name, const std::string& source)
 {
-	return m_stickTraceDlg->TC_SetSource(sandbox, name, source);
-	// m_stickTraceDlg->PostMessage(WM_USER_COMMAND);
+	return m_stickTraceDlg->APT_SetSource(sandbox, name, source);
 }
 
 bool SticktraceWindow::IsDebugMode()
 {
-	return m_stickTraceDlg->TC_IsDebugMode();
+	return m_stickTraceDlg->APT_IsDebugMode();
 }
 
 bool SticktraceWindow::IsBreakpoint(const char* name, int lineIndex)
 {
-	return m_stickTraceDlg->TC_IsBreakpoint(name, lineIndex);
+	return m_stickTraceDlg->APT_IsBreakpoint(name, lineIndex);
 }
 
 bool SticktraceWindow::OnSuspended()
 {
-	return m_stickTraceDlg->TC_OnSuspended();
+	return m_stickTraceDlg->APT_OnSuspended();
 }
 
 bool SticktraceWindow::OnResumed()
 {
-	return m_stickTraceDlg->TC_OnResumed();
+	return m_stickTraceDlg->APT_OnResumed();
 }
 
 bool SticktraceWindow::Jump(const char * name, int lineIndex)
 {
-	return m_stickTraceDlg->TC_Jump(name, lineIndex);
+	return m_stickTraceDlg->APT_Jump(name, lineIndex);
 }
 
 bool SticktraceWindow::NewSession()
 {
-	return m_stickTraceDlg->TC_NewSession();
+	return m_stickTraceDlg->APT_NewSession();
 }
 
 bool SticktraceWindow::OnStart()
 {
-	return m_stickTraceDlg->TC_OnStart();
+	return m_stickTraceDlg->APT_OnStart();
 }
 
 bool SticktraceWindow::OnStop()
 {
-	return m_stickTraceDlg->TC_OnStop();
+	return m_stickTraceDlg->APT_OnStop();
 }
 
 bool SticktraceWindow::OutputError(const char * message)
 {
-	return m_stickTraceDlg->TC_OutputError(message);
+	return m_stickTraceDlg->APT_OutputError(message);
 }
 
 bool SticktraceWindow::OutputDebug(const char * message)
 {
-	return m_stickTraceDlg->TC_OutputDebug(message);
+	return m_stickTraceDlg->APT_OutputDebug(message);
 }
 
 bool SticktraceWindow::SetWatch(const std::string& data)
 {
-	return m_stickTraceDlg->TC_SetWatch(data);
+	return m_stickTraceDlg->APT_SetWatch(data);
 }
 
 bool SticktraceWindow::SetVariableNotify(bool succeeded)
 {
-	return m_stickTraceDlg->TC_SetVariableNotify(succeeded);
+	return m_stickTraceDlg->APT_SetVariableNotify(succeeded);
 }
 
-SticktraceCommand SticktraceWindow::GetCommand(std::string & paramA, uint32_t waitMilliseconds)
+SticktraceDef::SuspendCommand SticktraceWindow::WaitCommandIsSet(std::string & paramA, uint32_t waitMilliseconds)
 {
-	return m_stickTraceDlg->TC_GetCommand(paramA, waitMilliseconds);
+	return m_stickTraceDlg->APT_WaitCommandIsSet(paramA, waitMilliseconds);
 }

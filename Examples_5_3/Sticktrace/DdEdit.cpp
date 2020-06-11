@@ -56,7 +56,11 @@ CFCDdEdit::CFCDdEdit ()
 	, m_dwMenuId(DWORD(-1))
 	, m_iSubmenuIndex(-1)
 	, m_bIsUndoable(FALSE)
-	, m_iCurUndoBuffer(0)	// Undoバッファー現在位置。
+	, m_iCurUndoBuffer(0)		// Undoバッファー現在位置。
+	, m_iSavedUndoBuffer(0)		// Undoバッファーセーブ時位置。
+	, m_lineHeight(-1)
+	, m_noSetWindowTextNotify(FALSE)
+	, m_lastTextEditedMillisec(0)
 {
 } // CFCDdEdit::CFCDdEdit
 
@@ -125,7 +129,9 @@ void CFCDdEdit::ResetUndoBuffer ()
 	// Undoバッファーをクリア。
 	m_vUndoBuffer.clear();
 	m_iCurUndoBuffer = 0;
-	UtilWin::GetWindowText(this, m_wstrPreText);
+	m_iSavedUndoBuffer = 0;
+	m_lastTextEditedMillisec = 0;
+	UtilWin::GetWindowText(this, m_currentText);
 } // CFCDdEdit::ResetUndoBuffer.
 
 //********************************************************************************************
@@ -155,6 +161,83 @@ void CFCDdEdit::SetAccelerator (DWORD accelId)
 	m_accelerator = ::LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(accelId));
 }
 
+BOOL CFCDdEdit::IsModified() const
+{
+	return (m_iSavedUndoBuffer != m_iCurUndoBuffer);
+}
+
+void CFCDdEdit::ResetModified()
+{
+	m_iSavedUndoBuffer = m_iCurUndoBuffer;
+}
+
+int CFCDdEdit::GetlineHeight()
+{
+	if (m_lineHeight == -1)
+	{
+		if (GetLineCount() <= 1)
+		{
+			// SetWindowText から OnUserSettextNotify がCallされるのを禁止する。
+			// Undoバッファがリセットされるのを防ぐ。
+			m_noSetWindowTextNotify = TRUE;
+
+			// 選択範囲を記録。
+			int startCharIndex;
+			int endCharIndex;
+			GetSel(startCharIndex, endCharIndex);
+			// ２行のダミーテキストに置き換える。
+			SetWindowText(L"a\r\na");
+			// ２行の位置を取得し、行の高さを計算する。
+			const CPoint pt0 = PosFromChar(LineIndex(0));
+			const CPoint pt1 = PosFromChar(LineIndex(1));
+			// 行の高さ
+			m_lineHeight = pt1.y - pt0.y;
+			// 元のテキストに戻す。
+			SetWindowText(m_currentText.c_str());
+			SetSel(startCharIndex, endCharIndex);
+
+			m_noSetWindowTextNotify = FALSE;
+		} else
+		{
+			const CPoint pt0 = PosFromChar(LineIndex(0));
+			const CPoint pt1 = PosFromChar(LineIndex(1));
+			// 行の高さ
+			m_lineHeight = pt1.y - pt0.y;
+		}
+	}
+	return m_lineHeight;
+} // CFCDdEdit::GetlineHeight.
+
+const std::wstring & CFCDdEdit::GetText() const
+{
+	return m_currentText;
+} // CFCDdEdit::GetText.
+
+
+BOOL CFCDdEdit::CanUndo() const
+{
+	if (m_bIsUndoable)
+	{	//----- 無制限Undoの場合 -----
+		return (!IsFlagged(GetStyle(), ES_READONLY) && m_iCurUndoBuffer != 0);
+	}
+	else
+	{
+		return BASE_CLASS::CanUndo();
+	}
+}
+
+BOOL CFCDdEdit::CanRedo() const
+{
+	if (m_bIsUndoable)
+	{	//----- 無制限Undoの場合 -----
+		return (!IsFlagged(GetStyle(), ES_READONLY) && m_iCurUndoBuffer < (int)m_vUndoBuffer.size());
+	}
+	else
+	{
+		return BASE_CLASS::CanUndo();
+	}
+}
+
 //********************************************************************************************
 /*!
  * @brief	AddUndoBuffer 関数。
@@ -168,16 +251,84 @@ void CFCDdEdit::SetAccelerator (DWORD accelId)
 //********************************************************************************************
 void CFCDdEdit::AddUndoBuffer ()
 {
+	//   Before
+	//                   +-------------------------------------+
+	//     m_vUndoBuffer |                                     |
+	//                   +-------------------------------------+
+	//                   A         A               A
+	//                   |         |               |
+	//                   0         |         m_iCurUndoBuffer
+	//                             |
+	//                     m_iSavedUndoBuffer
+	//
+	//   After
+	//                   +-------------------------+-----+
+	//     m_vUndoBuffer |                         | new |
+	//                   +-------------------------+-----+
+	//                   A         A                     A
+	//                   |         |                     |
+	//                   0         |               m_iCurUndoBuffer
+	//                             |
+	//                     m_iSavedUndoBuffer
+	//
+	//
+	//   Before
+	//                   +-------------------------------------+
+	//     m_vUndoBuffer |                                     |
+	//                   +-------------------------------------+
+	//                   A            A                 A
+	//                   |            |                 |
+	//                   0      m_iCurUndoBuffer        |
+	//                                                  |
+	//                                          m_iSavedUndoBuffer
+	//
+	//   After
+	//                   +------------+-----+
+	//     m_vUndoBuffer |            | new |
+	//                   +------------+-----+
+	//              -1   A            A
+	//               A   |            |
+	//               |   0      m_iCurUndoBuffer
+	//               |
+	//        m_iSavedUndoBuffer
+	//
+
 	std::wstring wstrText;	// テキスト。
 	UtilWin::GetWindowText(this, wstrText);
-	if (wstrText != m_wstrPreText)
+	if (wstrText != m_currentText)
 	{
+		auto textEditedMillisec = GetCurrentMillisecTime();
+
+		if (m_iCurUndoBuffer < m_iSavedUndoBuffer)
+			m_iSavedUndoBuffer = -1;
+
+		if (m_iCurUndoBuffer == m_iSavedUndoBuffer)
+			m_lastTextEditedMillisec = 0;
+
+		if (m_iCurUndoBuffer != m_vUndoBuffer.size())
+			m_lastTextEditedMillisec = 0;
+
 		// Undoバッファー現在位置にリサイズ。
 		m_vUndoBuffer.resize(m_iCurUndoBuffer);
+//----- 20.06.11  変更前 ()-----
+//		// Undoバッファー追加。
+//		UtilStr::CompText(m_vUndoBuffer, m_currentText.c_str(), m_currentText.length(), wstrText.c_str(), wstrText.length());
+//----- 20.06.11  変更後 ()-----
 		// Undoバッファー追加。
-		UtilStr::CompText(m_vUndoBuffer, m_wstrPreText.c_str(), m_wstrPreText.length(), wstrText.c_str(), wstrText.length());
+		std::vector<FCDiffRecW> vBuff;
+		UtilStr::CompText(vBuff, m_currentText.c_str(), m_currentText.length(), wstrText.c_str(), wstrText.length());
+
+		// If the elapsed time since last editting is under 500 msec, mearge last undo buffer and new buffer together.
+		if (textEditedMillisec - m_lastTextEditedMillisec < 500)
+			m_vUndoBuffer.back().insert(m_vUndoBuffer.back().end(), vBuff.begin(), vBuff.end());
+		else
+			m_vUndoBuffer.emplace_back(vBuff);
+
+		//----- 20.06.11  変更終 ()-----
 		m_iCurUndoBuffer = m_vUndoBuffer.size();
-		m_wstrPreText = wstrText;
+		m_currentText = wstrText;
+
+		m_lastTextEditedMillisec = textEditedMillisec;
 	}
 } // CFCDdEdit::AddUndoBuffer.
 
@@ -285,12 +436,13 @@ void CFCDdEdit::OnEditUndo ()
 	{	//----- 無制限Undoの場合 -----
 		// 一時的に無制限Undoを不可にする。FFUndoEdit中でReplaceSelを実行するが、これがEN_UPDATEを発生させOnUpdateを実行するため。
 		m_bIsUndoable = FALSE;
-		m_iCurUndoBuffer = UtilDlg::UndoEdit(this, m_vUndoBuffer, m_iCurUndoBuffer);
+		m_iCurUndoBuffer--;
+		UtilDlg::UndoEdit(this, m_vUndoBuffer[m_iCurUndoBuffer]);
 		m_bIsUndoable = TRUE;
-		UtilWin::GetWindowText(this, m_wstrPreText);
-	} else
-	//----- 標準Undoの場合 -----
-	{
+		UtilWin::GetWindowText(this, m_currentText);
+	}
+	else
+	{	//----- 標準Undoの場合 -----
 		Undo();
 	}
 } // CFCDdEdit::OnEditUndo
@@ -316,7 +468,7 @@ void CFCDdEdit::OnUpdateEditUndo (CCmdUI* pCmdUI)
 	}
 	else
 	{
-		pCmdUI->Enable(CanUndo());
+		pCmdUI->Enable(BASE_CLASS::CanUndo());
 	}
 } // CFCDdEdit::OnUpdateEditUndo
 
@@ -334,16 +486,16 @@ void CFCDdEdit::OnUpdateEditUndo (CCmdUI* pCmdUI)
 void CFCDdEdit::OnEditRedo ()
 {
 	if (m_bIsUndoable)
-	//----- 無制限Undoの場合 -----
-	{
+	{	//----- 無制限Undoの場合 -----
 		// 一時的に無制限Undoを不可にする。FFRedoEdit中でReplaceSelを実行するが、これがEN_UPDATEを発生させOnUpdateを実行するため。
 		m_bIsUndoable = FALSE;
-		m_iCurUndoBuffer = UtilDlg::RedoEdit(this, m_vUndoBuffer, m_iCurUndoBuffer);
+		UtilDlg::RedoEdit(this, m_vUndoBuffer[m_iCurUndoBuffer]);
+		m_iCurUndoBuffer++;
 		m_bIsUndoable = TRUE;
-		UtilWin::GetWindowText(this, m_wstrPreText);
-	} else
-	//----- 標準Undoの場合 -----
-	{
+		UtilWin::GetWindowText(this, m_currentText);
+	}
+	else
+	{	//----- 標準Undoの場合 -----
 		Undo();
 	}
 } // CFCDdEdit::OnEditRedo
@@ -369,7 +521,7 @@ void CFCDdEdit::OnUpdateEditRedo (CCmdUI* pCmdUI)
 	}
 	else
 	{
-		pCmdUI->Enable(CanUndo());
+		pCmdUI->Enable(BASE_CLASS::CanUndo());
 	}
 } // CFCDdEdit::OnUpdateEditRedo
 
@@ -471,17 +623,6 @@ void CFCDdEdit::OnContextMenu(CWnd* pWnd, CPoint point)
 	}
 }
 
-
-//int CFCDdEdit::OnCreate(LPCREATESTRUCT lpCreateStruct)
-//{
-//	if (CEdit::OnCreate(lpCreateStruct) == -1)
-//		return -1;
-//
-//
-//	return 0;
-//}
-
-
 void CFCDdEdit::OnDestroy()
 {
 	BASE_CLASS::OnDestroy();
@@ -504,8 +645,12 @@ BOOL CFCDdEdit::PreTranslateMessage(MSG* pMsg)
 
 LRESULT CFCDdEdit::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
-	if (message == WM_SETTEXT)
-		PostMessage(WM_USER_DDEDIT_SETTEXT_NOTIFY);
+	// TRACE(L"CFCDdEdit::WindowProc %x %x %x\n", message, wParam, lParam);
+	if (message == WM_SETFONT)
+		m_lineHeight = -1;
+
+	if (!m_noSetWindowTextNotify && message == WM_SETTEXT)
+		SendMessage(WM_USER_DDEDIT_SETTEXT_NOTIFY);
 
 	return BASE_CLASS::WindowProc(message, wParam, lParam);
 }

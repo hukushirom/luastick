@@ -7,10 +7,17 @@
 // Do not include "Stickrun.h". It must be included via "Stick.h".
 
 #include <string>
+#include "UtilSync.h"			// For AutoCS,AutoLeaveCS.
 #include "Sticktrace.h"
 
 
 class CStickTestDlg;
+
+enum : UINT
+{
+	WM_USER_COMMAND = WM_USER + 100,
+};
+
 
 /// <stick export="true"/>
 constexpr int HIJ = 10;
@@ -411,6 +418,10 @@ public:
 	/// <param name="message" io="in">The message.</param>
 	virtual void DebugOutput(const char* message);
 
+protected:
+	virtual void OnSaveScript(const std::string & name, const std::string & code);
+
+
 // 実装
 protected:
 	HICON m_hIcon;
@@ -418,7 +429,38 @@ protected:
 	Stickrun* m_stickrun;
 	Sticktrace m_sticktrace;
 
-	static void OnScriptCallback(lua_State * luaState, lua_Debug * luaDebug, void * userData, Sticktrace::Mode mode, Sticktrace* sticktrace);
+	/// <summary>
+	/// Data for synchronous communication from the application thread to the DlgSticktrace thread.
+	/// </summary>
+	struct InCmd
+	{
+		AutoCS cs;	// Locking object to protect this area.
+		AutoCV cv;	// Locking object to protect this area.
+		SticktraceDef::DebuggerCommand command;
+		std::string strParam1;
+		std::string strParam2;
+		InCmd() : command(SticktraceDef::DebuggerCommand::NONE) {}
+		~InCmd() = default;
+	} m_incmd;
+
+	virtual bool DGT_DebuggerCallback(
+		SticktraceDef::DebuggerCommand command,
+		SticktraceDef::DebuggerCallbackParam* param
+	);
+
+	static bool DGT_DebuggerCallback(
+		SticktraceDef::DebuggerCommand command,
+		SticktraceDef::DebuggerCallbackParam* param,
+		void* userData
+	);
+
+	static void OnScriptCallback(
+		lua_State * luaState,
+		lua_Debug * luaDebug,
+		void * userData,
+		SticktraceDef::Mode mode,
+		Sticktrace* sticktrace
+	);
 	
 	// 生成された、メッセージ割り当て関数
 	virtual BOOL OnInitDialog();
@@ -444,7 +486,7 @@ public:
 	afx_msg void OnBnClickedBtnTest8();
 	afx_msg void OnBnClickedBtnInitStickrun();
 	afx_msg void OnBnClickedBtnTest9();
-//	afx_msg void OnClose();
+	afx_msg LRESULT OnUserCommand(WPARAM, LPARAM);
 	virtual void OnOK();
 	virtual void OnCancel();
 };

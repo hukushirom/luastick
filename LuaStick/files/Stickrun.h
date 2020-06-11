@@ -23,6 +23,12 @@ constexpr const char* STICKERR_FUNCTION_NOT_FOUND_MSG = "Function was not found"
 
 class Stickrun
 {
+public:
+	/// <summary>
+	/// Maximum length of script name.
+	/// </summary>
+	static constexpr const size_t SCRIPT_NAME_MAX = 50;
+
 protected:
 	class Util
 	{
@@ -699,6 +705,10 @@ public:
 		if (is_executing)
 		{
 			m_error_message = StickSystemErrorMessage("Application calls script from the inside of script.");
+		}
+		else if (SCRIPT_NAME_MAX < name.length())
+		{
+			m_error_message = StickSystemErrorMessage("Script name is too long.");
 		}
 		else
 		{

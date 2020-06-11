@@ -76,4 +76,6 @@ public:
 	afx_msg void OnSize (UINT nType, int cx, int cy);
 	afx_msg void OnGetMinMaxInfo (MINMAXINFO FAR* lpMMI);
 //	virtual void OnOK();
+//	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 }; // class CFCDialogBase.

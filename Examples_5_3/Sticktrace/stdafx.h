@@ -60,6 +60,9 @@ constexpr auto FD_COLREF_ULTLA_LIGHT_GRAY = RGB(0xe8, 0xe8, 0xe8);
 
 extern double GetDisplayPPM();
 
+extern __int64 GetCurrentMillisecTime();
+
+
 template<typename S, typename T>
 bool IsFlagged(S value, T flag)
 {

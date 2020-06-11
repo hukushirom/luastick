@@ -13,3 +13,12 @@ double GetDisplayPPM()
 	}
 	return DISPLAY_PPM;
 }
+
+__int64 GetCurrentMillisecTime()
+{
+	// 100-nanosecond since January 1, 1601.
+	FILETIME ftSystemTime;
+	::GetSystemTimeAsFileTime(&ftSystemTime);
+	const ULARGE_INTEGER li = { ftSystemTime.dwLowDateTime, ftSystemTime.dwHighDateTime };
+	return li.QuadPart / 10000;
+}

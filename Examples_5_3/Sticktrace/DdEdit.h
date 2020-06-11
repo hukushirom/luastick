@@ -19,6 +19,14 @@ protected:
 public:
 	virtual void SetContextMenu (DWORD menuId, int submenuIndex);
 	virtual void SetAccelerator (DWORD accelId);
+	virtual BOOL IsModified() const;
+	virtual void ResetModified();
+	virtual int GetlineHeight();
+	virtual const std::wstring & GetText() const;
+
+	BOOL CanUndo() const;
+	BOOL CanRedo() const;
+
 protected:
 	virtual void AddUndoBuffer ();
 
@@ -27,12 +35,35 @@ protected:
 
 protected:
 	HACCEL	m_accelerator;
-	DWORD	m_dwMenuId;			// コンテキストメニューID。
-	int		m_iSubmenuIndex;	// コンテキストメニューのサブメニューインデックス。
-	BOOL	m_bIsUndoable;		// 無制限のUndoが可能か？
-	std::vector<FCDiffRecW> m_vUndoBuffer;	// Undoバッファー。
-	int		m_iCurUndoBuffer;	// Undoバッファー現在位置。
-	std::wstring m_wstrPreText;		// Undo前のテキスト。
+	DWORD	m_dwMenuId;				// コンテキストメニューID。
+	int		m_iSubmenuIndex;		// コンテキストメニューのサブメニューインデックス。
+	BOOL	m_bIsUndoable;			// 無制限のUndoが可能か？
+// 20.06.11  1行変更 ()
+//	std::vector<FCDiffRecW> m_vUndoBuffer;	// Undoバッファー。
+	std::vector<std::vector<FCDiffRecW>> m_vUndoBuffer;	// Undoバッファー。
+	int		m_iCurUndoBuffer;		// Undoバッファー現在位置。
+	std::wstring m_currentText;		// 現在のテキスト。
+	int		m_iSavedUndoBuffer;		// Undoバッファーセーブ時位置。
+	__int64 m_lastTextEditedMillisec;
+
+	//
+	//            ┌──┬┬────────┐
+	//         A─│    ││                │┬
+	//            │    ││TEXT TEXT TEXT  ││m_lineHeight
+	//            │    ││                │┴
+	//            │    ││TEXT TEXT TEXT  │
+	//            │ ◇ ││                │
+	//            │    ││TEXT TEXT TEXT  │
+	//            │ → ││                │
+	//            │    ││TEXT TEXT TEXT  │
+	//            │    ││                │
+	//            │    ││TEXT TEXT TEXT  │
+	//            │    ││                │
+	//            │    ││TEXT TEXT TEXT  │
+	//            └──┴┴────────┘
+	//
+	int		m_lineHeight;
+	BOOL	m_noSetWindowTextNotify;
 
 protected:
 	DECLARE_MESSAGE_MAP()
@@ -55,7 +86,6 @@ protected:
 	afx_msg LRESULT OnUserSettextNotify(WPARAM, LPARAM);
 public:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
-//	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);

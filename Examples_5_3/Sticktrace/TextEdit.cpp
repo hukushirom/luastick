@@ -21,15 +21,15 @@ static const int EDITOR_TEXT_LEFT = 20;				// テキストの描画領域の左�
 IMPLEMENT_DYNAMIC(CFCTextEdit, CFCDdEdit)
 
 CFCTextEdit::CFCTextEdit ()
-			:m_tabSize(4)
-			,m_lineHeight(-1)
-			,m_iCurCharIndex(-1)	// 現在位置。
-			,m_iLBtnDownLine(-1)	// マウス左ボタンダウン時の行インデックス。
-			,m_bIsBreakpointActivated(FALSE)	// ブレークポイントのアクティブ状態
-			,m_hIconBreakpoint(NULL)
-			,m_hIconInactiveBP(NULL)
-			,m_hIconTraceline(NULL)
-			,m_hIconNotify(NULL)
+			: m_tabSize(4)
+			, m_isUseSpacesAsTab(false)
+			, m_iCurCharIndex(-1)	// 現在位置。
+			, m_iLBtnDownLine(-1)	// マウス左ボタンダウン時の行インデックス。
+			, m_bIsBreakpointActivated(FALSE)	// ブレークポイントのアクティブ状態
+			, m_hIconBreakpoint(NULL)
+			, m_hIconInactiveBP(NULL)
+			, m_hIconTraceline(NULL)
+			, m_hIconNotify(NULL)
 {
 } // CFCTextEdit::CFCTextEdit ()
 
@@ -51,6 +51,11 @@ void CFCTextEdit::SetTabSize (int tabSize)
 	m_tabSize = tabSize;
 } // CFCTextEdit::SetTabSize.
 
+void CFCTextEdit::UseSpacesAsTab (bool useSpaces)
+{
+	m_isUseSpacesAsTab = useSpaces;
+} // CFCTextEdit::UseSpacesAsTab.
+
 //********************************************************************************************
 /*!
  * @brief	UpdateTextRect 関数。
@@ -71,32 +76,34 @@ void CFCTextEdit::UpdateTextRect ()
 	rtClient.left += EDITOR_TEXT_LEFT;
 	SetRect(rtClient);
 
-	if (GetLineCount() <= 1)
-	{
-		// 選択範囲を記録。
-		int startCharIndex;
-		int endCharIndex;
-		GetSel(startCharIndex, endCharIndex);
-		// テキストを記録。
-		CString text;
-		GetWindowText(text);
-		// ２行のダミーテキストに置き換える。
-		SetWindowText(L"a\r\na");
-		// ２行の位置を取得し、行の高さを計算する。
-		const CPoint pt0 = PosFromChar(LineIndex(0));
-		const CPoint pt1 = PosFromChar(LineIndex(1));
-		// 行の高さ
-		m_lineHeight = pt1.y - pt0.y;
-		// 元のテキストに戻す。
-		SetWindowText(text);
-		SetSel(startCharIndex, endCharIndex);
-	} else
-	{
-		const CPoint pt0 = PosFromChar(LineIndex(0));
-		const CPoint pt1 = PosFromChar(LineIndex(1));
-		// 行の高さ
-		m_lineHeight = pt1.y - pt0.y;
-	}
+//----- 20.06.11  削除始 ()-----
+//	if (GetLineCount() <= 1)
+//	{
+//		// 選択範囲を記録。
+//		int startCharIndex;
+//		int endCharIndex;
+//		GetSel(startCharIndex, endCharIndex);
+//		// テキストを記録。
+//		CString text;
+//		GetWindowText(text);
+//		// ２行のダミーテキストに置き換える。
+//		SetWindowText(L"a\r\na");
+//		// ２行の位置を取得し、行の高さを計算する。
+//		const CPoint pt0 = PosFromChar(LineIndex(0));
+//		const CPoint pt1 = PosFromChar(LineIndex(1));
+//		// 行の高さ
+//		m_lineHeight = pt1.y - pt0.y;
+//		// 元のテキストに戻す。
+//		SetWindowText(text);
+//		SetSel(startCharIndex, endCharIndex);
+//	} else
+//	{
+//		const CPoint pt0 = PosFromChar(LineIndex(0));
+//		const CPoint pt1 = PosFromChar(LineIndex(1));
+//		// 行の高さ
+//		m_lineHeight = pt1.y - pt0.y;
+//	}
+//----- 20.06.11  削除終 ()-----
 } // CFCTextEdit::UpdateTextRect.
 
 //********************************************************************************************
@@ -134,13 +141,10 @@ void CFCTextEdit::CharIndexToTabPosition (int& tabIndex, int& restCount, int cha
 	// lineTopCharIndex（文字位置）の行の先頭文字のインデックス。
 	const int charIndex0 = LineIndex(lineIndex);
 
-	CString text;
-	GetWindowText(text);
-
 	int hankakuCount = 0;	// 半角換算の文字数。
 	for (int index = charIndex0; index != charIndex; index++)
 	{
-		if (0xff < text[index])
+		if (0xff < GetText()[index])
 			hankakuCount += 2;
 		else
 			hankakuCount += 1;
@@ -162,12 +166,10 @@ void CFCTextEdit::CharIndexToTabPosition (int& tabIndex, int& restCount, int cha
 //********************************************************************************************
 int CFCTextEdit::FindNoSpaceCharIndex (int charIndex) const
 {
-	CString text;
-	GetWindowText(text);
 	int index = charIndex;
-	for (; index != text.GetLength(); index++)
+	for (; index != GetText().length(); index++)
 	{
-		if (text[index] != L' ' && text[index] != L'\t') break;
+		if (GetText()[index] != L' ' && GetText()[index] != L'\t') break;
 	}
 	return index;
 } // CFCTextEdit::FindNoSpaceCharIndex.
@@ -448,8 +450,8 @@ void CFCTextEdit::RedrawMarker()
 		dc.SelectClipRgn(&rgn0);
 		for (auto i : m_vUpdatedLine)
 		{
-			const int lineTop = textStartY + i * m_lineHeight;
-			const int lineBottom = lineTop + m_lineHeight;
+			const int lineTop = textStartY + i * GetlineHeight();
+			const int lineBottom = lineTop + GetlineHeight();
 			const CRect rtUpdate = rtMarker & CRect(rtMarker.left, lineTop, rtMarker.right, lineBottom);
 			CRgn rgn;
 			rgn.CreateRectRgn(rtUpdate.left, rtUpdate.top, rtUpdate.right, rtUpdate.bottom);
@@ -477,8 +479,8 @@ void CFCTextEdit::RedrawMarker()
 
 		for (auto i = ibegin; i != iend; i++)
 		{
-			const int lineTop = textStartY + i->first.second * m_lineHeight;
-			const int lineBottom = lineTop + m_lineHeight;
+			const int lineTop = textStartY + i->first.second * GetlineHeight();
+			const int lineBottom = lineTop + GetlineHeight();
 			if (lineBottom < rtMarker.top) continue;
 			if (rtMarker.bottom < lineTop) break;
 			const int lineMiddle = (lineTop + lineBottom) / 2;
@@ -521,8 +523,8 @@ void CFCTextEdit::CorrectMarker ()
 			// Search the same text line like the following.
 			// odr|
 			//----|-----------------------------------------
-			//	7 |	const int lineTop = textStartY + i->first.second * m_lineHeight;
-			//	5 |	const int lineBottom = lineTop + m_lineHeight;
+			//	7 |	const int lineTop = textStartY + i->first.second * GetlineHeight();
+			//	5 |	const int lineBottom = lineTop + GetlineHeight();
 			//	3 |	if (lineBottom < rtMarker.top) continue;
 			//	1 |	if (rtMarker.bottom < lineTop) break;
 			//	2 |	const int lineMiddle = (lineTop + lineBottom) / 2;
@@ -718,11 +720,11 @@ CRect CFCTextEdit::GetMarkerRect () const
  * @return	int	
  */
 //********************************************************************************************
-int CFCTextEdit::YToLineIndex (int y) const
+int CFCTextEdit::YToLineIndex (int y)
 {
 	const CPoint pt0 = PosFromChar(LineIndex(0));
 	// マウス左ボタンダウン時の行インデックス。
-	return (y - pt0.y) / m_lineHeight;
+	return (y - pt0.y) / GetlineHeight();
 } // CFCTextEdit::YToLineIndex
 
 BEGIN_MESSAGE_MAP(CFCTextEdit, BASE_CLASS)
@@ -753,7 +755,7 @@ END_MESSAGE_MAP()
 //********************************************************************************************
 BOOL CFCTextEdit::PreTranslateMessage (MSG* pMsg)
 {
-	// TRACE(L"CFCTextEdit::PreTranslateMessage %x %x %x\n", pMsg->message, pMsg->wParam, pMsg->lParam);
+	TRACE(L"CFCTextEdit::PreTranslateMessage %x %x %x\n", pMsg->message, pMsg->wParam, pMsg->lParam);
 
 	// 選択範囲を取得。
 	int startCharIndex;
@@ -809,22 +811,27 @@ LRESULT CFCTextEdit::OnUserTextEditInputTab (WPARAM, LPARAM)
 	const int lastLineIndex = LineFromChar(endCharIndex);
 
 	if (startLineIndex == lastLineIndex)
-	//----- 選択範囲が１行に収まる場合 -----
-	{
+	{	//----- 選択範囲が１行に収まる場合 -----
 		// 選択範囲が１行に収まる場合は、タブ文字を挿入する。
 
-		// startCharIndex のタブ位置を求める。
-		int tabIndex;	// タブインデックス
-		int restCount;	// タブ余り文字数
-		CharIndexToTabPosition(tabIndex, restCount, startCharIndex);
-		// 空白数を計算。
-		int spaceCount = m_tabSize - restCount;
-		// 空白を挿入。
-		ReplaceSel(CString(L' ', spaceCount), TRUE);
-		// SetSel(startCharIndex, startCharIndex + spaceCount);
-	} else
-	//----- 選択範囲が複数行に渡る場合 -----
-	{
+		if (m_isUseSpacesAsTab)
+		{
+			// startCharIndex のタブ位置を求める。
+			int tabIndex;	// タブインデックス
+			int restCount;	// タブ余り文字数
+			CharIndexToTabPosition(tabIndex, restCount, startCharIndex);
+			// 空白数を計算。
+			int spaceCount = m_tabSize - restCount;
+			// 空白を挿入。
+			ReplaceSel(CString(L' ', spaceCount), TRUE);
+		}
+		else
+		{
+			ReplaceSel(L"\t", TRUE);
+		}
+	}
+	else
+	{	//----- 選択範囲が複数行に渡る場合 -----
 		// 選択範囲が複数行に渡る場合は、範囲の先頭にインデントを入れる。SHIFTキーを押している場合はインデントを減らす。
 
 		// 選択範囲の最後が行の先頭だった場合、その行はインデントに含めない。
@@ -849,37 +856,32 @@ LRESULT CFCTextEdit::OnUserTextEditInputTab (WPARAM, LPARAM)
 		{
 			// 行 lineIndex の最初の文字のインデックスを求める。
 			const int iCharIndex0 = LineIndex(lineIndex);
-			// 行 lineIndex の最初の非空白文字のインデックスを求める。
-			const int iCharIndexX = FindNoSpaceCharIndex(iCharIndex0);
-			// 行 lineIndex の最初の非空白文字のタブ位置を求める。
-			// iCharIndexXのタブ位置を計算すると、タブインデックス位置＋空白数がiCharIndexXの位置。
-			int tabIndex;	// タブインデックス
-			int restCount;	// タブ余り文字数
-			CharIndexToTabPosition(tabIndex, restCount, iCharIndexX);
 
 			// シフトキーの場合はインデントを減らす。
 			if (GetKeyState(VK_SHIFT) < 0)
 			{
-				// 次のタブ位置へ送るために追加する空白数。
 				int spaceCount = 0;
-				if (restCount != 0)
+
+				if (GetText()[iCharIndex0] == L'\t')
 				{
-					spaceCount = restCount;
-				} else
-				if (tabIndex != 0)
+					spaceCount = 1;
+				}
+				else if (GetText()[iCharIndex0] == L' ')
 				{
-					spaceCount = m_tabSize;
+					for (spaceCount = 1; spaceCount != m_tabSize && GetText()[iCharIndex0 + spaceCount] == L' '; spaceCount++);
 				}
 				// 行の最初の空白を削除。
 				SetSel(iCharIndex0, iCharIndex0 + spaceCount);
 				ReplaceSel(L"", TRUE);
-			} else
+			}
+			else
 			{
-				// 次のタブ位置へ送るために追加する空白数。
-				int spaceCount = m_tabSize - restCount;
 				// 行の最初に空白を挿入。
 				SetSel(iCharIndex0, iCharIndex0);
-				ReplaceSel(CString(L' ', spaceCount), TRUE);
+				if (m_isUseSpacesAsTab)
+					ReplaceSel(CString(L' ', m_tabSize), TRUE);
+				else
+					ReplaceSel(L"\t", TRUE);
 			}
 		}
 
@@ -1105,3 +1107,11 @@ void CFCTextEdit::OnMouseMove (UINT nFlags, CPoint point)
 	if (rtMarker.PtInRect(point))
 		::SetCursor(AfxGetApp()->LoadStandardCursor(IDC_ARROW));
 } // CFCTextEdit::OnMouseMove
+
+LRESULT CFCTextEdit::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	auto result = BASE_CLASS::WindowProc(message, wParam, lParam);
+	if (message == WM_SETFONT)
+		UpdateTextRect();
+	return result;
+}

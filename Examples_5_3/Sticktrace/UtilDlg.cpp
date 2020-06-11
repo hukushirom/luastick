@@ -9,6 +9,72 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+//----- 20.06.11  変更前 ()-----
+////********************************************************************************************
+///*!
+// * @brief	EditコントロールにUndoを実行する。
+// * @author	Fukushiro M.
+// * @date	2014/09/22(月) 09:51:25
+// *
+// * @param[in]	CEdit*							edit			Undo対象のEditコントロール。
+// * @param[in]	const std::vector<FCDiffRecW>&	vUndoBuffer		Undoバッファ。
+// * @param[in]	int								iCurUndoBuffer	Undoバッファの現在位置。Undo対象の
+// *																バッファの1つ後を指す。
+// *
+// * @return	int	新しいUndoバッファの位置。
+// */
+////********************************************************************************************
+//int UtilDlg::UndoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, int iCurUndoBuffer)
+//{
+//	if (iCurUndoBuffer == 0) return iCurUndoBuffer;
+//	iCurUndoBuffer--;
+//	const FCDiffRecW& rec = vUndoBuffer[iCurUndoBuffer];
+//	if (rec.cmd == FCDiffRecW::INS)
+//	//----- 挿入の場合 -----
+//	{
+//		edit->SetSel(rec.begin, rec.begin + rec.text.length());
+//		edit->ReplaceSel(L"");
+//	} else
+//	//----- 削除の場合 -----
+//	{
+//		edit->SetSel(rec.begin, rec.begin);
+//		edit->ReplaceSel(rec.text.c_str());
+//	}
+//	return iCurUndoBuffer;
+//} // FFUndoEdit
+//
+////********************************************************************************************
+///*!
+// * @brief	EditコントロールにRedoを実行する。
+// * @author	Fukushiro M.
+// * @date	2014/09/22(月) 09:51:25
+// *
+// * @param[in]	CEdit*							edit			Redo対象のEditコントロール。
+// * @param[in]	const std::vector<FCDiffRecW>&	vUndoBuffer		Undoバッファ。
+// * @param[in]	int								iCurUndoBuffer	Undoバッファの現在位置。Redo対象の
+// *																バッファの1つ前を指す。
+// *
+// * @return	int	新しいUndoバッファの位置。
+// */
+////********************************************************************************************
+//int UtilDlg::RedoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, int iCurUndoBuffer)
+//{
+//	if (vUndoBuffer.size() == iCurUndoBuffer) return iCurUndoBuffer;
+//	const FCDiffRecW& rec = vUndoBuffer[iCurUndoBuffer];
+//	if (rec.cmd == FCDiffRecW::INS)
+//	//----- 挿入の場合 -----
+//	{
+//		edit->SetSel(rec.begin, rec.begin);
+//		edit->ReplaceSel(rec.text.c_str());
+//	} else
+//	//----- 削除の場合 -----
+//	{
+//		edit->SetSel(rec.begin, rec.begin + rec.text.length());
+//		edit->ReplaceSel(L"");
+//	}
+//	return iCurUndoBuffer + 1;
+//} // FFRedoEdit
+//----- 20.06.11  変更後 ()-----
 //********************************************************************************************
 /*!
  * @brief	EditコントロールにUndoを実行する。
@@ -23,23 +89,21 @@ static char THIS_FILE[] = __FILE__;
  * @return	int	新しいUndoバッファの位置。
  */
 //********************************************************************************************
-int UtilDlg::UndoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, int iCurUndoBuffer)
+void UtilDlg::UndoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer)
 {
-	if (iCurUndoBuffer == 0) return iCurUndoBuffer;
-	iCurUndoBuffer--;
-	const FCDiffRecW& rec = vUndoBuffer[iCurUndoBuffer];
-	if (rec.cmd == FCDiffRecW::INS)
-	//----- 挿入の場合 -----
+	for (auto irec = vUndoBuffer.rbegin(); irec != vUndoBuffer.rend(); irec++)
 	{
-		edit->SetSel(rec.begin, rec.begin + rec.text.length());
-		edit->ReplaceSel(L"");
-	} else
-	//----- 削除の場合 -----
-	{
-		edit->SetSel(rec.begin, rec.begin);
-		edit->ReplaceSel(rec.text.c_str());
+		if (irec->cmd == FCDiffRecW::INS)
+		{	//----- 挿入の場合 -----
+			edit->SetSel(irec->begin, irec->begin + irec->text.length());
+			edit->ReplaceSel(L"");
+		}
+		else
+		{	//----- 削除の場合 -----
+			edit->SetSel(irec->begin, irec->begin);
+			edit->ReplaceSel(irec->text.c_str());
+		}
 	}
-	return iCurUndoBuffer;
 } // FFUndoEdit
 
 //********************************************************************************************
@@ -56,23 +120,23 @@ int UtilDlg::UndoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, 
  * @return	int	新しいUndoバッファの位置。
  */
 //********************************************************************************************
-int UtilDlg::RedoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, int iCurUndoBuffer)
+void UtilDlg::RedoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer)
 {
-	if (vUndoBuffer.size() == iCurUndoBuffer) return iCurUndoBuffer;
-	const FCDiffRecW& rec = vUndoBuffer[iCurUndoBuffer];
-	if (rec.cmd == FCDiffRecW::INS)
-	//----- 挿入の場合 -----
+	for (auto irec = vUndoBuffer.begin(); irec != vUndoBuffer.end(); irec++)
 	{
-		edit->SetSel(rec.begin, rec.begin);
-		edit->ReplaceSel(rec.text.c_str());
-	} else
-	//----- 削除の場合 -----
-	{
-		edit->SetSel(rec.begin, rec.begin + rec.text.length());
-		edit->ReplaceSel(L"");
+		if (irec->cmd == FCDiffRecW::INS)
+		{	//----- 挿入の場合 -----
+			edit->SetSel(irec->begin, irec->begin);
+			edit->ReplaceSel(irec->text.c_str());
+		}
+		else
+		{	//----- 削除の場合 -----
+			edit->SetSel(irec->begin, irec->begin + irec->text.length());
+			edit->ReplaceSel(L"");
+		}
 	}
-	return iCurUndoBuffer + 1;
 } // FFRedoEdit
+//----- 20.06.11  変更終 ()-----
 
 /*************************************************************************
  * <関数>	FFInitDlgLayout
