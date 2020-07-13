@@ -32,6 +32,7 @@ private:
 	~SticktraceWindow();
 	bool Show(bool show);
 	bool IsVisible(bool & isVisible);
+	bool IsScriptModified(bool & isModified);
 	bool SetSource(const std::string& sandbox, const std::string& name, const std::string& source);
 	bool IsDebugMode();
 	bool IsBreakpoint(const char* name, int lineIndex);
@@ -39,8 +40,8 @@ private:
 	bool OnResumed();
 	bool Jump(const char * name, int lineIndex);
 	bool NewSession();
-	bool OnStart();
-	bool OnStop();
+	bool OnStart(SticktraceDef::ExecType execType);
+	bool OnStop(SticktraceDef::ExecType execType);
 	bool OutputError(const char* message);
 	bool OutputDebug(const char* message);
 	bool SetWatch(const std::string& data);
@@ -127,7 +128,8 @@ void SticktraceWindow::ThreadFunc(
 	m_stickTraceDlg->SetDialogId(dialogId);
 	m_stickTraceDlg->SetDebuggerCallback(DGT_debuggerCallbackFunc, debuggerCallbackData);
 	m_stickTraceDlg->Create(IDD_STICK_TRACE);
-	m_stickTraceDlg->ShowWindow(SW_HIDE);
+	m_stickTraceDlg->EnableWindow(FALSE);
+
 	// スレッドIDを設定。後で強制終了できるよう。CSロック前なのでInterlockedで設定。
 	::InterlockedExchange(&m_threadId, (LONG)::GetCurrentThreadId());
 	while (::InterlockedCompareExchange(&m_threadTerminateFlag, 0, 0) == 0)
@@ -139,16 +141,6 @@ void SticktraceWindow::ThreadFunc(
 	::InterlockedExchange(&m_threadId, 0);
 	::InterlockedExchange(&m_threadTerminateFlag, 0);
 }
-
-//----- 20.06.10  削除始 ()-----
-//void SticktraceWindow::Create(unsigned int dialogId)
-//{
-//	if (::InterlockedCompareExchange(&m_threadId, 0, 0) != 0) return;
-//	std::thread{ SticktraceWindow::StaticThreadFunc, this, dialogId }.detach();
-//	for (int i = 0; i != 100 && ::InterlockedCompareExchange(&m_threadId, 0, 0) == 0; i++)
-//		::Sleep(10);
-//}
-//----- 20.06.10  削除終 ()-----
 
 void SticktraceWindow::Destroy()
 {
@@ -192,6 +184,12 @@ bool SticktraceWindow::IsVisible(bool & isVisible)
 	return m_stickTraceDlg->APT_IsVisible(isVisible);
 }
 
+bool SticktraceWindow::IsScriptModified(bool & isModified)
+{
+	if (m_stickTraceDlg == nullptr) return false;
+	return m_stickTraceDlg->APT_IsScriptModified(isModified);
+}
+
 bool SticktraceWindow::SetSource(const std::string& sandbox, const std::string& name, const std::string& source)
 {
 	return m_stickTraceDlg->APT_SetSource(sandbox, name, source);
@@ -227,14 +225,14 @@ bool SticktraceWindow::NewSession()
 	return m_stickTraceDlg->APT_NewSession();
 }
 
-bool SticktraceWindow::OnStart()
+bool SticktraceWindow::OnStart(SticktraceDef::ExecType execType)
 {
-	return m_stickTraceDlg->APT_OnStart();
+	return m_stickTraceDlg->APT_OnStart(execType);
 }
 
-bool SticktraceWindow::OnStop()
+bool SticktraceWindow::OnStop(SticktraceDef::ExecType execType)
 {
-	return m_stickTraceDlg->APT_OnStop();
+	return m_stickTraceDlg->APT_OnStop(execType);
 }
 
 bool SticktraceWindow::OutputError(const char * message)

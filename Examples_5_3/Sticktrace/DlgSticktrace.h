@@ -44,6 +44,7 @@ public:
 
 	bool APT_Show(bool show);
 	bool APT_IsVisible(bool & isVisible);
+	bool APT_IsScriptModified(bool & isModified);
 	bool APT_SetSource(const std::string& sandbox, const std::string& name, const std::string& src);
 	bool APT_IsDebugMode();
 	bool APT_IsBreakpoint(const char* name, int lineIndex);
@@ -51,8 +52,8 @@ public:
 	bool APT_OnResumed();
 	bool APT_Jump(const char * name, int lineIndex);
 	bool APT_NewSession();
-	bool APT_OnStart();
-	bool APT_OnStop();
+	bool APT_OnStart(SticktraceDef::ExecType execType);
+	bool APT_OnStop(SticktraceDef::ExecType execType);
 	bool APT_OutputError(const char * message);
 	bool APT_OutputDebug(const char * message);
 	bool APT_SetWatch(const std::string& data);
@@ -73,8 +74,8 @@ private:
 
 	BOOL m_isScriptEditable;
 
-	BOOL m_bIsBtnOnPaneBorder;	// ペインボーダー上でボタンが押されているか？
-	CRect m_rtBar;				// ペインボーダー移動中のワーク。ボーダー位置を記録。
+	BOOL m_bIsBtnOnPaneBorder;		// ペインボーダー上でボタンが押されているか？
+	CRect m_rtBar;					// ペインボーダー移動中のワーク。ボーダー位置を記録。
 	HWND m_hwndWhenBorderMoving;	// Focused window when border moving.
 
 	struct
@@ -92,6 +93,7 @@ private:
 			NONE,
 			SHOW,
 			IS_VISIBLE,
+			IS_SCRIPT_MODIFIED,
 			SET_SOURCE,
 			NEW_SESSION,
 			ON_START,
@@ -186,8 +188,8 @@ protected:
 	void Jump(const std::string & name, int lineIndex, CFCTextEdit::MarkerType markerType, bool selectLine);
 	bool JumpErrorLocation();
 	void NewSession();
-	void OnStart();
-	void OnStop();
+	void OnStart(SticktraceDef::ExecType execType);
+	void OnStop(SticktraceDef::ExecType execType);
 	void OnSuspended();
 	void OnResumed();
 	void OutputError(const std::string & message);
@@ -273,4 +275,14 @@ public:
 	afx_msg void OnDestroy();
 	afx_msg void OnTcnSelchangingSceTabScript(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+//	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
+//	afx_msg void OnSetFocus(CWnd* pOldWnd);
+//	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
+//	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+//	afx_msg void OnActivateApp(BOOL bActive, DWORD dwThreadID);
+//	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg BOOL OnNcActivate(BOOL bActive);
+//	afx_msg void OnMDIActivate(BOOL bActivate, CWnd* pActivateWnd, CWnd* pDeactivateWnd);
+	afx_msg void OnOptionAutoAltkey();
+	afx_msg void OnUpdateOptionAutoAltkey(CCmdUI *pCmdUI);
 };

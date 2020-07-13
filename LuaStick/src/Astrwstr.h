@@ -12,6 +12,12 @@ public:
 		return converter;
 	}
 
+	/// <summary>
+	/// Convert UTF-8 text to UTF-16 and '\n' to '\r\n'.
+	/// </summary>
+	/// <param name="wstr"></param>
+	/// <param name="astr"></param>
+	/// <returns></returns>
 	static std::wstring & astr_to_wstr(std::wstring & wstr, const std::string & astr)
 	{
 		wstr = Converter().from_bytes(astr);
@@ -31,6 +37,12 @@ public:
 		return wstr;
 	}
 
+	/// <summary>
+	/// Convert UTF-16 text to UTF-8 and '\r\n' to '\n'.
+	/// </summary>
+	/// <param name="wstr"></param>
+	/// <param name="astr"></param>
+	/// <returns></returns>
 	static std::string & wstr_to_astr(std::string & astr, const std::wstring & wstr)
 	{
 		astr = Converter().to_bytes(wstr);

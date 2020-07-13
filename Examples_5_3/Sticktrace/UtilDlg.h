@@ -106,8 +106,19 @@ public:
 //	static int UndoEdit(CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, int iCurUndoBuffer);
 //	static int RedoEdit(CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, int iCurUndoBuffer);
 //----- 20.06.11  変更後 ()-----
-	static void UndoEdit(CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer);
-	static void RedoEdit(CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer);
+	/// <summary>
+	/// EditコントロールにUndoを実行する。
+	/// </summary>
+	/// <param name="edit">Undo対象のEditコントロール。</param>
+	/// <param name="vUndoBuffer">Undoバッファ。</param>
+	static void UndoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer);
+
+	/// <summary>
+	/// EditコントロールにRedoを実行する。
+	/// </summary>
+	/// <param name="edit">Redo対象のEditコントロール。</param>
+	/// <param name="vUndoBuffer">Undoバッファ。</param>
+	static void RedoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer);
 //----- 20.06.11  変更終 ()-----
 
 	/*************************************************************************

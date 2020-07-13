@@ -217,7 +217,14 @@ namespace SticktraceDef
 		SAVE_SCRIPT,	// Save the script.
 	};
 
+	/// <summary>
+	/// Callback from debugger window.
+	/// Case:command=SAVE_SCRIPT
+	///   param->strParam1:Script name
+	///   param->strParam2:Script code. Note:New line char is '\n', not "\r\n".
+	/// </summary>
 	using DebuggerCallbackFunc = bool (*)(
+		unsigned int dialogId,
 		SticktraceDef::DebuggerCommand command,
 		DebuggerCallbackParam* param,
 		void* userData
@@ -257,6 +264,15 @@ namespace SticktraceDef
 		std::string name;
 		std::string type;
 		std::string value;
+	};
+
+	/// <summary>
+	/// Script execution type.
+	/// </summary>
+	enum class ExecType
+	{
+		ON_LOAD,	// Execute on load.
+		ON_CALL,	// Execute on function call.
 	};
 }
 
@@ -413,6 +429,7 @@ private:
 	~SticktraceWindow() = delete;
 	bool Show(bool show);
 	bool IsVisible(bool & isVisible);
+	bool IsScriptModified(bool & isModified);
 	bool SetSource(const std::string& sandbox, const std::string& name, const std::string& source);
 	bool IsDebugMode();
 	bool IsBreakpoint(const char* name, int lineIndex);
@@ -420,8 +437,8 @@ private:
 	bool OnResumed();
 	bool Jump(const char * name, int lineIndex);
 	bool NewSession();
-	bool OnStart();
-	bool OnStop();
+	bool OnStart(SticktraceDef::ExecType execType);
+	bool OnStop(SticktraceDef::ExecType execType);
 	bool OutputError(const char* message);
 	bool OutputDebug(const char* message);
 	bool SetWatch(const std::string& data);
@@ -1928,7 +1945,7 @@ public:
 	{
 		Terminate();
 	}
-	
+
 private:
 	static std::unordered_map<lua_State*, Sticktrace*>& LUA_TO_TRACE()
 	{
@@ -1966,6 +1983,11 @@ public:
 	/// <summary>
 	/// Initializes the specified stickrun.
 	/// </summary>
+	/// <param name="hwndParent">
+	/// Parent window. This function creates the debugger window. The window deprives the focus despite it is hidden window. So this function gives the focus back to hwndParent.
+	/// /NULL:Do not back the focus.
+	/// </param>
+	/// /nullptr or empty:Default value will be used.</param>
 	/// <param name="companyName">Name of company. Used to determine the name of registry./nullptr or empty:Default value will be used.</param>
 	/// <param name="packageName">Name of package. Used to determine the name of registry./nullptr:Default value will be used.</param>
 	/// <param name="applicationName">Name of application. Used to determine the name of registry./nullptr:Default value will be used.</param>
@@ -1977,6 +1999,7 @@ public:
 	/// <param name="scriptHookData">The user defined data which is passed to scriptHookFunc.</param>
 	/// <param name="scriptHookInterval">The script hook interval. If scriptHookInterval is set to 10, scriptHookFunc is called once every 10 lines execution.</param>
 	void Initialize(
+		HWND hwndParent,
 		const wchar_t* companyName,
 		const wchar_t* packageName,
 		const wchar_t* applicationName,
@@ -1997,60 +2020,8 @@ public:
 			);
 
 			LuaToClassHook<Sticktrace>::Alloc(m_luaToClassHook, this);
-
-//----- 20.06.11  削除始 ()-----
-//			m_stickrun = stickrun;
-//			m_stickrun->SetHook(Sticktrace::HookFunc, this);
-//			m_scriptHookFunc = scriptHookFunc;
-//			m_scriptHookData = scriptHookData;
-//			m_scriptHookInterval = scriptHookInterval;
-//
-//			// push global table.
-//			//       STACK
-//			//    |         |
-//			//    |---------|      +---------+--------------+
-//			//    |   _G    |----->| Key     |    Value     |
-//			//    +---------+      |---------|--------------|
-//			//                     :         :              :
-//			Sticklib::push_table(stickrun->GetLuaState(), nullptr);
-//
-//			// Create and register the static class 'STICKTRACE'.
-//			//       STACK
-//			//    |         |
-//			//    |---------|
-//			//  -1|  table  |-------------------------------+
-//			//    |---------|      +------------+--------+  |
-//			//  -2|   _G    |----->| Key        | Value  |  |
-//			//    +---------+      |------------|--------|  |   +--------+--------+
-//			//                     |"STICKTRACE"| table  |--+-->| Key    | Value  |
-//			//                     |------------|--------|      |--------|--------|
-//			//                     :            :        :      :        :        :
-//			Sticklib::push_table(stickrun->GetLuaState(), "STICKTRACE");
-//
-//			// Register functions into the 'STICKTRACE' table.
-//			//       STACK
-//			//    |         |
-//			//    |---------|
-//			//  -1|  table  |-------------------------------+
-//			//    |---------|      +------------+--------+  |
-//			//  -2|   _G    |----->| Key        | Value  |  |
-//			//    +---------+      |------------|--------|  |   +--------------------+------------------+
-//			//                     |"STICKTRACE"| table  |--+-->| Key                | Value            |
-//			//                     |------------|--------|      |--------------------|------------------|
-//			//                     :            :        :      |"OutputDebugMessage"|OutputDebugMessage|
-//			//                                                  |--------------------|------------------|
-//			//                                                  :                    :                  :
-//			static struct luaL_Reg funcs[] =
-//			{
-//				{ "OutputDebugMessage", OutputDebugMessage },
-//				{ nullptr, nullptr },
-//			};
-//			Sticklib::set_functions(stickrun->GetLuaState(), funcs);
-//
-//			// Pop the "STICKTRACE" table and Global table.
-//			Sticklib::pop(stickrun->GetLuaState());
-//			Sticklib::pop(stickrun->GetLuaState());
-//----- 20.06.11  削除終 ()-----
+			if (hwndParent != NULL)
+				::SetForegroundWindow(hwndParent);
 		}
 	}
 
@@ -2073,35 +2044,6 @@ public:
 			m_luaToClassHook.Clear();
 			SticktraceWindow::Delete(m_sticktraceWindow);
 			m_sticktraceWindow = nullptr;
-
-//----- 20.06.11  削除始 ()-----
-//			//       STACK
-//			//    |         |
-//			//    |---------|      +------------+--------+
-//			//  -1|   _G    |----->| Key        | Value  |
-//			//    +---------+      |------------|--------|      +--------+--------+
-//			//                     |"STICKTRACE"| table  |----->| Key    | Value  |
-//			//                     |------------|--------|      |--------|--------|
-//			//                     :            :        :      :        :        :
-//			Sticklib::push_table(m_stickrun->GetLuaState(), nullptr);
-//
-//			//       STACK
-//			//    |         |
-//			//    |---------|      +------------+--------+
-//			//  -1|   _G    |----->| Key        | Value  |
-//			//    +---------+      |------------|--------|
-//			//                     :            :        :
-//			Sticklib::remove_table_item(m_stickrun->GetLuaState(), "STICKTRACE");
-//
-//			// Pop the Global table.
-//			Sticklib::pop(m_stickrun->GetLuaState());
-//
-//			m_stickrun->SetHook(nullptr, nullptr);
-//			m_stickrun = nullptr;
-//			m_scriptHookFunc = nullptr;
-//			m_scriptHookData = nullptr;
-//			m_scriptHookInterval = 0;
-//----- 20.06.11  削除終 ()-----
 		}
 		return true;
 	}
@@ -2222,6 +2164,14 @@ public:
 		return isVisible;
 	}
 
+	bool IsScriptModified()
+	{
+		bool isModified;
+		if (!m_sticktraceWindow->IsScriptModified(isModified))
+			return false;
+		return isModified;
+	}
+
 	bool OutputError(const char* message)
 	{
 		return m_sticktraceWindow->OutputError(message);
@@ -2262,20 +2212,22 @@ public:
 		return m_suspendMode;
 	}
 
-	bool Suspend()
-	{
-		m_suspendMode = SticktraceDef::Mode::SUSPEND;
-	}
-
-	bool Resume()
-	{
-		m_suspendMode = SticktraceDef::Mode::RUN;
-	}
-
-	bool ProceedToNext()
-	{
-		m_suspendMode = SticktraceDef::Mode::PROCEED_NEXT;
-	}
+//----- 20.06.14 Fukushiro M. 削除始 ()-----
+//	bool Suspend()
+//	{
+//		m_suspendMode = SticktraceDef::Mode::SUSPEND;
+//	}
+//
+//	bool Resume()
+//	{
+//		m_suspendMode = SticktraceDef::Mode::RUN;
+//	}
+//
+//	bool ProceedToNext()
+//	{
+//		m_suspendMode = SticktraceDef::Mode::PROCEED_NEXT;
+//	}
+//----- 20.06.14 Fukushiro M. 削除終 ()-----
 
 	Stickrun* GetStickrun() const
 	{
@@ -2288,27 +2240,26 @@ private:
 		m_sticktraceWindow->NewSession();
 	}
 
-	void OnStartExec(lua_State* L)
+	void OnStartExec(lua_State* L, SticktraceDef::ExecType execType)
 	{
 		if (m_sticktraceWindow->IsDebugMode())
 			::lua_sethook(L, m_luaToClassHook.hook, LUA_MASKLINE, 0);
 
-		
 		LUA_TO_TRACE()[L] = this;
 
-		m_sticktraceWindow->OnStart();
+		m_sticktraceWindow->OnStart(execType);
 		m_suspendMode = SticktraceDef::Mode::RUN;
 		m_scriptHookCount = 0;
 	}
 
-	void OnStopExec(lua_State* L)
+	void OnStopExec(lua_State* L, SticktraceDef::ExecType execType)
 	{
 		LUA_TO_TRACE().erase(L);
 		::lua_sethook(L, nullptr, 0, 0);
 
 		m_suspendMode = SticktraceDef::Mode::STOP;
-		m_sticktraceWindow->OnStop();
-		m_sticktraceWindow->Jump(nullptr, -1);
+		m_sticktraceWindow->OnStop(execType);
+		// m_sticktraceWindow->Jump(nullptr, -1);
 	}
 
 #if _DEBUG
@@ -2801,11 +2752,17 @@ private:
 		case Stickrun::CallbackType::NEW_SESSION:
 			((Sticktrace*)userData)->NewSession();
 			break;
-		case Stickrun::CallbackType::ON_START_EXEC:
-			((Sticktrace*)userData)->OnStartExec(L);
+		case Stickrun::CallbackType::ON_START_EXEC_ON_LOAD:
+			((Sticktrace*)userData)->OnStartExec(L, SticktraceDef::ExecType::ON_LOAD);
 			break;
-		case Stickrun::CallbackType::ON_STOP_EXEC:
-			((Sticktrace*)userData)->OnStopExec(L);
+		case Stickrun::CallbackType::ON_STOP_EXEC_ON_LOAD:
+			((Sticktrace*)userData)->OnStopExec(L, SticktraceDef::ExecType::ON_LOAD);
+			break;
+		case Stickrun::CallbackType::ON_START_EXEC_ON_CALL:
+			((Sticktrace*)userData)->OnStartExec(L, SticktraceDef::ExecType::ON_CALL);
+			break;
+		case Stickrun::CallbackType::ON_STOP_EXEC_ON_CALL:
+			((Sticktrace*)userData)->OnStopExec(L, SticktraceDef::ExecType::ON_CALL);
 			break;
 		case Stickrun::CallbackType::ON_ERROR:
 			((Sticktrace*)userData)->OutputError((const char*)data);

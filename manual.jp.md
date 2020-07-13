@@ -80,8 +80,10 @@ Lua 5.4.0 はまだリリースされていません。リリース後、以下�
 
 以下のようなコマンドラインで実行する。  
 ```  
->LuaStick.exe -out Stick Sticklib.h main.h srcx.h  
+>LuaStick.exe -out Stick -lang ja Sticklib.h main.h srcx.h  
 ```  
+**-out**&emsp;出力するファイルの名前を指定する。  
+**-lang**&emsp;言語を指定する。詳しくは後述の「言語の指定」を参照。  
 
 以下は、LuaStick.exeによって作成されるファイルとアプリケーションの構成例。  
 ```  
@@ -149,6 +151,7 @@ LuaStickで使用するタグはすべて３つのスラッシュ"///"から始�
 LuaStickでは、以下のタグを使用する。
 - \<stick\>
 - \<param\>
+- \<returns\>
 - \<exception\>
 - \<sticktype\>
 - \<stickconv\>
@@ -589,6 +592,7 @@ static void MyFunc()
 ### \<summary\>  
 
 HTMLヘルプに出力される、関数・定数等の説明を記述する。  
+\<stick\>タグで使われる属性を\<summary\>に記述し、\<stick\>タグの代わりに使うことができる。
 
 ###### 例  
 
@@ -597,6 +601,11 @@ HTMLヘルプに出力される、関数・定数等の説明を記述する。
 /// This is a my function.  
 /// </summary>  
 static void MyFunc();  
+
+/// <summary export="true" lname="MyFuncX">  
+/// This is a my function 2.  
+/// </summary>  
+static void MyFunc2();  
 ```  
 
 #### 属性  
@@ -614,6 +623,30 @@ static void MyFunc();
 constexpr int ABC = 10;  
 // HTMLヘルプの定数"ABC"の説明に"This is a my constant."が記載される。  
 ```  
+
+##### export  
+
+任意。\<stick\>タグの解説を参照。  
+
+##### type  
+
+任意。\<stick\>タグの解説を参照。  
+
+##### ctype  
+
+任意。\<stick\>タグの解説を参照。  
+
+##### ltype  
+
+任意。\<stick\>タグの解説を参照。  
+
+##### lname  
+
+任意。\<stick\>タグの解説を参照。  
+
+##### super  
+
+任意。\<stick\>タグの解説を参照。  
 
 <br/><br/>
 
@@ -677,6 +710,47 @@ Program example for this function
 | int x = 10;      // x is 10.                    |  
 | MyFunc(x);       // Call MyFunc.                |  
 +-------------------------------------------------+  
+```  
+
+************************************************************  
+
+## 言語の指定  
+
+\<summary\>タグ等のtext contentは、複数の言語で記述することができる。  
+コマンドラインの-langオプションで指定した言語の記述のみがマニュアルに出力される。  
+
+#### 記述方法  
+
+*言語コード1;* コンテンツ-1 *言語コード2;* コンテンツ-2...  
+
+- 言語コードの前は行頭、空白、または改行でなければならない。  
+- 言語コードは、HTMLのlang属性のいずれかのコードでなければならない。
+
+#### 例  
+
+```  
+/// <summary export="true">  
+/// en;
+/// <para>Program example for this function</para>  
+/// <code>  
+/// int x = 10;      // x is 10.
+/// MyFunc(x);       // Call MyFunc.
+/// </code>  
+/// ja;
+/// <para>関数のプログラム例</para>  
+/// <code>  
+/// int x = 10;      // x は 10.
+/// MyFunc(x);       // MyFuncの呼び出し
+/// </code>  
+/// </summary>  
+/// <param io="in" name="x">en;Parameter x ja;パラメーター x</<param>
+static void MyFunc(int x);  
+
+Command line example  
++----------------------------------------------------+  
+| >stick.exe -out Stick -lang en sticklib.h hoo.h    |  
+| >stick.exe -out Stick -lang ja sticklib.h hoo.h    |  
++----------------------------------------------------+  
 ```  
 
 ************************************************************  

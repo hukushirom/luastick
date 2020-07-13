@@ -5,8 +5,6 @@
 #include "resource.h"
 #include "Astrwstr.h"
 #include "UtilStr.h"		// For UtilStr::AppendString.
-//#include "UtilGraphics.h"	// For FCEditDraw.
-//#include "FrameWnd.h"		// For FFMainWnd().
 #include "TextEdit.h"		// This header.
 
 static const CSize EDITOR_BREAKPOINT_SIZE(9, 9);	// BREAKPOINTアイコンサイズ
@@ -75,35 +73,6 @@ void CFCTextEdit::UpdateTextRect ()
 	GetClientRect(rtClient);
 	rtClient.left += EDITOR_TEXT_LEFT;
 	SetRect(rtClient);
-
-//----- 20.06.11  削除始 ()-----
-//	if (GetLineCount() <= 1)
-//	{
-//		// 選択範囲を記録。
-//		int startCharIndex;
-//		int endCharIndex;
-//		GetSel(startCharIndex, endCharIndex);
-//		// テキストを記録。
-//		CString text;
-//		GetWindowText(text);
-//		// ２行のダミーテキストに置き換える。
-//		SetWindowText(L"a\r\na");
-//		// ２行の位置を取得し、行の高さを計算する。
-//		const CPoint pt0 = PosFromChar(LineIndex(0));
-//		const CPoint pt1 = PosFromChar(LineIndex(1));
-//		// 行の高さ
-//		m_lineHeight = pt1.y - pt0.y;
-//		// 元のテキストに戻す。
-//		SetWindowText(text);
-//		SetSel(startCharIndex, endCharIndex);
-//	} else
-//	{
-//		const CPoint pt0 = PosFromChar(LineIndex(0));
-//		const CPoint pt1 = PosFromChar(LineIndex(1));
-//		// 行の高さ
-//		m_lineHeight = pt1.y - pt0.y;
-//	}
-//----- 20.06.11  削除終 ()-----
 } // CFCTextEdit::UpdateTextRect.
 
 //********************************************************************************************
@@ -755,7 +724,7 @@ END_MESSAGE_MAP()
 //********************************************************************************************
 BOOL CFCTextEdit::PreTranslateMessage (MSG* pMsg)
 {
-	TRACE(L"CFCTextEdit::PreTranslateMessage %x %x %x\n", pMsg->message, pMsg->wParam, pMsg->lParam);
+	// TRACE(L"CFCTextEdit::PreTranslateMessage %x %x %x\n", pMsg->message, pMsg->wParam, pMsg->lParam);
 
 	// 選択範囲を取得。
 	int startCharIndex;
@@ -775,7 +744,7 @@ BOOL CFCTextEdit::PreTranslateMessage (MSG* pMsg)
 		switch (pMsg->wParam)
 		{
 		case VK_TAB:	// Tab
-			if ((GetStyle() & ES_READONLY) != ES_READONLY)
+			if (!IsReadOnly())
 			{
 				PostMessage(WM_USER_TEXT_EDIT_INPUT_TAB);
 				return TRUE;

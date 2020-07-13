@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <string>
+#include <unordered_set>
 #include "AnyValue.h"
 #include "LeException.h"
 
@@ -1278,6 +1279,265 @@ public:
 			}
 		}
 		return '\0';
+	}
+
+
+	static std::string GetLangPart(
+		const std::string & lang,
+		const std::string & source
+	)
+	{
+		static const std::unordered_set<std::string> LANGSET
+		{
+			"ab",
+			"aa",
+			"af",
+			"ak",
+			"sq",
+			"am",
+			"ar",
+			"an",
+			"hy",
+			"as",
+			"av",
+			"ae",
+			"ay",
+			"az",
+			"bm",
+			"ba",
+			"eu",
+			"be",
+			"bn",
+			"bh",
+			"bi",
+			"bs",
+			"br",
+			"bg",
+			"my",
+			"ca",
+			"ch",
+			"ce",
+			"ny",
+			"zh",
+			"zh-Hans",
+			"zh-Hant",
+			"cv",
+			"kw",
+			"co",
+			"cr",
+			"hr",
+			"cs",
+			"da",
+			"dv",
+			"nl",
+			"dz",
+			"en",
+			"eo",
+			"et",
+			"ee",
+			"fo",
+			"fj",
+			"fi",
+			"fr",
+			"ff",
+			"gl",
+			"gd",
+			"gv",
+			"ka",
+			"de",
+			"el",
+			"kl",
+			"gn",
+			"gu",
+			"ht",
+			"ha",
+			"he",
+			"hz",
+			"hi",
+			"ho",
+			"hu",
+			"is",
+			"io",
+			"ig",
+			"id",
+			"in",
+			"ia",
+			"ie",
+			"iu",
+			"ik",
+			"ga",
+			"it",
+			"ja",
+			"jv",
+			"kl",
+			"kn",
+			"kr",
+			"ks",
+			"kk",
+			"km",
+			"ki",
+			"rw",
+			"rn",
+			"ky",
+			"kv",
+			"kg",
+			"ko",
+			"ku",
+			"kj",
+			"lo",
+			"la",
+			"lv",
+			"li",
+			"ln",
+			"lt",
+			"lu",
+			"lg",
+			"lb",
+			"gv",
+			"mk",
+			"mg",
+			"ms",
+			"ml",
+			"mt",
+			"mi",
+			"mr",
+			"mh",
+			"mo",
+			"mn",
+			"na",
+			"nv",
+			"ng",
+			"nd",
+			"ne",
+			"no",
+			"nb",
+			"nn",
+			"ii",
+			"oc",
+			"oj",
+			"cu",
+			"or",
+			"om",
+			"os",
+			"pi",
+			"ps",
+			"fa",
+			"pl",
+			"pt",
+			"pa",
+			"qu",
+			"rm",
+			"ro",
+			"ru",
+			"se",
+			"sm",
+			"sg",
+			"sa",
+			"sr",
+			"sh",
+			"st",
+			"tn",
+			"sn",
+			"ii",
+			"sd",
+			"si",
+			"ss",
+			"sk",
+			"sl",
+			"so",
+			"nr",
+			"es",
+			"su",
+			"sw",
+			"ss",
+			"sv",
+			"tl",
+			"ty",
+			"tg",
+			"ta",
+			"tt",
+			"te",
+			"th",
+			"bo",
+			"ti",
+			"to",
+			"ts",
+			"tr",
+			"tk",
+			"tw",
+			"ug",
+			"uk",
+			"ur",
+			"uz",
+			"ve",
+			"vi",
+			"vo",
+			"wa",
+			"cy",
+			"wo",
+			"fy",
+			"xh",
+			"yi",
+			"ji",
+			"yo",
+			"za",
+			"zu",
+		};
+
+		if (!lang.empty())
+		{
+			// lang="ja", source="kn;abcde ja;あいうえお en;ABCDE" -> "あいうえお"
+
+			static const std::regex REX(
+				R"(\b([A-Za-z\-]+);)"
+			);
+
+			const char* str = source.c_str();
+			const char* str1 = nullptr;
+			const char* str2 = nullptr;
+			std::cmatch results;
+			while (std::regex_search(str, results, REX))
+			{
+				auto argument = results[1].str();
+				auto pos = results.position();
+				auto len = results.length();
+				str = str + pos + len;
+				if (argument == lang)
+				{
+					str1 = str;
+					break;
+				}
+			}
+			if (str1 != nullptr)
+			{
+				while (std::regex_search(str, results, REX))
+				{
+					auto argument = results[1].str();
+					auto pos = results.position();
+					auto len = results.length();
+					if (LANGSET.find(argument) != LANGSET.end())
+					{
+						str2 = str + pos;
+						break;
+					}
+					str = str + pos + len;
+				}
+				if (str2 == nullptr)
+					str2 = source.c_str() + source.length();
+
+				std::string retstr(str1, str2);
+				UtilString::Trim(retstr);
+				return retstr;
+			}
+			else
+			{
+				return source;
+			}
+		}
+		else
+		{
+			return source;
+		}
 	}
 
 };

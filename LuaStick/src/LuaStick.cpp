@@ -214,6 +214,7 @@
 #define FORMHTML(...) __FMTEXP(__FMTNAME(__VA_ARGS__,__FMH17,__FMH16,__FMH15,__FMH14,__FMH13,__FMH12,__FMH11,__FMH10,__FMH09,__FMH08,__FMH07,__FMH06,__FMH05,__FMH04,__FMH03,__FMH02,__FMH01,__FMH00)("${SRCMARKER}",SRCMARKER,__VA_ARGS__))
 
 constexpr const wchar_t* OPTION_OUT = L"out";
+constexpr const wchar_t* OPTION_LANG = L"lang";
 
 /// <summary>
 /// Make dummy class object. Use for function's argument.
@@ -342,6 +343,11 @@ struct LuaTypeRec
 static LuaType CtypeToLuaType(const std::string & ctype);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// <summary>
+/// Language. e.g. "ja","en","zh"...
+/// </summary>
+static std::string LANG;
 
 /// <summary>
 /// Lua-type -> information hash array.
@@ -5106,12 +5112,19 @@ static void HandleStickTag(
 {
 	// get xxx from export="xxx"
 	auto v = UtilMisc::FindMapValue(tag.attributes, "export");
+//----- 20.06.15 Fukushiro M. 変更前 ()-----
+//	if (v == "true")
+//		isExport = true;
+//	else if (v == "false")
+//		isExport = false;
+//	else
+//		ThrowLeException(LeError::WRONG_DEFINED_TAG, tag.name);
+//----- 20.06.15 Fukushiro M. 変更後 ()-----
 	if (v == "true")
 		isExport = true;
-	else if (v == "false")
-		isExport = false;
 	else
-		ThrowLeException(LeError::WRONG_DEFINED_TAG, tag.name);
+		isExport = false;
+//----- 20.06.15 Fukushiro M. 変更終 ()-----
 	// get xxx from type="xxx"
 	classStrType = UtilMisc::FindMapValue(tag.attributes, "type");
 	// get xxx from lname="xxx"
@@ -5322,7 +5335,7 @@ static void HandleParamTag(
 		}
 
 		// get summary.
-		xmlCommentArgNameToSummary[name] = tag.GetText();
+		xmlCommentArgNameToSummary[name] = UtilString::GetLangPart(LANG, tag.GetText());
 	}
 } // HandleParamTag.
 
@@ -5359,7 +5372,7 @@ static void HandleReturnsTag(
 	}
 
 	// get summary.
-	xmlCommentArgNameToSummary["__lstickvar_ret"] = tag.GetText();
+	xmlCommentArgNameToSummary["__lstickvar_ret"] = UtilString::GetLangPart(LANG, tag.GetText());
 
 } // HandleReturnsTag.
 
@@ -6161,11 +6174,12 @@ static void ParseEnumContent(
 							ThrowLeException(LeError::TAG_OCCURED_UNEXPECTED_PLACE, "<stick> tag occured repeatedly");
 						}
 						if (tag.name == "summary")
-							xmlCommentSummary = tag.GetText();
+							xmlCommentSummary = UtilString::GetLangPart(LANG, tag.GetText());
 					}
 					else
 					{
 						if (tag.name == "stick")
+						{
 							HandleStickTag(
 								tag,
 								xmlCommentIsExport,
@@ -6175,6 +6189,23 @@ static void ParseEnumContent(
 								Dummy<LuaType>(),
 								Dummy<std::string>()
 							);
+						}
+//----- 20.06.15 Fukushiro M. 追加始 ()-----
+						else if (tag.name == "summary")
+						{
+							HandleStickTag(
+								tag,
+								xmlCommentIsExport,
+								Dummy<std::string>(),
+								xmlCommentLuaname,
+								Dummy<std::string>(),
+								Dummy<LuaType>(),
+								Dummy<std::string>()
+							);
+							if (xmlCommentIsExport)
+								xmlCommentSummary = UtilString::GetLangPart(LANG, tag.GetText());
+						}
+//----- 20.06.15 Fukushiro M. 追加終 ()-----
 					}
 				}
 			}
@@ -6315,7 +6346,9 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 						}
 						else
 						{
-							if (tag.name == "stick")
+// 20.06.15 Fukushiro M. 1行変更 ()
+//							if (tag.name == "stick")
+							if (tag.name == "stick" || tag.name == "summary")
 								HandleStickTag(
 									tag,
 									xmlCommentIsExport,
@@ -6579,11 +6612,12 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							else if (tag.name == "exception")
 								HandleExceptionTag(tag, xmlCommentExceptions);
 							else if (tag.name == "summary")
-								xmlCommentSummary = tag.GetText();
+								xmlCommentSummary = UtilString::GetLangPart(LANG, tag.GetText());
 						}
 						else
 						{
 							if (tag.name == "stick")
+							{
 								HandleStickTag(
 									tag,
 									xmlCommentIsExport,
@@ -6593,6 +6627,23 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 									xmlCommentLuatype,
 									Dummy<std::string>()
 								);
+							}
+//----- 20.06.15 Fukushiro M. 追加始 ()-----
+							else if (tag.name == "summary")
+							{
+								HandleStickTag(
+									tag,
+									xmlCommentIsExport,
+									xmlCommentClassType,
+									xmlCommentLuaname,
+									xmlCommentCtype,
+									xmlCommentLuatype,
+									Dummy<std::string>()
+								);
+								if (xmlCommentIsExport)
+									xmlCommentSummary = UtilString::GetLangPart(LANG, tag.GetText());
+							}
+//----- 20.06.15 Fukushiro M. 追加終 ()-----
 						}
 					}
 				}
@@ -7979,6 +8030,11 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 		);
 		// Output file name. It does not include extension. e.g. "fileA"
 		const std::wstring outFileName = fname;
+
+		// Language. e.g. "ja","en","zh"...
+		const auto iOptionLang = optionToValue.find(OPTION_LANG);
+		if (iOptionLang != optionToValue.end())
+			Astrwstr::wstr_to_astr(LANG, iOptionLang->second);
 
 		// class and it's member function array.
 		// std::vector<ClassRec> CLASS_AND_CFUNC_SET;

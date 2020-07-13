@@ -82,8 +82,10 @@ Lua 5.4.0 is not released yet. After released, you will become to be able to bui
 
 Executes like the following command line.  
 ```  
->LuaStick.exe -out Stick Sticklib.h main.h srcx.h  
+>LuaStick.exe -out Stick -lang en Sticklib.h main.h srcx.h  
 ```  
+**-out**&emsp;Specify the name of output files.
+**-lang**&emsp;Specify the language. See 'Specify the language' below for further details.
 
 Components example of application files and binding source files created by LuaStick.exe.  
 ```  
@@ -151,6 +153,7 @@ Tags used by LuaStick must be start with three slashes "///".
 LuaStick uses the following tags.  
 - \<stick\>
 - \<param\>
+- \<returns\>
 - \<exception\>
 - \<sticktype\>
 - \<stickconv\>
@@ -594,6 +597,7 @@ The variable name of the exception object is fixed to 'e'.
 ### \<summary\>  
 
 Describes functions, classes, constants and so on. LuaStick outputs the text content to the HTML API manual.  
+You can use the \<summary\> tag instead of the \<stick\> tag, by writing the attributes that are used in the \<stick\> tag,
 
 ###### Example  
 
@@ -602,6 +606,11 @@ Describes functions, classes, constants and so on. LuaStick outputs the text con
 /// This is a my function.  
 /// </summary>  
 static void MyFunc();  
+
+/// <summary export="true" lname="MyFuncX">  
+/// This is a my function 2.  
+/// </summary>  
+static void MyFunc2();  
 ```  
 
 #### Attributes  
@@ -620,6 +629,30 @@ Optional. LuaStick outputs the text content to the HTML API manual. It describes
 constexpr int ABC = 10;  
 // In the HTML API manual, 'This is a my constant' is described for the constant 'ABC'.  
 ```  
+
+##### export  
+
+Optional. See the explanation in the \<stick\> tag.
+
+##### type  
+
+Optional. See the explanation in the \<stick\> tag.
+
+##### ctype  
+
+Optional. See the explanation in the \<stick\> tag.
+
+##### ltype  
+
+Optional. See the explanation in the \<stick\> tag.
+
+##### lname  
+
+Optional. See the explanation in the \<stick\> tag.
+
+##### super  
+
+Optional. See the explanation in the \<stick\> tag.
 
 <br/><br/>
 
@@ -684,6 +717,47 @@ Program example for this function
 | int x = 10;      // x is 10.                    |  
 | MyFunc(x);       // Call MyFunc.                |  
 +-------------------------------------------------+  
+```  
+
+************************************************************  
+
+## Specify the language  
+
+Text contents in the \<summary\> and other tags can be described using more than two languages.  
+If you describe contents using several languages, one language content which are specified with -lang option in the command-line is outputted into the HTML API manual.  
+
+#### Syntax  
+
+*language-code-1;* content-1 *language-code-2;* content-2...  
+
+- The front of language-code must be top of the line, space or line feed.  
+- language-code must be one of the codes that are used at the HTML lang attribute.  
+
+#### Example  
+
+```  
+/// <summary export="true">  
+/// en;
+/// <para>Program example for this function</para>  
+/// <code>  
+/// int x = 10;      // x is 10.
+/// MyFunc(x);       // Call MyFunc.
+/// </code>  
+/// ja;
+/// <para>関数のプログラム例</para>  
+/// <code>  
+/// int x = 10;      // x は 10.
+/// MyFunc(x);       // MyFuncの呼び出し
+/// </code>  
+/// </summary>  
+/// <param io="in" name="x">en;Parameter x ja;パラメーター x</<param>
+static void MyFunc(int x);  
+
+Command line example  
++----------------------------------------------------+  
+| >stick.exe -out Stick -lang en sticklib.h hoo.h    |  
+| >stick.exe -out Stick -lang ja sticklib.h hoo.h    |  
++----------------------------------------------------+  
 ```  
 
 ************************************************************  

@@ -96,14 +96,22 @@ protected:
 		T	m_backup;
 	}; // template<typename T> class AutoBackup.
 
+	enum class EndCallType
+	{
+		EXEC_ON_LOAD,
+		CALL_FUNCTION,
+	};
+
 public:
 	enum class CallbackType
 	{
-		NEW_SESSION,		// Notify the beginning of new session to the callback function.
-		ON_LOAD_SCRIPT,		// Called when script script was loaded.
-		ON_START_EXEC,		// Called when script is going to start.
-		ON_STOP_EXEC,		// Called when script was stopped.
-		ON_ERROR,			// Called when script running encounter the error.
+		NEW_SESSION,			// Notify the beginning of new session to the callback function.
+		ON_LOAD_SCRIPT,			// Called when script script was loaded.
+		ON_START_EXEC_ON_LOAD,	// Called when script is going to start, on script loading.
+		ON_STOP_EXEC_ON_LOAD,	// Called when script was stopped, on script loading.
+		ON_START_EXEC_ON_CALL,	// Called when script is going to start, on function calling.
+		ON_STOP_EXEC_ON_CALL,	// Called when script was stopped, on function calling.
+		ON_ERROR,				// Called when script running encounter the error.
 	};
 
 	/// <summary>
@@ -132,8 +140,8 @@ public:
 	/// <para>   If callbackType=ON_ERROR then data returns an error message. (const char*)    </para>
 	/// <para>   If callbackType=ON_LOAD_SCRIPT then data returns sandbox name, script name and source code.    </para>
 	/// <para>     (const ScriptInfo*)                                      </para>
-	/// <para>   If callbackType=ON_START_EXEC then data returns nullptr.   </para>
-	/// <para>   callbackType=ON_STOP_EXEC then data returns nullptr.       </para>
+	/// <para>   If callbackType=ON_START_EXEC_XXX then data returns nullptr.   </para>
+	/// <para>   callbackType=ON_STOP_EXEC_XXX then data returns nullptr.       </para>
 	/// <para> param luaState: lua_State object.                            </para>
 	/// <para> param userData: User data given when SetHook called.         </para>
 	/// <para> param stickrun: This class object.                           </para>
@@ -339,7 +347,7 @@ public:
 				//   :       :
 				// Stickrun::pusharg(std::move(args)...);
 				m_callDataStack.back().m_arg_count += stick_pusharg(m_lua_state, this, std::move(args)...);
-				EndCall();
+				EndCall(Stickrun::EndCallType::CALL_FUNCTION);
 			}
 			catch (std::exception & e)
 			{
@@ -714,8 +722,8 @@ public:
 		{
 			try
 			{
-				// Front new line must be erased from source code. Because Lua load function trim the input source automatically.
-				// So if source was not trimed previously, source inside of Lua and inside of editor did not correspond.
+				// Front new line must be erased from source code. Because Lua load function trim the input source code automatically.
+				// So if source code was not trimed previously, source code inside of Lua and inside of editor did not correspond.
 				Util::Trim(source);
 				std::string luaScript;
 				if (sandboxenv.empty())
@@ -789,7 +797,7 @@ return ''
 				if (sandboxenv.empty())
 				{	//----- When the script should be executed directly -----
 					// Execute the script.
-					EndCall();
+					EndCall(Stickrun::EndCallType::EXEC_ON_LOAD);
 				}
 				else
 				{	//----- When the script should be executed in the sandbox -----
@@ -797,7 +805,7 @@ return ''
 					// Set a variable to receive the error message. Because the wrapping script returns an error message.
 					AddOutArg(err_message);
 					// Execute the script.
-					EndCall();
+					EndCall(Stickrun::EndCallType::EXEC_ON_LOAD);
 					if (!err_message.empty())
 						m_error_message = err_message;	// Don't throw error because 'CancelCall' is called in the catch statement.
 				}
@@ -1007,14 +1015,27 @@ protected:
 		return *this;
 	}
 
-	Stickrun & EndCall()
+	Stickrun & EndCall(EndCallType endCallType)
 	{
+		Stickrun::CallbackType startCallbackType;
+		Stickrun::CallbackType stopCallbackType;
+		if (endCallType == Stickrun::EndCallType::EXEC_ON_LOAD)
+		{
+			startCallbackType = Stickrun::CallbackType::ON_START_EXEC_ON_LOAD;	// Called when script is going to start, on script loading.
+			stopCallbackType = Stickrun::CallbackType::ON_STOP_EXEC_ON_LOAD;	// Called when script was stopped, on script loading.
+		}
+		else	// Stickrun::EndCallType::CALL_FUNCTION
+		{
+			startCallbackType = Stickrun::CallbackType::ON_START_EXEC_ON_CALL;	// Called when script is going to start, on function calling.
+			stopCallbackType = Stickrun::CallbackType::ON_STOP_EXEC_ON_CALL;	// Called when script was stopped, on function calling.
+		}
+
 		try
 		{
 			if (m_hookFunc != nullptr)
 			{
 				m_hookFunc(
-					Stickrun::CallbackType::ON_START_EXEC,
+					startCallbackType,
 					nullptr,
 					m_lua_state,
 					m_hookUserData,
@@ -1173,7 +1194,7 @@ protected:
 				try
 				{
 					m_hookFunc(
-						Stickrun::CallbackType::ON_STOP_EXEC,
+						stopCallbackType,
 						nullptr,
 						m_lua_state,
 						m_hookUserData,
@@ -1191,7 +1212,7 @@ protected:
 			try
 			{
 				m_hookFunc(
-					Stickrun::CallbackType::ON_STOP_EXEC,
+					stopCallbackType,
 					nullptr,
 					m_lua_state,
 					m_hookUserData,
