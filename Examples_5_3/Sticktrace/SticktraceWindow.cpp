@@ -33,7 +33,7 @@ private:
 	bool Show(bool show);
 	bool IsVisible(bool & isVisible);
 	bool IsScriptModified(bool & isModified);
-	bool SetSource(const std::string& sandbox, const std::string& name, const std::string& source);
+	bool SetSource(const char * sandbox, const char * name, const char * source);
 	bool IsDebugMode();
 	bool IsBreakpoint(const char* name, int lineIndex);
 	bool OnSuspended();
@@ -44,9 +44,9 @@ private:
 	bool OnStop(SticktraceDef::ExecType execType);
 	bool OutputError(const char* message);
 	bool OutputDebug(const char* message);
-	bool SetWatch(const std::string& data);
+	bool SetWatch(const char * data);
 	bool SetVariableNotify(bool succeeded);
-	SticktraceDef::SuspendCommand WaitCommandIsSet(std::string & paramA, uint32_t waitMilliseconds);
+	SticktraceDef::SuspendCommand WaitCommandIsSet(StickString & paramA, uint32_t waitMilliseconds);
 
 // 20.06.10  1行削除 ()
 //	void Create(unsigned int dialogId);
@@ -134,6 +134,40 @@ void SticktraceWindow::ThreadFunc(
 	::InterlockedExchange(&m_threadId, (LONG)::GetCurrentThreadId());
 	while (::InterlockedCompareExchange(&m_threadTerminateFlag, 0, 0) == 0)
 		AfxGetApp()->PumpMessage();
+//----- 20.07.30 Fukushiro M. 削除始 ()-----
+//	MSG msg;
+//	for (;;)
+//	{
+//		if (::InterlockedCompareExchange(&m_threadTerminateFlag, 0, 0) != 0)
+//			break;
+////		AfxGetApp()->PumpMessage();
+//		if (::GetMessage(&msg, NULL, 0, 0))
+//		{
+//			if (!m_stickTraceDlg->PreTranslateMessage(&msg))
+//			{
+//
+//				::TranslateMessage(&msg);
+//				::DispatchMessage(&msg);
+//			}
+//		}
+//	}
+//
+//
+//	while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+//	{
+//		if (::InterlockedCompareExchange(&m_threadTerminateFlag, 0, 0) != 0)
+//			break;
+//		if (!AfxGetApp()->PumpMessage())
+//		{
+//			break;
+//		}
+//	}
+//----- 20.07.30 Fukushiro M. 削除終 ()-----
+
+	
+	//----- 20.07.30 Fukushiro M. 変更終 ()-----
+
+
 	m_stickTraceDlg->DestroyWindow();
 	delete m_stickTraceDlg;
 	m_stickTraceDlg = nullptr;
@@ -157,7 +191,7 @@ void SticktraceWindow::Destroy()
 	DWORD result = WAIT_TIMEOUT;
 	for (int i = 0; i != WAIT_COUNT && result == WAIT_TIMEOUT; i++)
 	{
-		// Post the WM_USER as a dummy message to work the PumpMessage function.
+		// Post the WM_USER as a dummy message to work the GetMessage function.
 		if (::IsWindow(m_stickTraceDlg->GetSafeHwnd()))
 			m_stickTraceDlg->PostMessage(WM_USER);
 		result = ::WaitForSingleObject(threadHandle, 100);
@@ -190,7 +224,7 @@ bool SticktraceWindow::IsScriptModified(bool & isModified)
 	return m_stickTraceDlg->APT_IsScriptModified(isModified);
 }
 
-bool SticktraceWindow::SetSource(const std::string& sandbox, const std::string& name, const std::string& source)
+bool SticktraceWindow::SetSource(const char * sandbox, const char * name, const char * source)
 {
 	return m_stickTraceDlg->APT_SetSource(sandbox, name, source);
 }
@@ -245,7 +279,7 @@ bool SticktraceWindow::OutputDebug(const char * message)
 	return m_stickTraceDlg->APT_OutputDebug(message);
 }
 
-bool SticktraceWindow::SetWatch(const std::string& data)
+bool SticktraceWindow::SetWatch(const char * data)
 {
 	return m_stickTraceDlg->APT_SetWatch(data);
 }
@@ -255,7 +289,7 @@ bool SticktraceWindow::SetVariableNotify(bool succeeded)
 	return m_stickTraceDlg->APT_SetVariableNotify(succeeded);
 }
 
-SticktraceDef::SuspendCommand SticktraceWindow::WaitCommandIsSet(std::string & paramA, uint32_t waitMilliseconds)
+SticktraceDef::SuspendCommand SticktraceWindow::WaitCommandIsSet(StickString & paramA, uint32_t waitMilliseconds)
 {
 	return m_stickTraceDlg->APT_WaitCommandIsSet(paramA, waitMilliseconds);
 }

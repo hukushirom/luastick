@@ -45,7 +45,7 @@ public:
 	bool APT_Show(bool show);
 	bool APT_IsVisible(bool & isVisible);
 	bool APT_IsScriptModified(bool & isModified);
-	bool APT_SetSource(const std::string& sandbox, const std::string& name, const std::string& src);
+	bool APT_SetSource(const char * sandbox, const char * name, const char * src);
 	bool APT_IsDebugMode();
 	bool APT_IsBreakpoint(const char* name, int lineIndex);
 	bool APT_OnSuspended();
@@ -56,9 +56,9 @@ public:
 	bool APT_OnStop(SticktraceDef::ExecType execType);
 	bool APT_OutputError(const char * message);
 	bool APT_OutputDebug(const char * message);
-	bool APT_SetWatch(const std::string& data);
+	bool APT_SetWatch(const char * data);
 	bool APT_SetVariableNotify(bool succeeded);
-	SticktraceDef::SuspendCommand APT_WaitCommandIsSet(std::string & paramA, uint32_t waitMilliseconds);
+	SticktraceDef::SuspendCommand APT_WaitCommandIsSet(StickString & paramA, uint32_t waitMilliseconds);
 
 private:
 	HACCEL	m_accelerator;
@@ -216,6 +216,8 @@ public:
 	afx_msg void OnUpdateFileSave(CCmdUI *pCmdUI);
 	afx_msg void OnEditScriptEdit();
 	afx_msg void OnUpdateEditScriptEdit(CCmdUI *pCmdUI);
+	afx_msg void OnSceEditInputLine();
+	afx_msg void OnUpdateEditInputLine(CCmdUI *pCmdUI);
 	afx_msg void OnSceEditGotoLine();
 	afx_msg void OnUpdateSceEditGotoLine(CCmdUI *pCmdUI);
 	afx_msg void OnSceWinKeyword();
@@ -224,10 +226,10 @@ public:
 	afx_msg void OnUpdateEditFindNextText(CCmdUI *pCmdUI);
 	afx_msg void OnEditFindPrevText();
 	afx_msg void OnUpdateEditFindPrevText(CCmdUI *pCmdUI);
-	afx_msg void OnSceOutwinGotoLocation();
-	afx_msg void OnUpdateSceOutwinGotoLocation(CCmdUI *pCmdUI);
-	afx_msg void OnSceOutwinClear();
-	afx_msg void OnUpdateSceOutwinClear(CCmdUI *pCmdUI);
+	afx_msg void OnSceWinClearError();
+	afx_msg void OnUpdateSceWinClearError(CCmdUI *pCmdUI);
+	afx_msg void OnSceWinClearOutput();
+	afx_msg void OnUpdateSceWinClearOutput(CCmdUI *pCmdUI);
 	afx_msg void OnSceDebugToggleBreakpoint();
 	afx_msg void OnUpdateSceDebugToggleBreakpoint(CCmdUI *pCmdUI);
 	afx_msg void OnSceDebugClearBreakpoint();
@@ -265,10 +267,12 @@ public:
 	afx_msg void OnBnClickedSceBtnSetVariable();
 	afx_msg void OnBnClickedSceBtnAddWatch();
 	afx_msg void OnBnClickedSceBtnDeleteWatch();
+	afx_msg void OnBnClickedSceChkDebugMode();
+	afx_msg void OnBnClickedSceBtnFindNext();
+	afx_msg void OnChangeSceEdtKeyword();
 	afx_msg void OnNMClickSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg LRESULT OnUserDdEditDblClked(WPARAM wParam, LPARAM);
 	afx_msg LRESULT OnUserTextEditCurlineChanged(WPARAM wParam, LPARAM lParam);
-	afx_msg void OnBnClickedSceChkDebugMode();
 	afx_msg void OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu);
 	afx_msg void OnLvnItemchangedSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);

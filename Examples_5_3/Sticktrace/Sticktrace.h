@@ -406,6 +406,27 @@ public:
 	}
 }; // class Stickutil.
 
+/// <summary>
+/// String buffer to get and set between exe and dll.
+/// </summary>
+class StickString
+{
+public:
+	StickString() = default;
+	virtual ~StickString() = default;
+	virtual StickString & operator = (const char * cp)
+	{
+		m_str = cp;
+		return *this;
+	}
+	virtual const char * c_str () const
+	{
+		return m_str.c_str();
+	}
+private:
+	std::string m_str;
+}; // class StickString.
+
 #if !defined(_STICKTRACE)
 
 class __declspec(dllimport) SticktraceWindow
@@ -430,7 +451,7 @@ private:
 	bool Show(bool show);
 	bool IsVisible(bool & isVisible);
 	bool IsScriptModified(bool & isModified);
-	bool SetSource(const std::string& sandbox, const std::string& name, const std::string& source);
+	bool SetSource(const char * sandbox, const char * name, const char * source);
 	bool IsDebugMode();
 	bool IsBreakpoint(const char* name, int lineIndex);
 	bool OnSuspended();
@@ -441,9 +462,9 @@ private:
 	bool OnStop(SticktraceDef::ExecType execType);
 	bool OutputError(const char* message);
 	bool OutputDebug(const char* message);
-	bool SetWatch(const std::string& data);
+	bool SetWatch(const char * data);
 	bool SetVariableNotify(bool succeeded);
-	SticktraceDef::SuspendCommand WaitCommandIsSet(std::string & paramA, uint32_t waitMilliseconds);
+	SticktraceDef::SuspendCommand WaitCommandIsSet(StickString & paramA, uint32_t waitMilliseconds);
 	void Destroy();
 	static void StaticThreadFunc(
 		SticktraceWindow* stickTrace,
@@ -497,11 +518,18 @@ private:
 			v.num = 0.0;
 		}
 
+		_TrAnyValue(const _TrAnyValue & v) = delete;
+// 20.07.16 Fukushiro M. 1行削除 ()
+//		_TrAnyValue(_TrAnyValue & v) = delete;
+
 		_TrAnyValue(Stickobject && o)
 			:_TrAnyValue()
 		{
 			Set(std::move(o));
 		}
+
+		_TrAnyValue(const Stickobject & o) = delete;
+		_TrAnyValue(Stickobject & o) = delete;
 
 		_TrAnyValue(const bool & b)
 			: _TrAnyValue()
@@ -555,6 +583,10 @@ private:
 			v.num = 0.0;
 			return *this;
 		}
+
+		_TrAnyValue & operator = (const _TrAnyValue & v) = delete;
+// 20.07.16 Fukushiro M. 1行削除 ()
+//		_TrAnyValue & operator = (_TrAnyValue & v) = delete;
 
 		void Set(Stickobject && o)
 		{
@@ -842,6 +874,8 @@ private:
 
 
 		Stickobject(const Stickobject & v) = delete;
+// 20.07.16 Fukushiro M. 1行削除 ()
+//		Stickobject(Stickobject & v) = delete;
 
 	//----- 20.06.04  削除始 ()-----
 	//	Stickobject(const Stickobject & v)
@@ -1198,6 +1232,8 @@ private:
 		}
 
 		Stickobject & operator = (const Stickobject & v) = delete;
+// 20.07.16 Fukushiro M. 1行削除 ()
+//		Stickobject & operator = (Stickobject & v) = delete;
 
 		Stickobject & operator = (Stickobject && v)
 		{
@@ -1694,8 +1730,13 @@ private:
 						}
 						else
 						{
-							auto && obj = GetLocalVariable(value.str);
-							return GetSetAtomValueX(is_set, is_local, str, terminator, std::move(obj), newValue);
+// 20.07.16 Fukushiro M. 1行変更 ()
+//							auto && obj = GetLocalVariable(value.str);
+							auto obj = std::move(GetLocalVariable(value.str));
+							if (obj.Isnull())
+								return TrAnyValue();
+							else
+								return GetSetAtomValueX(is_set, is_local, str, terminator, std::move(obj), newValue);
 						}
 					}
 					else
@@ -1706,7 +1747,9 @@ private:
 						}
 						else
 						{
-							auto && obj = GetGlobalVariable(value.str);
+// 20.07.16 Fukushiro M. 1行変更 ()
+//							auto && obj = GetGlobalVariable(value.str);
+							auto obj = std::move(GetGlobalVariable(value.str));
 							return GetSetAtomValueX(is_set, is_local, str, terminator, std::move(obj), newValue);
 						}
 					}
@@ -1740,7 +1783,9 @@ private:
 				}
 				else
 				{
-					auto && obj1 = obj.GetTableValue(name);
+// 20.07.16 Fukushiro M. 1行変更 ()
+//					auto && obj1 = obj.GetTableValue(name);
+					auto obj1 = std::move(obj.GetTableValue(name));
 					return GetSetAtomValueX(is_set, is_local, str, terminator, std::move(obj1), newValue);
 				}
 			}
@@ -1757,7 +1802,9 @@ private:
 					return obj.SetTableValue(value, newValue);
 				}
 	//----- 20.06.04  追加終 ()-----
-				auto && obj1 = obj.GetTableValue(value);
+// 20.07.16 Fukushiro M. 1行変更 ()
+//				auto && obj1 = obj.GetTableValue(value);
+				auto obj1 = std::move(obj.GetTableValue(value));
 				return GetSetAtomValueX(is_set, is_local, str, terminator, std::move(obj1), newValue);
 			}
 			default:
@@ -1788,6 +1835,8 @@ private:
 		)
 		{
 			auto left = GetSetAtomValue(is_set, is_local, formula, terminator, newValue);
+			if (left.type == TrAnyValue::Type::NONE)
+				return left;
 			for (;;)
 			{
 				const char* cpTokenBegin;
@@ -1840,7 +1889,7 @@ private:
 		bool SetVariableValue(bool is_local, const char* piledName, const TrAnyValue & newValue)
 		{
 			auto ret = GetSetFormulaValue(true, is_local, piledName, TT_NONE, 0, newValue);
-			return (ret.num != 0.0);
+			return (ret.type == TrAnyValue::Type::BOOLEAN && ret.num != 0.0);
 		} // SetVariableValue.
 
 	private:
@@ -2471,6 +2520,7 @@ private:
 			if (m_suspendMode == SticktraceDef::Mode::SUSPEND ||
 				m_sticktraceWindow->IsBreakpoint(nullptr, ar->currentline - 1))
 			{
+
 				// 'n': fills in the field name and namewhat;
 				// 'S': fills in the fields source, short_src, linedefined, lastlinedefined, and what;
 				// 'l': fills in the field currentline;
@@ -2484,7 +2534,7 @@ private:
 					m_sticktraceWindow->IsBreakpoint(ar->source, ar->currentline - 1))
 				{
 					m_suspendMode = SticktraceDef::Mode::SUSPENDING;
-					std::string paramA;
+					StickString paramA;
 					command = m_sticktraceWindow->WaitCommandIsSet(paramA, 0);
 					// If Stop command, throw the lua exception and stop the running of the script.
 					if (command == SticktraceDef::SuspendCommand::STOP)
@@ -2548,6 +2598,7 @@ private:
 							std::unordered_set<std::string> stExpandedName;
 							std::string sandbox;
 							auto receivedata = paramA.c_str();
+
 							Stickutil::Unserialize(sandbox, receivedata);
 							Stickutil::Unserialize(vTopLevelName, receivedata);
 							Stickutil::Unserialize(stExpandedName, receivedata);
@@ -2619,10 +2670,9 @@ private:
 									);
 								}
 							}
-
 							std::string senddata;
 							Stickutil::Serialize(senddata, varIconIndentNameTypeValueArray);
-							m_sticktraceWindow->SetWatch(senddata);
+							m_sticktraceWindow->SetWatch(senddata.c_str());
 						}
 						else if (command == SticktraceDef::SuspendCommand::SET_VARIABLE)
 						{
@@ -2668,6 +2718,7 @@ private:
 								}
 
 								auto ret = stickvar.SetVariableValue(true, varName.c_str(), newValue);
+
 								if (!ret)
 								{
 									if (sandbox.empty())
@@ -2723,7 +2774,7 @@ private:
 		}
 	}
 
-	void SetSource(const std::string& sandbox, const std::string& name, const std::string& source)
+	void SetSource(const char * sandbox, const char * name, const char * source)
 	{
 		m_sticktraceWindow->SetSource(sandbox, name, source);
 	}
@@ -2743,9 +2794,9 @@ private:
 		{
 			auto scriptInfo = (Stickrun::ScriptInfo *)data;
 			((Sticktrace*)userData)->SetSource(
-				scriptInfo->sandbox,
-				scriptInfo->name,
-				scriptInfo->source
+				scriptInfo->sandbox.c_str(),
+				scriptInfo->name.c_str(),
+				scriptInfo->source.c_str()
 			);
 			break;
 		}

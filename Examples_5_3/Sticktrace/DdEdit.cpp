@@ -37,6 +37,8 @@ BEGIN_MESSAGE_MAP(CFCDdEdit, BASE_CLASS)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, &CFCDdEdit::OnUpdateEditDelete)
 	ON_COMMAND(ID_EDIT_SELECT_ALL, &CFCDdEdit::OnEditSelectAll)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECT_ALL, &CFCDdEdit::OnUpdateEditSelectAll)
+	ON_COMMAND(ID_EDIT_CLEAR, &CFCDdEdit::OnEditClear)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CLEAR, &CFCDdEdit::OnUpdateEditClear)
 	ON_MESSAGE(WM_USER_DDEDIT_SETTEXT_NOTIFY, &CFCDdEdit::OnUserSettextNotify)
 	ON_WM_DESTROY()
 END_MESSAGE_MAP()
@@ -555,6 +557,16 @@ void CFCDdEdit::OnUpdateEditSelectAll (CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(GetWindowTextLength() != 0);
 } // CFCDdEdit::OnUpdateEditSelectAll.
+
+void CFCDdEdit::OnEditClear ()
+{
+	SetWindowText(L"");
+} // CFCDdEdit::OnEditClear.
+
+void CFCDdEdit::OnUpdateEditClear (CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(TRUE);
+} // CFCDdEdit::OnUpdateEditClear.
 
 LRESULT CFCDdEdit::OnUserSettextNotify (WPARAM, LPARAM)
 {

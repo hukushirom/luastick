@@ -32,11 +32,11 @@ Test1 = function()
 	-- os.execute("sleep 2")
 	STICKTRACE.OutputDebugMessage("hello")
 	ShowMessage(debug.traceback())
-	local c1 = {"a", "b", "c", "d"}
+	c1 = {"a", "b", "c", "d"}
 	c1["x"] = { [1] = "p", [2] = "q", [3] = "r" }
 	-- local d = {"A"->"B"}
 	b = X.B.New()
-	ii, a = b:Add1()
+	local ii, a = b:Add1()
 	ShowMessage("A::Get=" .. a:Get() .. "\r\n")
 	ShowMessage(X.A.ABC .. "\r\n")
 	local c = X.B.CreateA(15)

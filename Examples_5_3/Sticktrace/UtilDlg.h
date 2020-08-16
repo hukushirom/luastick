@@ -72,40 +72,16 @@ typedef std::map<long, FCDlgLayoutRec> IdToDlgLayoutRecMap;
 class UtilDlg
 {
 public:
-	static int GetCurSel (const CListCtrl* pListCtrl)
-	{
-		POSITION pos = pListCtrl->GetFirstSelectedItemPosition();
-		if (pos == NULL) return -1;
-		return pListCtrl->GetNextSelectedItem(pos);
-	} // int FfGetCurSel (const CListCtrl* pListCtrl)
+	static int GetCurSel (const CListCtrl* pListCtrl);
 
-	static int InsertColumn(CListCtrl* pCtrl, int nCol, const wchar_t* lpszColumnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1)
-	{
-		return pCtrl->InsertColumn(nCol, lpszColumnHeading, nFormat, nWidth, nSubItem);
-	}
+	static int InsertColumn(CListCtrl* pCtrl, int nCol, const wchar_t* lpszColumnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1);
 
 	// UNICODEで文字列を取得。
-	static std::wstring& GetDlgItemText(const CWnd* pWnd, DWORD dwCtrl, std::wstring& wstr)
-	{
-		CString str;
-		pWnd->GetDlgItemText(dwCtrl, str);
-		wstr = str;
-		return wstr;
-	}
+	static std::wstring& GetDlgItemText(const CWnd* pWnd, DWORD dwCtrl, std::wstring& wstr);
 
 	// UTF-8で文字列を取得。
-	static std::string& GetDlgItemText(const CWnd* pWnd, DWORD dwCtrl, std::string& astr)
-	{
-		std::wstring wstr;
-		UtilDlg::GetDlgItemText(pWnd, dwCtrl, wstr);
-		Astrwstr::wstr_to_astr(astr, wstr);
-		return astr;
-	}
+	static std::string& GetDlgItemText(const CWnd* pWnd, DWORD dwCtrl, std::string& astr);
 
-//----- 20.06.11  変更前 ()-----
-//	static int UndoEdit(CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, int iCurUndoBuffer);
-//	static int RedoEdit(CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, int iCurUndoBuffer);
-//----- 20.06.11  変更後 ()-----
 	/// <summary>
 	/// EditコントロールにUndoを実行する。
 	/// </summary>
@@ -119,7 +95,6 @@ public:
 	/// <param name="edit">Redo対象のEditコントロール。</param>
 	/// <param name="vUndoBuffer">Undoバッファ。</param>
 	static void RedoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer);
-//----- 20.06.11  変更終 ()-----
 
 	/*************************************************************************
 	 * <関数>	FFInitDlgLayout
@@ -148,17 +123,21 @@ public:
 		long lControlSize,
 		const long aControlId[],
 		DWORD dwOffsetFlag);
-	static void DlgLayout(const IdToDlgLayoutRecMap& mpLayoutInfo,
-		HWND hWnd);
 
-	static std::wstring GetItemText(CTabCtrl* tabCtrl, int index)
-	{
-		wchar_t textBuff[200];
-		TCITEM item;
-		item.mask = TCIF_TEXT;
-		item.pszText = textBuff;
-		item.cchTextMax = _countof(textBuff);
-		tabCtrl->GetItem(index, &item);
-		return textBuff;
-	}
+	static void DlgLayout(const IdToDlgLayoutRecMap& mpLayoutInfo, HWND hWnd);
+
+	static std::wstring GetItemText(CTabCtrl* tabCtrl, int index);
+
+	/// <summary>
+	/// Get the array of every monitor's rect.
+	/// </summary>
+	/// <param name="vMonitorRect">Array of every monitor's rect</param>
+	static void GetMonitorRect (std::vector<CRect>& vMonitorRect);
+
+	/// <summary>
+	/// If top left of the specified rect is out of monitor, justify the rect to fit the monitor.
+	/// </summary>
+	/// <param name="winRect">Window's rect</param>
+	/// <returns>Moving distance to justify the rect</returns>
+	static CSize JustifyToMonitor (const CRect & winRect);
 };

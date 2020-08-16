@@ -80,6 +80,8 @@ protected:
 	afx_msg void OnUpdateEditDelete (CCmdUI* pCmdUI);
 	afx_msg void OnEditSelectAll ();
 	afx_msg void OnUpdateEditSelectAll (CCmdUI* pCmdUI);
+	afx_msg void OnEditClear ();
+	afx_msg void OnUpdateEditClear (CCmdUI* pCmdUI);
 	afx_msg LRESULT OnUserSettextNotify (WPARAM, LPARAM);
 	afx_msg void OnDestroy ();
 	virtual LRESULT WindowProc (UINT message, WPARAM wParam, LPARAM lParam);

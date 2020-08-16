@@ -5,6 +5,7 @@
 #include "resource.h"
 #include "Astrwstr.h"
 #include "UtilStr.h"		// For UtilStr::AppendString.
+#include "UtilWin.h"
 #include "TextEdit.h"		// This header.
 
 static const CSize EDITOR_BREAKPOINT_SIZE(9, 9);	// BREAKPOINTアイコンサイズ
@@ -634,6 +635,63 @@ const std::map<std::pair<std::string, int>, std::wstring>& CFCTextEdit::GetBreak
 {
 	return m_mpBreakpoint;
 }
+
+BOOL CFCTextEdit::SearchForward (const std::wstring & keyword)
+{
+	std::wstring text;
+	UtilWin::GetWindowText(this, text);
+	// 選択範囲を記録。
+	int startCharIndex;
+	int endCharIndex;
+	GetSel(startCharIndex, endCharIndex);
+	auto pos = std::wstring::npos;
+	for (int i = 0; i != 2; i++)
+	{
+		pos = text.find(keyword, endCharIndex);
+		if (pos != std::wstring::npos)
+			break;
+		endCharIndex = 0;
+	}
+	if (pos != std::wstring::npos)
+	{
+		SetSel((int)pos, (int)(pos + keyword.length()));
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+} // CFCTextEdit::SearchForward.
+
+BOOL CFCTextEdit::SearchBackward (const std::wstring & keyword)
+{
+	std::wstring text;
+	UtilWin::GetWindowText(this, text);
+	// 選択範囲を記録。
+	int startCharIndex;
+	int endCharIndex;
+	GetSel(startCharIndex, endCharIndex);
+	startCharIndex--;
+	if (startCharIndex == -1)
+		startCharIndex = text.length();
+	auto pos = std::wstring::npos;
+	for (int i = 0; i != 2; i++)
+	{
+		pos = text.rfind(keyword, startCharIndex);
+		if (pos != std::wstring::npos)
+			break;
+		startCharIndex = text.length();
+	}
+	if (pos != std::wstring::npos)
+	{
+		SetSel((int)pos, (int)(pos + keyword.length()));
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+} // CFCTextEdit::SearchBackward.
 
 //********************************************************************************************
 /*!

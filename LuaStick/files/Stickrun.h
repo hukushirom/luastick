@@ -334,7 +334,9 @@ public:
 			try
 			{
 				BeginCall();
-				PushFunc(funcname);
+				std::vector<std::string> items;
+				Stickrun::Split(items, funcname, '.');
+				PushFunc(items);
 
 				//   |       |
 				//   |-------|
@@ -347,7 +349,7 @@ public:
 				//   :       :
 				// Stickrun::pusharg(std::move(args)...);
 				m_callDataStack.back().m_arg_count += stick_pusharg(m_lua_state, this, std::move(args)...);
-				EndCall(Stickrun::EndCallType::CALL_FUNCTION);
+				EndCall(Stickrun::EndCallType::CALL_FUNCTION, items.back());
 			}
 			catch (std::exception & e)
 			{
@@ -797,7 +799,7 @@ return ''
 				if (sandboxenv.empty())
 				{	//----- When the script should be executed directly -----
 					// Execute the script.
-					EndCall(Stickrun::EndCallType::EXEC_ON_LOAD);
+					EndCall(Stickrun::EndCallType::EXEC_ON_LOAD, name);
 				}
 				else
 				{	//----- When the script should be executed in the sandbox -----
@@ -805,7 +807,7 @@ return ''
 					// Set a variable to receive the error message. Because the wrapping script returns an error message.
 					AddOutArg(err_message);
 					// Execute the script.
-					EndCall(Stickrun::EndCallType::EXEC_ON_LOAD);
+					EndCall(Stickrun::EndCallType::EXEC_ON_LOAD, name);
 					if (!err_message.empty())
 						m_error_message = err_message;	// Don't throw error because 'CancelCall' is called in the catch statement.
 				}
@@ -891,10 +893,8 @@ protected:
 		return *this;
 	}
 
-	Stickrun & PushFunc(const char* funcname)
+	Stickrun & PushFunc(const std::vector<std::string> & items)
 	{
-		std::vector<std::string> items;
-		Stickrun::Split(items, funcname, '.');
 		if (items.size() == 1)
 		{	//----- if function is in the global table -----
 			// Push the function on the stack.
@@ -903,9 +903,9 @@ protected:
 			//         |--------------|
 			//         |   function   |
 			//         +--------------+
-			lua_getglobal(m_lua_state, funcname);
+			lua_getglobal(m_lua_state, items[0].c_str());
 			if (lua_type(m_lua_state, -1) != LUA_TFUNCTION)
-				StickThrowRuntimeError(STICKERR_FUNCTION_NOT_FOUND, funcname);
+				StickThrowRuntimeError(STICKERR_FUNCTION_NOT_FOUND, items[0].c_str());
 		}
 		else
 		{
@@ -924,7 +924,7 @@ protected:
 			//                                                                :           :           :
 			lua_getglobal(m_lua_state, items[0].c_str());
 			if (lua_type(m_lua_state, -1) != LUA_TTABLE)
-				StickThrowRuntimeError(STICKERR_FUNCTION_NOT_FOUND, funcname);
+				StickThrowRuntimeError(STICKERR_FUNCTION_NOT_FOUND, items[0].c_str());
 
 			for (int i = 1; i != items.size() - 1; i++)
 			{
@@ -944,7 +944,7 @@ protected:
 				//                                                            :           :           :
 				::lua_getfield(m_lua_state, -1, items[i].c_str());
 				if (::lua_type(m_lua_state, -1) != LUA_TTABLE)
-					StickThrowRuntimeError(STICKERR_FUNCTION_NOT_FOUND, funcname);
+					StickThrowRuntimeError(STICKERR_FUNCTION_NOT_FOUND, items[i].c_str());
 
 				// 使わなくなったテーブル名をスタックから削除。
 				//                        +------------------------------------------------------ - -
@@ -978,7 +978,7 @@ protected:
 			//                                                            :           :           :
 			lua_getfield(m_lua_state, -1, items.back().c_str());
 			if (lua_type(m_lua_state, -1) != LUA_TFUNCTION)
-				StickThrowRuntimeError(STICKERR_FUNCTION_NOT_FOUND, funcname);
+				StickThrowRuntimeError(STICKERR_FUNCTION_NOT_FOUND, items.back().c_str());
 
 			// 使わなくなったテーブル名をスタックから削除。
 			//
@@ -1015,7 +1015,7 @@ protected:
 		return *this;
 	}
 
-	Stickrun & EndCall(EndCallType endCallType)
+	Stickrun & EndCall(EndCallType endCallType, const std::string & funcname)
 	{
 		Stickrun::CallbackType startCallbackType;
 		Stickrun::CallbackType stopCallbackType;
@@ -1063,9 +1063,7 @@ protected:
 			for (auto & ref : m_callDataStack.back().m_results)
 //----- 18.06.18 Fukushiro M. 変更終 ( )-----
 			{
-
-				const auto argno = (int)m_callDataStack.back().m_results.size() + iStackIdx + 1;
-
+				const auto retno = (int)m_callDataStack.back().m_results.size() + iStackIdx + 1;
 				switch (lua_type(m_lua_state, iStackIdx))
 				{
 				case LUA_TSTRING:
@@ -1087,7 +1085,13 @@ protected:
 						*(std::string*)ref.data = ::lua_tostring(m_lua_state, iStackIdx);
 						break;
 					default:
-						StickThrowRuntimeError(STICKERR_INCORRECT_ARG_TYPE, "Cannot convert string value to output no.", argno);
+						StickThrowRuntimeError(
+							STICKERR_INCORRECT_ARG_TYPE,
+							"Cannot convert string value to the output. funcname",
+							funcname.c_str(),
+							" returnno",
+							retno
+						);
 					}
 					break;
 				case LUA_TNUMBER:
@@ -1109,7 +1113,13 @@ protected:
 						*(std::string*)ref.data = std::to_string(::lua_tonumber(m_lua_state, iStackIdx));
 						break;
 					default:
-						StickThrowRuntimeError(STICKERR_INCORRECT_ARG_TYPE, "Cannot convert number value to output no.", argno);
+						StickThrowRuntimeError(
+							STICKERR_INCORRECT_ARG_TYPE,
+							"Cannot convert number value to the output. funcname",
+							funcname.c_str(),
+							" returnno",
+							retno
+						);
 					}
 					break;
 				case LUA_TBOOLEAN:
@@ -1131,10 +1141,15 @@ protected:
 						*(std::string*)ref.data = std::to_string(::lua_toboolean(m_lua_state, iStackIdx));
 						break;
 					default:
-						StickThrowRuntimeError(STICKERR_INCORRECT_ARG_TYPE, "Cannot convert boolean value to output no.", argno);
+						StickThrowRuntimeError(
+							STICKERR_INCORRECT_ARG_TYPE,
+							"Cannot convert boolean value to the output. funcname",
+							funcname.c_str(),
+							" returnno",
+							retno
+						);
 					}
 					break;
-
 				case LUA_TTABLE:
 					switch (ref.type)
 					{
@@ -1175,11 +1190,23 @@ protected:
 						Sticklib::check_hash<std::string, std::string>(*(std::unordered_map<std::string, std::string> *)ref.data, m_lua_state, iStackIdx);
 						break;
 					default:
-						StickThrowRuntimeError(STICKERR_INCORRECT_ARG_TYPE, "Cannot convert table to output no.", argno);
+						StickThrowRuntimeError(
+							STICKERR_INCORRECT_ARG_TYPE,
+							"Cannot convert table to the output. funcname",
+							funcname.c_str(),
+							" returnno",
+							retno
+						);
 					}
 					break;
 				default:
-					StickThrowRuntimeError(STICKERR_INCORRECT_ARG_TYPE, "Unsupported type value was returned.");
+					StickThrowRuntimeError(
+						STICKERR_INCORRECT_ARG_TYPE,
+						"Unsupported type value was returned.funcname",
+						funcname.c_str(),
+						" returnno",
+						retno
+					);
 				}
 				iStackIdx++;
 			}

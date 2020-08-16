@@ -871,7 +871,9 @@ struct FuncRec
 	// Argument name -> summary.
 	// return value's summary is registered as "__lstickvar_ret".
 	// It's used for HTML help and definition of function's return variable.
-	std::unordered_map<std::string, std::string> argNameToSummary;
+// 20.07.25 Fukushiro M. 1行変更 ()
+//	std::unordered_map<std::string, std::string> argNameToSummary;
+	std::vector<std::pair<std::string, std::string>> argNameToSummary;
 
 	// Input Argument names.
 	// e.g. int FuncA(const char* a, double b) -> inArgNames={"a", "b"}
@@ -4355,6 +4357,8 @@ static int ${wrapperFunctionName}(lua_State* L)
 			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
 		// Call the c++ function.
+		if (__lstickobj == nullptr)
+			throw std::invalid_argument("Null pointer is specified as class object.");
 		__lstickobj->${funcRec.funcCname}(
 )", funcRec.funcCname);
 		}
@@ -4370,6 +4374,8 @@ static int ${wrapperFunctionName}(lua_State* L)
 			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
 		// Call the c++ function.
+		if (__lstickobj == nullptr)
+			throw std::invalid_argument("Null pointer is specified as class object.");
 		auto __lstickvar_ret = (${conversionPath.front()})__lstickobj->${funcRec.funcCname}(
 )", conversionPath.front(), funcRec.funcCname);
 		}
@@ -5303,7 +5309,9 @@ static void HandleParamTag(
 	std::unordered_map<std::string, std::string> & argNameToIO,
 	std::unordered_map<std::string, std::string> & argNameToAliasCtype,
 	std::unordered_map<std::string, LuaType> & argNameToAliasLtype,
-	std::unordered_map<std::string, std::string> & xmlCommentArgNameToSummary
+// 20.07.25 Fukushiro M. 1行変更 ()
+//	std::unordered_map<std::string, std::string> & xmlCommentArgNameToSummary
+	std::vector<std::pair<std::string, std::string>> & xmlCommentArgNameToSummary
 )
 {
 	// e.g. "<param name="argbBack" io="in">"
@@ -5335,7 +5343,9 @@ static void HandleParamTag(
 		}
 
 		// get summary.
-		xmlCommentArgNameToSummary[name] = UtilString::GetLangPart(LANG, tag.GetText());
+// 20.07.25 Fukushiro M. 1行変更 ()
+//		xmlCommentArgNameToSummary[name] = UtilString::GetLangPart(LANG, tag.GetText());
+		xmlCommentArgNameToSummary.emplace_back(std::make_pair(name, UtilString::GetLangPart(LANG, tag.GetText())));
 	}
 } // HandleParamTag.
 
@@ -5352,7 +5362,9 @@ static void HandleReturnsTag(
 	const UtilXml::Tag & tag,
 	std::unordered_map<std::string, std::string> & argNameToAliasCtype,
 	std::unordered_map<std::string, LuaType> & argNameToAliasLtype,
-	std::unordered_map<std::string, std::string> & xmlCommentArgNameToSummary
+// 20.07.25 Fukushiro M. 1行変更 ()
+//	std::unordered_map<std::string, std::string> & xmlCommentArgNameToSummary
+	std::vector<std::pair<std::string, std::string>> & xmlCommentArgNameToSummary
 )
 {
 	// get xxx from "ctype="xxx"
@@ -5372,7 +5384,9 @@ static void HandleReturnsTag(
 	}
 
 	// get summary.
-	xmlCommentArgNameToSummary["__lstickvar_ret"] = UtilString::GetLangPart(LANG, tag.GetText());
+// 20.07.25 Fukushiro M. 1行変更 ()
+//	xmlCommentArgNameToSummary["__lstickvar_ret"] = UtilString::GetLangPart(LANG, tag.GetText());
+	xmlCommentArgNameToSummary.emplace_back(std::make_pair("__lstickvar_ret", UtilString::GetLangPart(LANG, tag.GetText())));
 
 } // HandleReturnsTag.
 
@@ -6525,7 +6539,10 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 	std::unordered_map<std::string, LuaType> xmlCommentArgNameToAliasLtype;
 	// variable name -> summary
 	// e.g. <param name="abc">hello</param> -> { "abc" -> "hello" }
-	std::unordered_map<std::string, std::string> xmlCommentArgNameToSummary;
+// 20.07.25 Fukushiro M. 1行変更 ()
+//	std::unordered_map<std::string, std::string> xmlCommentArgNameToSummary;
+	std::vector<std::pair<std::string, std::string>> xmlCommentArgNameToSummary;
+
 	// exception name array. <exception cref="?????" ...>
 	std::vector<std::string> xmlCommentExceptions;
 	// <stick export="true">

@@ -88,17 +88,18 @@ struct StickInstanceWrapper
 // Converter definition.
 
 /// <stickconv type1="std::vector<__int64>" type2="std::vector<int>" type1to2="Sticklib::vector_to_vector<int,__int64>" type2to1="Sticklib::vector_to_vector<__int64,int>" />
+/// <stickconv type1="std::vector<__int64>" type2="std::vector<__int32>" type1to2="Sticklib::vector_to_vector<__int32,__int64>" type2to1="Sticklib::vector_to_vector<__int64,__int32>" />
 /// <stickconv type1="std::vector<std::string>" type2="std::vector<std::wstring>" type1to2="Sticklib::vector_to_vector<std::wstring,std::string>" type2to1="Sticklib::vector_to_vector<std::string,std::wstring>" />
-/// <stickconv type1="std::vector<double>" type2="std::unordered_set<double>" type1to2="Sticklib::vector_to_uset<double>" type2to1="Sticklib::uset_to_vector<double>" />
-/// <stickconv type1="std::vector<__int64>" type2="std::unordered_set<__int64>" type1to2="Sticklib::vector_to_uset<__int64>" type2to1="Sticklib::uset_to_vector<__int64>" />
-/// <stickconv type1="std::vector<bool>" type2="std::unordered_set<bool>" type1to2="Sticklib::vector_to_uset<bool>" type2to1="Sticklib::uset_to_vector<bool>" />
-/// <stickconv type1="std::vector<std::string>" type2="std::unordered_set<std::string>" type1to2="Sticklib::vector_to_uset<std::string>" type2to1="Sticklib::uset_to_vector<std::string>" />
-/// <stickconv type1="std::vector<void*>" type2="std::unordered_set<void*>" type1to2="Sticklib::vector_to_uset<void*>" type2to1="Sticklib::uset_to_vector<void*>" />
-/// <stickconv type1="std::vector<double>" type2="std::set<double>" type1to2="Sticklib::vector_to_set<double>" type2to1="Sticklib::set_to_vector<double>" />
-/// <stickconv type1="std::vector<__int64>" type2="std::set<__int64>" type1to2="Sticklib::vector_to_set<__int64>" type2to1="Sticklib::set_to_vector<__int64>" />
-/// <stickconv type1="std::vector<bool>" type2="std::set<bool>" type1to2="Sticklib::vector_to_set<bool>" type2to1="Sticklib::set_to_vector<bool>" />
-/// <stickconv type1="std::vector<std::string>" type2="std::set<std::string>" type1to2="Sticklib::vector_to_set<std::string>" type2to1="Sticklib::set_to_vector<std::string>" />
-/// <stickconv type1="std::vector<void*>" type2="std::set<void*>" type1to2="Sticklib::vector_to_set<void*>" type2to1="Sticklib::set_to_vector<void*>" />
+/// <stickconv type1="std::vector<double>" type2="std::unordered_set<double>" type1to2="Sticklib::vector_to_uset<double,double>" type2to1="Sticklib::uset_to_vector<double,double>" />
+/// <stickconv type1="std::vector<__int64>" type2="std::unordered_set<__int64>" type1to2="Sticklib::vector_to_uset<__int64,__int64>" type2to1="Sticklib::uset_to_vector<__int64,__int64>" />
+/// <stickconv type1="std::vector<bool>" type2="std::unordered_set<bool>" type1to2="Sticklib::vector_to_uset<bool,bool>" type2to1="Sticklib::uset_to_vector<bool,bool>" />
+/// <stickconv type1="std::vector<std::string>" type2="std::unordered_set<std::string>" type1to2="Sticklib::vector_to_uset<std::string,std::string>" type2to1="Sticklib::uset_to_vector<std::string,std::string>" />
+/// <stickconv type1="std::vector<void*>" type2="std::unordered_set<void*>" type1to2="Sticklib::vector_to_uset<void*,void*>" type2to1="Sticklib::uset_to_vector<void*,void*>" />
+/// <stickconv type1="std::vector<double>" type2="std::set<double>" type1to2="Sticklib::vector_to_set<double,double>" type2to1="Sticklib::set_to_vector<double,double>" />
+/// <stickconv type1="std::vector<__int64>" type2="std::set<__int64>" type1to2="Sticklib::vector_to_set<__int64,__int64>" type2to1="Sticklib::set_to_vector<__int64,__int64>" />
+/// <stickconv type1="std::vector<bool>" type2="std::set<bool>" type1to2="Sticklib::vector_to_set<bool,bool>" type2to1="Sticklib::set_to_vector<bool,bool>" />
+/// <stickconv type1="std::vector<std::string>" type2="std::set<std::string>" type1to2="Sticklib::vector_to_set<std::string,std::string>" type2to1="Sticklib::set_to_vector<std::string,std::string>" />
+/// <stickconv type1="std::vector<void*>" type2="std::set<void*>" type1to2="Sticklib::vector_to_set<void*,void*>" type2to1="Sticklib::set_to_vector<void*,void*>" />
 /// <stickconv type1="std::string" type2="std::wstring" type1to2="Sticklib::astring_to_wstring" type2to1="Sticklib::wstring_to_astring" />
 /// <stickconv type1="std::string" type2="char*" type1to2="Sticklib::astring_to_atext" type2to1="Sticklib::atext_to_astring" />
 /// <stickconv type1="__int64" type2="__int32" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
@@ -340,36 +341,36 @@ public:
 		}
 	}
 
-	template<typename T>
-	static void vector_to_uset(std::unordered_set<T> & dst, const std::vector<T> & src)
+	template<typename DST, typename SRC>
+	static void vector_to_uset(std::unordered_set<DST> & dst, const std::vector<SRC> & src)
 	{
 		dst.clear();
 		for (const auto & v : src)
-			dst.insert(v);
+			dst.insert((DST)v);
 	}
 
-	template<typename T>
-	static void uset_to_vector(std::vector<T> & dst, const std::unordered_set<T> & src)
+	template<typename DST, typename SRC>
+	static void uset_to_vector(std::vector<DST> & dst, const std::unordered_set<SRC> & src)
 	{
 		dst.clear();
 		for (const auto & v : src)
-			dst.emplace_back(v);
+			dst.emplace_back((DST)v);
 	}
 
-	template<typename T>
-	static void vector_to_set(std::set<T> & dst, const std::vector<T> & src)
+	template<typename DST, typename SRC>
+	static void vector_to_set(std::set<DST> & dst, const std::vector<SRC> & src)
 	{
 		dst.clear();
 		for (const auto & v : src)
-			dst.insert(v);
+			dst.insert((DST)v);
 	}
 
-	template<typename T>
-	static void set_to_vector(std::vector<T> & dst, const std::set<T> & src)
+	template<typename DST, typename SRC>
+	static void set_to_vector(std::vector<DST> & dst, const std::set<SRC> & src)
 	{
 		dst.clear();
 		for (const auto & v : src)
-			dst.emplace_back(v);
+			dst.emplace_back((DST)v);
 	}
 
 	static void astring_to_atext(char * & atx, const std::string & lstr)
