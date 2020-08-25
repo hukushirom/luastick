@@ -326,8 +326,13 @@ private:
 	static bool ParseShot(TagShot & tagShot, const char *& xml, bool isPreserveSpace, bool isPreserveCR)
 	{
 		tagShot.type = TagShot::Type::NIL;
+//----- 20.08.25 Fukushiro M. 変更前 ()-----
+//		if (*xml == '\0')
+//			return false;
+//----- 20.08.25 Fukushiro M. 変更後 ()-----
 		if (*xml == '\0')
-			return false;
+			ThrowLeException(LeError::UNEXPECTED_EOF);
+//----- 20.08.25 Fukushiro M. 変更終 ()-----
 		if (*xml == '<')
 		{
 			TagShot::Type type;
