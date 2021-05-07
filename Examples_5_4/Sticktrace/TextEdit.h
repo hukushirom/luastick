@@ -36,6 +36,7 @@ public:
 	CFCTextEdit ();
 	virtual ~CFCTextEdit ();
 	virtual void SetTabSize (int tabSize);
+	virtual void UseSpacesAsTab (bool useSpaces);
 
 	virtual void UpdateTextRect ();
 
@@ -46,7 +47,7 @@ public:
 
 	virtual void AddMarker (MarkerType markerType, const std::string & name, int lineIndex);
 	virtual void RemoveMarker (MarkerType markerType, const std::string & name, int lineIndex);
-	virtual void ClearMarker(MarkerType markerType, const std::string & contentName);
+	virtual void ClearMarker (MarkerType markerType, const std::string & contentName);
 	virtual void ClearMarker (MarkerType markerType);
 	virtual void ClearAllMarker ();
 	virtual BOOL IsThereMarker (MarkerType markerType, const std::string & name, int lineIndex) const;
@@ -58,36 +59,21 @@ public:
 	virtual void InMarkerStream (std::wstring& wstrStream);
 	virtual void SetContentName(const std::string& name);
 	virtual const std::string& GetContentName() const;
-	const std::map<std::pair<std::string, int>, std::wstring>& GetBreakpoint() const;
+	virtual const std::map<std::pair<std::string, int>, std::wstring>& GetBreakpoint () const;
+	virtual BOOL SearchForward (const std::wstring & keyword);
+	virtual BOOL SearchBackward (const std::wstring & keyword);
 
 protected:
 	virtual void GetLineText (std::wstring& text, int lineIndex) const;
 	virtual CRect GetMarkerRect () const;
-	virtual int YToLineIndex (int y) const;
+	virtual int YToLineIndex (int y);
 
 public:
 	virtual BOOL PreTranslateMessage (MSG* pMsg);
 
 protected:
-	int		m_tabSize;		// Tabの半角換算の文字数。
-	int		m_lineHeight;	// 行の高さ
-	//
-	//            ┌──┬┬────────┐
-	//         A─│    ││                │┬
-	//            │    ││TEXT TEXT TEXT  ││m_lineHeight
-	//            │    ││                │┴
-	//            │    ││TEXT TEXT TEXT  │
-	//            │ ◇ ││                │
-	//            │    ││TEXT TEXT TEXT  │
-	//            │ → ││                │
-	//            │    ││TEXT TEXT TEXT  │
-	//            │    ││                │
-	//            │    ││TEXT TEXT TEXT  │
-	//            │    ││                │
-	//            │    ││TEXT TEXT TEXT  │
-	//            └──┴┴────────┘
-	//
-
+	int		m_tabSize;			// Tabの半角換算の文字数。
+	bool	m_isUseSpacesAsTab;	// Use space chars instead of tab char.
 	int		m_iCurCharIndex;	// 現在位置。
 	int		m_iLBtnDownLine;	// マウス左ボタンダウン時の行インデックス。
 
@@ -115,6 +101,7 @@ protected:
 	afx_msg void OnLButtonDown (UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp (UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove (UINT nFlags, CPoint point);
+	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 }; // class CFCTextEdit : public SUPER_CLASS
 
 

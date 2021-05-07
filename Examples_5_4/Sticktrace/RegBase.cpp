@@ -9,15 +9,13 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-//----- 20.06.02  変更前 ()-----
-//static const wchar_t* REG_COMPANY_NAME = L"Dynamic Draw Project";
-//static const wchar_t* REG_PACKAGE_NAME = L"StickTest";
-//static const wchar_t* REG_APPLICATION_NAME = L"StickTest";
-//----- 20.06.02  変更後 ()-----
 static std::wstring REG_COMPANY_NAME = L"Dynamic Draw Project";
 static std::wstring REG_PACKAGE_NAME = L"Sticktrace";
 static std::wstring REG_APPLICATION_NAME = L"Sticktrace";
-//----- 20.06.02  変更終 ()-----
+
+
+static constexpr const wchar_t* REG_IS_AUTO_ALT_NAME = L"IsAutoAlt";
+
 
 static const LOGFONT DEFAULT_LOGFONT[] = {
 	{
@@ -135,10 +133,15 @@ static std::wstring MyIdNameToRegName(const wchar_t* name)
 
 void FCRegBase::SetApplicationInfo(const wchar_t* companyName, const wchar_t* packageName, const wchar_t* applicationName)
 {
+	// REG_COMPANY_NAME must be filled. If companyName is empty, REG_COMPANY_NAME keeps default value.
 	if (companyName != nullptr && companyName[0] != L'\0')
 		REG_COMPANY_NAME = companyName;
+
+	// REG_PACKAGE_NAME can be empty.
 	if (packageName != nullptr)
 		REG_PACKAGE_NAME = packageName;
+
+	// REG_APPLICATION_NAME can be empty.
 	if (applicationName != nullptr)
 		REG_APPLICATION_NAME = applicationName;
 } // FCRegBase::SetApplicationInfo.
@@ -507,6 +510,31 @@ bool FCRegBase::LoadRegDWORD(
 {
 	return LoadDWORD(dwValue, HKEY_CURRENT_USER, myGetCompAppSection(wcpSection).c_str(), wcpName);
 } // FCRegBase::LoadRegDWORD.
+
+BOOL FCRegBase::GetIsAutoAlt (int isAutoAlt)
+{
+	static int IS_AUTO_ALT = -1;
+	if (isAutoAlt == -1)
+	{
+		if (IS_AUTO_ALT == -1)
+		{
+			// Set 'false' as the default value.
+			IS_AUTO_ALT = 0;
+			LoadRegBinary(NULL, REG_IS_AUTO_ALT_NAME, (BYTE*)&IS_AUTO_ALT, sizeof(IS_AUTO_ALT));
+		}
+	}
+	else
+	{
+		IS_AUTO_ALT = isAutoAlt;
+		SaveRegBinary(NULL, REG_IS_AUTO_ALT_NAME, (const BYTE*)&IS_AUTO_ALT, sizeof(IS_AUTO_ALT));
+	}
+	return (BOOL)IS_AUTO_ALT;
+} // FCRegBase::GetIsAutoAlt.
+
+void FCRegBase::SetIsAutoAlt (BOOL isAutoAlt)
+{
+	GetIsAutoAlt((int)isAutoAlt);
+} // FCRegBase::SetIsAutoAlt.
 
 /*************************************************************************
  * <関数>	FCRegBase::SaveBinary

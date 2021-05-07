@@ -30,6 +30,7 @@ std::string script1 = u8R"(
 xyz = "hello"
 Test1 = function()
 	-- os.execute("sleep 2")
+	STICKTRACE.DebugBreak()
 	STICKTRACE.OutputDebugMessage("hello")
 	ShowMessage(debug.traceback())
 	c1 = {"a", "b", "c", "d"}

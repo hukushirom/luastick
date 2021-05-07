@@ -9,6 +9,36 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+int UtilDlg::GetCurSel (const CListCtrl* pListCtrl)
+{
+	POSITION pos = pListCtrl->GetFirstSelectedItemPosition();
+	if (pos == NULL) return -1;
+	return pListCtrl->GetNextSelectedItem(pos);
+} // int FfGetCurSel (const CListCtrl* pListCtrl)
+
+int UtilDlg::InsertColumn(CListCtrl* pCtrl, int nCol, const wchar_t* lpszColumnHeading, int nFormat, int nWidth, int nSubItem)
+{
+	return pCtrl->InsertColumn(nCol, lpszColumnHeading, nFormat, nWidth, nSubItem);
+}
+
+// UNICODEで文字列を取得。
+std::wstring& UtilDlg::GetDlgItemText(const CWnd* pWnd, DWORD dwCtrl, std::wstring& wstr)
+{
+	CString str;
+	pWnd->GetDlgItemText(dwCtrl, str);
+	wstr = str;
+	return wstr;
+	}
+
+// UTF-8で文字列を取得。
+std::string& UtilDlg::GetDlgItemText(const CWnd* pWnd, DWORD dwCtrl, std::string& astr)
+{
+	std::wstring wstr;
+	UtilDlg::GetDlgItemText(pWnd, dwCtrl, wstr);
+	Astrwstr::wstr_to_astr(astr, wstr);
+	return astr;
+}
+
 //********************************************************************************************
 /*!
  * @brief	EditコントロールにUndoを実行する。
@@ -23,23 +53,21 @@ static char THIS_FILE[] = __FILE__;
  * @return	int	新しいUndoバッファの位置。
  */
 //********************************************************************************************
-int UtilDlg::UndoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, int iCurUndoBuffer)
+void UtilDlg::UndoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer)
 {
-	if (iCurUndoBuffer == 0) return iCurUndoBuffer;
-	iCurUndoBuffer--;
-	const FCDiffRecW& rec = vUndoBuffer[iCurUndoBuffer];
-	if (rec.cmd == FCDiffRecW::INS)
-	//----- 挿入の場合 -----
+	for (auto irec = vUndoBuffer.rbegin(); irec != vUndoBuffer.rend(); irec++)
 	{
-		edit->SetSel(rec.begin, rec.begin + rec.text.length());
-		edit->ReplaceSel(L"");
-	} else
-	//----- 削除の場合 -----
-	{
-		edit->SetSel(rec.begin, rec.begin);
-		edit->ReplaceSel(rec.text.c_str());
+		if (irec->cmd == FCDiffRecW::INS)
+		{	//----- 挿入の場合 -----
+			edit->SetSel(irec->begin, irec->begin + irec->text.length());
+			edit->ReplaceSel(L"");
+		}
+		else
+		{	//----- 削除の場合 -----
+			edit->SetSel(irec->begin, irec->begin);
+			edit->ReplaceSel(irec->text.c_str());
+		}
 	}
-	return iCurUndoBuffer;
 } // FFUndoEdit
 
 //********************************************************************************************
@@ -56,22 +84,21 @@ int UtilDlg::UndoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, 
  * @return	int	新しいUndoバッファの位置。
  */
 //********************************************************************************************
-int UtilDlg::RedoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, int iCurUndoBuffer)
+void UtilDlg::RedoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer)
 {
-	if (vUndoBuffer.size() == iCurUndoBuffer) return iCurUndoBuffer;
-	const FCDiffRecW& rec = vUndoBuffer[iCurUndoBuffer];
-	if (rec.cmd == FCDiffRecW::INS)
-	//----- 挿入の場合 -----
+	for (auto irec = vUndoBuffer.begin(); irec != vUndoBuffer.end(); irec++)
 	{
-		edit->SetSel(rec.begin, rec.begin);
-		edit->ReplaceSel(rec.text.c_str());
-	} else
-	//----- 削除の場合 -----
-	{
-		edit->SetSel(rec.begin, rec.begin + rec.text.length());
-		edit->ReplaceSel(L"");
+		if (irec->cmd == FCDiffRecW::INS)
+		{	//----- 挿入の場合 -----
+			edit->SetSel(irec->begin, irec->begin);
+			edit->ReplaceSel(irec->text.c_str());
+		}
+		else
+		{	//----- 削除の場合 -----
+			edit->SetSel(irec->begin, irec->begin + irec->text.length());
+			edit->ReplaceSel(L"");
+		}
 	}
-	return iCurUndoBuffer + 1;
 } // FFRedoEdit
 
 /*************************************************************************
@@ -160,11 +187,13 @@ int UtilDlg::RedoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer, 
  *
  * <履歴>	05.11.11 Fukushiro M. 作成
  *************************************************************************/
-void UtilDlg::InitDlgLayout (	IdToDlgLayoutRecMap& mpLayoutInfo,
-						HWND hWnd,
-						long lControlSize,
-						const long aControlId[],
-						DWORD dwOffsetFlag)
+void UtilDlg::InitDlgLayout (
+	IdToDlgLayoutRecMap& mpLayoutInfo,
+	HWND hWnd,
+	long lControlSize,
+	const long aControlId[],
+	DWORD dwOffsetFlag
+)
 {
 	const CWnd* pWnd = CWnd::FromHandle(hWnd);
 	// ダイアログのウィンドウ領域を取得。
@@ -206,8 +235,7 @@ void UtilDlg::InitDlgLayout (	IdToDlgLayoutRecMap& mpLayoutInfo,
  *
  * <履歴>	05.11.11 Fukushiro M. 作成
  *************************************************************************/
-void UtilDlg::DlgLayout (	const IdToDlgLayoutRecMap& mpLayoutInfo,
-					HWND hWnd)
+void UtilDlg::DlgLayout (const IdToDlgLayoutRecMap& mpLayoutInfo, HWND hWnd)
 {
 	CWnd* pWnd = CWnd::FromHandle(hWnd);
 	// ダイアログのウィンドウ領域を取得。
@@ -253,3 +281,95 @@ void UtilDlg::DlgLayout (	const IdToDlgLayoutRecMap& mpLayoutInfo,
 		pWnd->GetDlgItem(iInfo->first)->RedrawWindow();
 	}
 } // DlgLayout.
+
+std::wstring UtilDlg::GetItemText(CTabCtrl* tabCtrl, int index)
+{
+	wchar_t textBuff[200];
+	TCITEM item;
+	item.mask = TCIF_TEXT;
+	item.pszText = textBuff;
+	item.cchTextMax = _countof(textBuff);
+	tabCtrl->GetItem(index, &item);
+	return textBuff;
+}
+
+void UtilDlg::GetMonitorRect (std::vector<CRect> & vMonitorRect)
+{
+	vMonitorRect.clear();
+	struct My
+	{
+		static BOOL CALLBACK MonitorEnumProc (
+			HMONITOR hMonitor,	// ディスプレイモニタのハンドル。
+			HDC hdcMonitor,		// モニタに適したデバイスコンテキストのハンドル。
+			LPRECT lprcMonitor,	// モニタ上の交差部分を表す長方形領域へのポインタ。
+			LPARAM dwData		// EnumDisplayMonitors から渡されたデータ。
+		)
+		{
+			auto vMonitorRect = (std::vector<CRect> *)dwData;
+			MONITORINFO monitorInfo;
+			memset(&monitorInfo, 0, sizeof(monitorInfo));
+			monitorInfo.cbSize = sizeof(monitorInfo);
+			if (::GetMonitorInfo(hMonitor, &monitorInfo))
+			{	//----- モニターのワーク領域（タスクバーを除いた領域）を取得 -----
+				vMonitorRect->emplace_back(monitorInfo.rcWork);
+			} else
+			{	//----- モニターのワーク領域（タスクバーを除いた領域）を取得できない場合 -----
+				vMonitorRect->emplace_back(*lprcMonitor);
+			}
+			return TRUE;	// 列挙を続行。
+		}; // MonitorEnumProc.
+	};
+	::EnumDisplayMonitors(NULL, nullptr, My::MonitorEnumProc, LPARAM(&vMonitorRect));
+} // UtilDlg::GetMonitorRect.
+
+CSize UtilDlg::JustifyToMonitor (const CRect & winRect)
+{
+	auto POW2 = [](__int64 x) { return x * x; };
+	const CPoint winPoint = winRect.TopLeft() + CSize(50, 50);
+
+//----- 20.07.19 Fukushiro M. 削除始 ()-----
+//	/// <summary>
+//	/// CRect::PtInRect regards the point as outside if point is on rect.right or rect.bottom.
+//	/// This function regards it as inside.
+//	/// </summary>
+//	/// <param name="rect"></param>
+//	/// <param name="point"></param>
+//	/// <returns></returns>
+//	auto PtInRect = [](const CRect & rect, const CPoint & point)
+//	{
+//		return (
+//			rect.left <= point.x &&
+//			point.x <= rect.right &&
+//			rect.top <= point.y &&
+//			point.y <= rect.bottom
+//			);
+//	};
+//----- 20.07.19 Fukushiro M. 削除終 ()-----
+
+	// モニター領域の配列を取得。
+	std::vector<CRect> vMonitorRect;
+	UtilDlg::GetMonitorRect(vMonitorRect);
+
+	BOOL isOK = FALSE;
+	CRect oneMonRect;
+	__int64 powLen = _I64_MAX;
+	for (const auto & monRect : vMonitorRect)
+	{
+		if (monRect.PtInRect(winPoint))
+		{
+			isOK = TRUE;
+			break;
+		}
+		else
+		{
+			auto sz = monRect.TopLeft() - winRect.TopLeft();
+			auto tmp = POW2(sz.cx) + POW2(sz.cy);
+			if (tmp < powLen)
+			{
+				powLen = tmp;
+				oneMonRect = monRect;
+			}
+		}
+	}
+	return isOK ? CSize(0, 0) : (oneMonRect.TopLeft() - winRect.TopLeft());
+} // UtilDlg::JustifyToMonitor.

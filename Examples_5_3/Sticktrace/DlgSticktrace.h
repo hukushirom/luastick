@@ -269,6 +269,8 @@ public:
 	afx_msg void OnBnClickedSceBtnDeleteWatch();
 	afx_msg void OnBnClickedSceChkDebugMode();
 	afx_msg void OnBnClickedSceBtnFindNext();
+// 21.05.07 Fukushiro M. 1行追加 ()
+	afx_msg void OnBnClickedSceBtnGotoLine();
 	afx_msg void OnChangeSceEdtKeyword();
 	afx_msg void OnNMClickSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg LRESULT OnUserDdEditDblClked(WPARAM wParam, LPARAM);

@@ -59,13 +59,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\lua-5.4.0\src;..\Sticktrace;..\..\Luastick\files</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\lua-5.4.3\src;..\Sticktrace;..\..\Luastick\files;..\..\LuaStick\src</AdditionalIncludeDirectories>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>..\..\lua-5.4.0\vs2017\liblua\$(Configuration);..\Sticktrace\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\lua-5.4.3\vs2017\liblua\$(Configuration);..\Sticktrace\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>liblua.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>
       </ImportLibrary>
@@ -91,14 +91,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\lua-5.4.0\src;..\Sticktrace;..\..\Luastick\files</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\lua-5.4.3\src;..\Sticktrace;..\..\Luastick\files;..\..\LuaStick\src</AdditionalIncludeDirectories>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
+      <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\..\lua-5.4.0\vs2017\liblua\$(Configuration);..\Sticktrace\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\lua-5.4.3\vs2017\liblua\$(Configuration);..\Sticktrace\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>liblua.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
@@ -155,10 +156,10 @@ copy ..\Sticktrace\$(Configuration)\Sticktrace.pdb $(TargetDir)</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo &gt; dummy2
 copy ..\Sticktrace\$(Configuration)\Sticktrace.dll $(TargetDir)
 copy ..\Sticktrace\$(Configuration)\Sticktrace.pdb $(TargetDir)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(TargetDir)Sticktrace.dll;$(TargetDir)Sticktrace.pdb;%(Outputs)</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\Sticktrace\$(Configuration)\Sticktrace.dll;..\Sticktrace\$(Configuration)\Sticktrace.pdb;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(TargetDir)Sticktrace.dll;$(TargetDir)Sticktrace.pdb;%(Outputs)</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\Sticktrace\$(Configuration)\Sticktrace.dll;..\Sticktrace\$(Configuration)\Sticktrace.pdb;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(TargetDir)Sticktrace.dll;$(TargetDir)Sticktrace.pdb</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\Sticktrace\$(Configuration)\Sticktrace.dll;..\Sticktrace\$(Configuration)\Sticktrace.pdb</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(TargetDir)Sticktrace.dll;$(TargetDir)Sticktrace.pdb</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\Sticktrace\$(Configuration)\Sticktrace.dll;..\Sticktrace\$(Configuration)\Sticktrace.pdb</AdditionalInputs>
     </CustomBuild>
     <None Include="res\StickTest.rc2" />
   </ItemGroup>

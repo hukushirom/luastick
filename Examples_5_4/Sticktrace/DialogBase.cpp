@@ -94,11 +94,9 @@ void CFCDialogBase::SizeToRegistered ()
 		if (dwDataSz == sizeof(rtWindow))
 		//----- レジストリからウィンドウ座標が読み出せた場合 -----
 		{
-//----- 17.09.21 Fukushiro M. 削除始 ()-----
-//			// ウィンドウ座標をモニター位置に補正。
-//			// マルチモニター環境を考慮。
-//			rtWindow += FFJustifyToMonitor(rtWindow);
-//----- 17.09.21 Fukushiro M. 削除終 ()-----
+			// ウィンドウ座標をモニター位置に補正。
+			// マルチモニター環境を考慮。
+			rtWindow += UtilDlg::JustifyToMonitor(rtWindow);
 			// ウィンドウを移動。
 			MoveWindow(rtWindow);
 		}
@@ -270,3 +268,38 @@ void CFCDialogBase::OnGetMinMaxInfo (MINMAXINFO FAR* lpMMI)
 	lpMMI->ptMinTrackSize.x = m_szMinFrame.cx;
 	lpMMI->ptMinTrackSize.y = m_szMinFrame.cy;
 } // CFCDialogBase::OnGetMinMaxInfo.
+
+
+// LRESULT CFCDialogBase::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+// {
+//	 TRACE(L"CFCDialogBase::WindowProc %x %x %x\r\n", message, wParam, lParam);
+//
+//	 auto status = GetQueueStatus(QS_ALLINPUT);
+//	 if (HIWORD(status) == 0)
+//		 PostMessage(WM_IDLEUPDATECMDUI);
+//
+//	 return BASE_CLASS::WindowProc(message, wParam, lParam);
+// }
+
+
+ BOOL CFCDialogBase::PreTranslateMessage(MSG* pMsg)
+ {
+//----- 20.07.30 Fukushiro M. 変更前 ()-----
+//	 // Any message is in the queue.
+//	 auto status = GetQueueStatus(QS_ALLINPUT);
+//	 // The high-order word of the return value indicates the types of messages currently in the queue.
+//	if (HIWORD(status) == 0)
+//		PostMessage(WM_IDLEUPDATECMDUI);
+//----- 20.07.30 Fukushiro M. 変更後 ()-----
+	if (pMsg->message != WM_IDLEUPDATECMDUI)
+	{
+		 // Any message is in the queue.
+		 auto status = GetQueueStatus(QS_ALLINPUT);
+		 // The high-order word of the return value indicates the types of messages currently in the queue.
+		if (HIWORD(status) == 0)
+			PostMessage(WM_IDLEUPDATECMDUI);
+	}
+//----- 20.07.30 Fukushiro M. 変更終 ()-----
+
+	 return BASE_CLASS::PreTranslateMessage(pMsg);
+ }

@@ -1906,6 +1906,8 @@ private:
 	{
 	private:
 		using LuaHookFunc = void(*)(lua_State* luaState, lua_Debug* luaDebug);
+// 21.05.07 Fukushiro M. 1行追加 ()
+		using LuaFunc = int(*)(lua_State* luaState);
 		using ClassObjFunc = T*&(*)();
 	private:
 		template<size_t S>
@@ -1916,6 +1918,54 @@ private:
 				ClassObj()->OnCallLuaHook(L, ar);
 			}
 
+//----- 21.05.07 Fukushiro M. 追加始 ()-----
+			static int DebugBreak(lua_State* L)
+			{
+				try
+				{
+					// Check the count of arguments.
+					if (lua_gettop(L) != 0)
+						throw std::invalid_argument("Count of arguments is not correct.");
+					ClassObj()->SetScriptMode(SticktraceDef::Mode::SUSPEND);
+					ClassObj()->ShowWindow(true);
+				}
+				catch (std::exception & e)
+				{
+					luaL_error(L, (std::string("C function error:::DebugBreak:") + e.what()).c_str());
+				}
+				catch (...)
+				{
+					luaL_error(L, "C function error:::DebugBreak");
+				}
+				return 0;
+			}
+
+			/// <summary>
+			///
+			/// </summary>
+			static int OutputDebugMessage(lua_State* L)
+			{
+				try
+				{
+					// Check the count of arguments.
+					if (lua_gettop(L) != 1)
+						throw std::invalid_argument("Count of arguments is not correct.");
+					std::string message;
+					Sticklib::check_lvalue(message, L, 1);
+					ClassObj()->OutputDebug(message.c_str());
+				}
+				catch (std::exception & e)
+				{
+					luaL_error(L, (std::string("C function error:::OutputDebugMessage:") + e.what()).c_str());
+				}
+				catch (...)
+				{
+					luaL_error(L, "C function error:::OutputDebugMessage");
+				}
+				return 0;
+			}
+//----- 21.05.07 Fukushiro M. 追加終 ()-----
+
 			static T*& ClassObj()
 			{
 				static T* s_ClassObj = nullptr;
@@ -1925,18 +1975,33 @@ private:
 	private:
 		static std::vector<LuaToClassHook> & LUA_TO_CLASS_HOOK_STACK()
 		{
+//----- 21.05.07 Fukushiro M. 変更前 ()-----
+//			static std::vector<LuaToClassHook> s_LuaToClassHookArray {
+//				LuaToClassHook{ LH<0>::HookFunc, LH<0>::ClassObj },
+//				LuaToClassHook{ LH<1>::HookFunc, LH<1>::ClassObj },
+//				LuaToClassHook{ LH<2>::HookFunc, LH<2>::ClassObj },
+//				LuaToClassHook{ LH<3>::HookFunc, LH<3>::ClassObj },
+//				LuaToClassHook{ LH<4>::HookFunc, LH<4>::ClassObj },
+//				LuaToClassHook{ LH<5>::HookFunc, LH<5>::ClassObj },
+//				LuaToClassHook{ LH<6>::HookFunc, LH<6>::ClassObj },
+//				LuaToClassHook{ LH<7>::HookFunc, LH<7>::ClassObj },
+//				LuaToClassHook{ LH<8>::HookFunc, LH<8>::ClassObj },
+//				LuaToClassHook{ LH<9>::HookFunc, LH<9>::ClassObj },
+//			};
+//----- 21.05.07 Fukushiro M. 変更後 ()-----
 			static std::vector<LuaToClassHook> s_LuaToClassHookArray {
-				LuaToClassHook{ LH<0>::HookFunc, LH<0>::ClassObj },
-				LuaToClassHook{ LH<1>::HookFunc, LH<1>::ClassObj },
-				LuaToClassHook{ LH<2>::HookFunc, LH<2>::ClassObj },
-				LuaToClassHook{ LH<3>::HookFunc, LH<3>::ClassObj },
-				LuaToClassHook{ LH<4>::HookFunc, LH<4>::ClassObj },
-				LuaToClassHook{ LH<5>::HookFunc, LH<5>::ClassObj },
-				LuaToClassHook{ LH<6>::HookFunc, LH<6>::ClassObj },
-				LuaToClassHook{ LH<7>::HookFunc, LH<7>::ClassObj },
-				LuaToClassHook{ LH<8>::HookFunc, LH<8>::ClassObj },
-				LuaToClassHook{ LH<9>::HookFunc, LH<9>::ClassObj },
+				LuaToClassHook{ LH<0>::HookFunc, LH<0>::DebugBreak, LH<0>::OutputDebugMessage, LH<0>::ClassObj },
+				LuaToClassHook{ LH<1>::HookFunc, LH<1>::DebugBreak, LH<1>::OutputDebugMessage, LH<1>::ClassObj },
+				LuaToClassHook{ LH<2>::HookFunc, LH<2>::DebugBreak, LH<2>::OutputDebugMessage, LH<2>::ClassObj },
+				LuaToClassHook{ LH<3>::HookFunc, LH<3>::DebugBreak, LH<3>::OutputDebugMessage, LH<3>::ClassObj },
+				LuaToClassHook{ LH<4>::HookFunc, LH<4>::DebugBreak, LH<4>::OutputDebugMessage, LH<4>::ClassObj },
+				LuaToClassHook{ LH<5>::HookFunc, LH<5>::DebugBreak, LH<5>::OutputDebugMessage, LH<5>::ClassObj },
+				LuaToClassHook{ LH<6>::HookFunc, LH<6>::DebugBreak, LH<6>::OutputDebugMessage, LH<6>::ClassObj },
+				LuaToClassHook{ LH<7>::HookFunc, LH<7>::DebugBreak, LH<7>::OutputDebugMessage, LH<7>::ClassObj },
+				LuaToClassHook{ LH<8>::HookFunc, LH<8>::DebugBreak, LH<8>::OutputDebugMessage, LH<8>::ClassObj },
+				LuaToClassHook{ LH<9>::HookFunc, LH<9>::DebugBreak, LH<9>::OutputDebugMessage, LH<9>::ClassObj },
 			};
+//----- 21.05.07 Fukushiro M. 変更終 ()-----
 			return s_LuaToClassHookArray;
 		}
 
@@ -1956,25 +2021,49 @@ private:
 		}
 
 	public:
+//----- 21.05.07 Fukushiro M. 変更前 ()-----
+//		LuaToClassHook()
+//			: hook(nullptr)
+//			, obj(nullptr)
+//		{}
+//
+//		LuaToClassHook(LuaHookFunc h, ClassObjFunc c)
+//			: hook(h)
+//			, obj(c)
+//		{}
+//----- 21.05.07 Fukushiro M. 変更後 ()-----
 		LuaToClassHook()
 			: hook(nullptr)
+			, debug_break(nullptr)
+			, output_debug_message(nullptr)
 			, obj(nullptr)
 		{}
 
-		LuaToClassHook(LuaHookFunc h, ClassObjFunc c)
+		LuaToClassHook(LuaHookFunc h, LuaFunc d, LuaFunc m, ClassObjFunc c)
 			: hook(h)
+			, debug_break(d)
+			, output_debug_message(m)
 			, obj(c)
 		{}
+//----- 21.05.07 Fukushiro M. 変更終 ()-----
 
 		~LuaToClassHook() = default;
 
 		void Clear()
 		{
 			hook = nullptr;
+//----- 21.05.07 Fukushiro M. 追加始 ()-----
+			debug_break = nullptr;
+			output_debug_message = nullptr;
+//----- 21.05.07 Fukushiro M. 追加終 ()-----
 			obj = nullptr;
 		}
 	public:
 		LuaHookFunc hook;
+//----- 21.05.07 Fukushiro M. 追加始 ()-----
+		LuaFunc debug_break;
+		LuaFunc output_debug_message;
+//----- 21.05.07 Fukushiro M. 追加終 ()-----
 		ClassObjFunc obj;
 	}; // class LuaToClassHook.
 
@@ -1996,37 +2085,39 @@ public:
 	}
 
 private:
-	static std::unordered_map<lua_State*, Sticktrace*>& LUA_TO_TRACE()
-	{
-		static std::unordered_map<lua_State*, Sticktrace*> s_LUA_TO_TRACE;
-		return s_LUA_TO_TRACE;
-	}
-
-	/// <summary>
-	///
-	/// </summary>
-	static int OutputDebugMessage(lua_State* L)
-	{
-		try
-		{
-			// Check the count of arguments.
-			if (lua_gettop(L) != 1)
-				throw std::invalid_argument("Count of arguments is not correct.");
-
-			std::string message;
-			Sticklib::check_lvalue(message, L, 1);
-			LUA_TO_TRACE().at(L)->OutputDebug(message.c_str());
-		}
-		catch (std::exception & e)
-		{
-			luaL_error(L, (std::string("C function error:::OutputDebugMessage:") + e.what()).c_str());
-		}
-		catch (...)
-		{
-			luaL_error(L, "C function error:::OutputDebugMessage");
-		}
-		return 0;
-	}
+//----- 21.05.07 Fukushiro M. 削除始 ()-----
+//	static std::unordered_map<lua_State*, Sticktrace*>& LUA_TO_TRACE()
+//	{
+//		static std::unordered_map<lua_State*, Sticktrace*> s_LUA_TO_TRACE;
+//		return s_LUA_TO_TRACE;
+//	}
+//
+//	/// <summary>
+//	///
+//	/// </summary>
+//	static int OutputDebugMessage(lua_State* L)
+//	{
+//		try
+//		{
+//			// Check the count of arguments.
+//			if (lua_gettop(L) != 1)
+//				throw std::invalid_argument("Count of arguments is not correct.");
+//
+//			std::string message;
+//			Sticklib::check_lvalue(message, L, 1);
+//			LUA_TO_TRACE().at(L)->OutputDebug(message.c_str());
+//		}
+//		catch (std::exception & e)
+//		{
+//			luaL_error(L, (std::string("C function error:::OutputDebugMessage:") + e.what()).c_str());
+//		}
+//		catch (...)
+//		{
+//			luaL_error(L, "C function error:::OutputDebugMessage");
+//		}
+//		return 0;
+//	}
+//----- 21.05.07 Fukushiro M. 削除終 ()-----
 
 public:
 	/// <summary>
@@ -2041,12 +2132,8 @@ public:
 	/// <param name="packageName">Name of package. Used to determine the name of registry./nullptr:Default value will be used.</param>
 	/// <param name="applicationName">Name of application. Used to determine the name of registry./nullptr:Default value will be used.</param>
 	/// <param name="dialogId">ID of Debugger window. Used to determine the name of registry. You must specify different values if one application uses more than two debuggers.</param>
-	/// <param name="DGT_debuggerCallbackFunc">Callback function called from the debugger./nullptr:No callback</param>
+	/// <param name="DGT_debuggerCallbackFunc">Callback function called from the debugger. It's called when script was saved./nullptr:No callback</param>
 	/// <param name="debuggerCallbackData">The user defined data which is passed to DGT_debuggerCallbackFunc.</param>
-	/// <param name="stickrun">The stickrun.</param>
-	/// <param name="scriptHookFunc">The script hook function. It is called when script is suspended and script is executed. See the comment described at OnCallLuaHook function.</param>
-	/// <param name="scriptHookData">The user defined data which is passed to scriptHookFunc.</param>
-	/// <param name="scriptHookInterval">The script hook interval. If scriptHookInterval is set to 10, scriptHookFunc is called once every 10 lines execution.</param>
 	void Initialize(
 		HWND hwndParent,
 		const wchar_t* companyName,
@@ -2141,6 +2228,26 @@ public:
 			//                     :            :        :      :        :        :
 			Sticklib::push_table(stickrun->GetLuaState(), "STICKTRACE");
 
+//----- 21.05.07 Fukushiro M. 変更前 ()-----
+//			// Register functions into the 'STICKTRACE' table.
+//			//       STACK
+//			//    |         |
+//			//    |---------|
+//			//  -1|  table  |-------------------------------+
+//			//    |---------|      +------------+--------+  |
+//			//  -2|   _G    |----->| Key        | Value  |  |
+//			//    +---------+      |------------|--------|  |   +--------------------+------------------+
+//			//                     |"STICKTRACE"| table  |--+-->| Key                | Value            |
+//			//                     |------------|--------|      |--------------------|------------------|
+//			//                     :            :        :      |"OutputDebugMessage"|OutputDebugMessage|
+//			//                                                  |--------------------|------------------|
+//			//                                                  :                    :                  :
+//			static struct luaL_Reg funcs[] =
+//			{
+//				{ "OutputDebugMessage", OutputDebugMessage },
+//				{ nullptr, nullptr },
+//			};
+//----- 21.05.07 Fukushiro M. 変更後 ()-----
 			// Register functions into the 'STICKTRACE' table.
 			//       STACK
 			//    |         |
@@ -2151,14 +2258,18 @@ public:
 			//    +---------+      |------------|--------|  |   +--------------------+------------------+
 			//                     |"STICKTRACE"| table  |--+-->| Key                | Value            |
 			//                     |------------|--------|      |--------------------|------------------|
-			//                     :            :        :      |"OutputDebugMessage"|OutputDebugMessage|
+			//                     :            :        :      |"DebugBreak"        |DebugBreak        |
+			//                                                  |--------------------|------------------|
+			//                                                  |"OutputDebugMessage"|OutputDebugMessage|
 			//                                                  |--------------------|------------------|
 			//                                                  :                    :                  :
 			static struct luaL_Reg funcs[] =
 			{
-				{ "OutputDebugMessage", OutputDebugMessage },
+				{ "DebugBreak", m_luaToClassHook.debug_break },
+				{ "OutputDebugMessage", m_luaToClassHook.output_debug_message },
 				{ nullptr, nullptr },
 			};
+//----- 21.05.07 Fukushiro M. 変更終 ()-----
 			Sticklib::set_functions(stickrun->GetLuaState(), funcs);
 
 			// Pop the "STICKTRACE" table and Global table.
@@ -2294,7 +2405,8 @@ private:
 		if (m_sticktraceWindow->IsDebugMode())
 			::lua_sethook(L, m_luaToClassHook.hook, LUA_MASKLINE, 0);
 
-		LUA_TO_TRACE()[L] = this;
+// 21.05.07 Fukushiro M. 1行削除 ()
+//		LUA_TO_TRACE()[L] = this;
 
 		m_sticktraceWindow->OnStart(execType);
 		m_suspendMode = SticktraceDef::Mode::RUN;
@@ -2303,7 +2415,9 @@ private:
 
 	void OnStopExec(lua_State* L, SticktraceDef::ExecType execType)
 	{
-		LUA_TO_TRACE().erase(L);
+// 21.05.07 Fukushiro M. 1行削除 ()
+//		LUA_TO_TRACE().erase(L);
+
 		::lua_sethook(L, nullptr, 0, 0);
 
 		m_suspendMode = SticktraceDef::Mode::STOP;

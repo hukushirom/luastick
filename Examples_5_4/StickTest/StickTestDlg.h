@@ -7,29 +7,38 @@
 // Do not include "Stickrun.h". It must be included via "Stick.h".
 
 #include <string>
+#include "UtilSync.h"			// For AutoCS,AutoLeaveCS.
 #include "Sticktrace.h"
 
 
 class CStickTestDlg;
 
-/// <stick export="true"/>
-constexpr int HIJ = 10;
+enum : UINT
+{
+	WM_USER_COMMAND = WM_USER + 100,
+};
 
-/// <stick export="true" ctype="char*" />
-#define XXX "HELLO"
-
-/// <stick export="true"/>
-/// <summary>
-/// Array test.
+/// <summary export="true">
+/// kn;Array test.
+/// ja;配列テスト。
+/// en;Array test.
 /// </summary>
-/// <param name="v1" io="inout">test</param>
+/// <param name="v1" io="inout">ja;テスト en;test</param>
 extern void MyArrayFunc0(
 	std::vector<std::string> & v1
 );
 
 /// <stick export="true"/>
 /// <summary>
-/// Array test.
+/// kn;
+/// <para>Array test2-1.</para>
+/// <para>Array test2-2.</para>
+/// ja;
+/// <para>配列テスト2-1。</para>
+/// <para>配列テスト2-2。</para>
+/// en;
+/// <para>Array test2-1.</para>
+/// <para>Array test2-2.</para>
 /// </summary>
 /// <param name="v1" io="inout">test</param>
 extern void MyArrayFunc1(
@@ -38,13 +47,32 @@ extern void MyArrayFunc1(
 
 /// <stick export="true"/>
 /// <summary>
-/// Array test.
+/// kn;
+/// <code>
+/// Array test2-1.
+/// Array test2-2.
+/// </code>
+/// ja;
+/// <code>
+/// 配列テスト2-1。
+/// 配列テスト2-2。
+/// </code>
+/// en;
+/// <code>
+/// Array test2-1.
+/// Array test2-2.
+/// </code>
 /// </summary>
 /// <param name="v1" io="inout">test</param>
 extern void MyArrayFunc2(
 	std::vector<std::wstring> & v1
 );
 
+/// <stick export="true"/>
+constexpr int HIJ = 10;
+
+/// <stick export="true" ctype="char*" />
+#define XXX "HELLO"
 
 /// <stick export="true"/>
 class X
@@ -404,21 +432,65 @@ public:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV サポート
 
 public:	
-	/// <stick export="true" />
-	/// <summary>
+	/// <summary export="true">
 	/// Debugs the output.
 	/// </summary>
 	/// <param name="message" io="in">The message.</param>
 	virtual void DebugOutput(const char* message);
+
+protected:
+	virtual void OnSaveScript(const std::string & name, const std::string & code);
 
 // 実装
 protected:
 	HICON m_hIcon;
 
 	Stickrun* m_stickrun;
-	Sticktrace m_sticktrace;
+	Sticktrace* m_sticktrace;
 
-	static void OnScriptCallback(lua_State * luaState, lua_Debug * luaDebug, void * userData, Sticktrace::Mode mode, Sticktrace* sticktrace);
+	/// <summary>
+	/// Data for synchronous communication from the application thread to the DlgSticktrace thread.
+	/// </summary>
+	struct InCmd
+	{
+		AutoCS cs;	// Locking object to protect this area.
+		AutoCV cv;	// Locking object to protect this area.
+		SticktraceDef::DebuggerCommand command;
+		std::string strParam1;
+		std::string strParam2;
+		InCmd() : command(SticktraceDef::DebuggerCommand::NONE) {}
+		~InCmd() = default;
+	} m_incmd;
+
+	/// <summary>
+	/// ja; コールバック関数。デバッガーウィンドウから実行される。
+	/// en; Callback function. It is called from the debugger window.
+	/// </summary>
+	/// <param name="command" io="in">
+	/// 	ja; コマンド。コールバックのタイプを指定する。
+	/// 	en; Command. It specifies the type of callback.
+	/// </param>
+	/// <param name="param" io="in">Parameters for the command.</param>
+	/// <returns>true:Accepted/false:Timeout</returns>
+	virtual bool DGT_DebuggerCallback(
+		SticktraceDef::DebuggerCommand command,
+		SticktraceDef::DebuggerCallbackParam* param
+	);
+
+	static bool DGT_DebuggerCallback(
+		unsigned int dialogId,
+		SticktraceDef::DebuggerCommand command,
+		SticktraceDef::DebuggerCallbackParam* param,
+		void* userData
+	);
+
+	static void OnScriptCallback(
+		lua_State * luaState,
+		lua_Debug * luaDebug,
+		void * userData,
+		SticktraceDef::Mode mode,
+		Sticktrace* sticktrace
+	);
 	
 	// 生成された、メッセージ割り当て関数
 	virtual BOOL OnInitDialog();
@@ -444,11 +516,10 @@ public:
 	afx_msg void OnBnClickedBtnTest8();
 	afx_msg void OnBnClickedBtnInitStickrun();
 	afx_msg void OnBnClickedBtnTest9();
-//	afx_msg void OnClose();
+	afx_msg LRESULT OnUserCommand(WPARAM, LPARAM);
 	virtual void OnOK();
 	virtual void OnCancel();
 };
-
 
 /// <stick export="true" />
 /// <summary>

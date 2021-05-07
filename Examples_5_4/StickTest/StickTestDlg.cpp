@@ -26,17 +26,18 @@
 #define new DEBUG_NEW
 #endif
 
-constexpr char* script1 = u8R"(
+std::string script1 = u8R"(
 xyz = "hello"
 Test1 = function()
 	-- os.execute("sleep 2")
+	STICKTRACE.DebugBreak()
 	STICKTRACE.OutputDebugMessage("hello")
 	ShowMessage(debug.traceback())
-	local c1 = {"a", "b", "c", "d"}
+	c1 = {"a", "b", "c", "d"}
 	c1["x"] = { [1] = "p", [2] = "q", [3] = "r" }
 	-- local d = {"A"->"B"}
 	b = X.B.New()
-	ii, a = b:Add1()
+	local ii, a = b:Add1()
 	ShowMessage("A::Get=" .. a:Get() .. "\r\n")
 	ShowMessage(X.A.ABC .. "\r\n")
 	local c = X.B.CreateA(15)
@@ -68,7 +69,7 @@ Test4 = function()
 end
 )";
 
-constexpr char* script2 = u8R"(
+std::string script2 = u8R"(
 Test5 = function()
 
   obj, rx = NM1.NM1_NM2.New(5)
@@ -224,7 +225,7 @@ CStickTestDlg* ToStickTestDlg(void* data)
 CStickTestDlg::CStickTestDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_STICKTEST_DIALOG, pParent)
 	, m_stickrun(nullptr)
-	, m_sticktrace(L"Dynamic Draw Project", L"", L"StickTest", (DWORD)-1)
+	, m_sticktrace(nullptr)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -236,7 +237,47 @@ void CStickTestDlg::DoDataExchange(CDataExchange* pDX)
 
 void CStickTestDlg::DebugOutput(const char* message)
 {
-	m_sticktrace.OutputDebug(message);
+	m_sticktrace->OutputDebug(message);
+}
+
+void CStickTestDlg::OnSaveScript(const std::string & name, const std::string & code)
+{
+	std::string error_message;
+	if (name == "script1")
+	{
+		script1 = code;
+
+		m_sticktrace->DetachStickrun();
+		delete m_stickrun;
+		m_stickrun = new Stickrun(luastick_init);
+		m_sticktrace->AttachStickrun(
+			m_stickrun,
+			OnScriptCallback,
+			this,
+			100
+		);
+
+		// Do not call Stickrun::NewSession when saving.
+		m_stickrun->DoString(&error_message, script1, "script1");
+
+	}
+	else if (name == "script2")
+	{
+		script2 = code;
+
+		m_sticktrace->DetachStickrun();
+		delete m_stickrun;
+		m_stickrun = new Stickrun(luastick_init);
+		m_sticktrace->AttachStickrun(
+			m_stickrun,
+			OnScriptCallback,
+			this,
+			100
+		);
+
+		// Do not call Stickrun::NewSession when saving.
+		m_stickrun->DoSandboxString(&error_message, "SCR2", script2, "script2");
+	}
 }
 
 BEGIN_MESSAGE_MAP(CStickTestDlg, CDialogEx)
@@ -260,12 +301,42 @@ BEGIN_MESSAGE_MAP(CStickTestDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_TEST8, &CStickTestDlg::OnBnClickedBtnTest8)
 	ON_BN_CLICKED(IDC_BTN_TEST9, &CStickTestDlg::OnBnClickedBtnTest9)
 	ON_BN_CLICKED(IDC_BTN_INIT_STICKRUN, &CStickTestDlg::OnBnClickedBtnInitStickrun)
-//	ON_WM_CLOSE()
+	ON_MESSAGE(WM_USER_COMMAND, &CStickTestDlg::OnUserCommand)
+
 END_MESSAGE_MAP()
 
 // CStickTestDlg メッセージ ハンドラー
 
-void CStickTestDlg::OnScriptCallback(lua_State * luaState, lua_Debug * luaDebug, void * userData, Sticktrace::Mode mode, Sticktrace* sticktrace)
+bool CStickTestDlg::DGT_DebuggerCallback(SticktraceDef::DebuggerCommand command, SticktraceDef::DebuggerCallbackParam * param)
+{
+	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
+	m_incmd.command = command;
+	m_incmd.strParam1 = param->strParam1;
+	m_incmd.strParam2 = param->strParam2;
+	PostMessage(WM_USER_COMMAND);
+	// Wait for the command to be accepted by the Sticktrace Window.
+	if (!acs.SleepConditionVariable(10000))
+		return false;
+	return true;
+}
+
+bool CStickTestDlg::DGT_DebuggerCallback(
+	unsigned int dialogId, 
+	SticktraceDef::DebuggerCommand command,
+	SticktraceDef::DebuggerCallbackParam* param,
+	void* userData
+)
+{
+	return ((CStickTestDlg*)userData)->DGT_DebuggerCallback(command, param);
+}
+
+void CStickTestDlg::OnScriptCallback(
+	lua_State * luaState,
+	lua_Debug * luaDebug,
+	void * userData,
+	SticktraceDef::Mode mode,
+	Sticktrace* sticktrace
+)
 {
 	MSG msg;
 	if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -284,7 +355,24 @@ BOOL CStickTestDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 大きいアイコンの設定
 	SetIcon(m_hIcon, FALSE);		// 小さいアイコンの設定
 
-	m_sticktrace.Initialize();
+//----- 20.06.13 Fukushiro M. 削除始 ()-----
+//	m_stickrun = new Stickrun(luastick_init);
+//	m_sticktrace = new Sticktrace();
+//	m_sticktrace->Initialize(
+//		L"Dynamic Draw Project",
+//		L"",
+//		L"StickTest",
+//		(DWORD)-1,
+//		DGT_DebuggerCallback,
+//		this
+//	);
+//	m_sticktrace->AttachStickrun(
+//		m_stickrun,
+//		OnScriptCallback,
+//		this,
+//		100
+//	);
+//----- 20.06.13 Fukushiro M. 削除終 ()-----
 
 	OnBnClickedBtnInitStickrun();
 	
@@ -365,7 +453,9 @@ void CStickTestDlg::OnBnClickedBtnTest1()
 
 void CStickTestDlg::OnDestroy()
 {
-	m_sticktrace.Terminate();
+	m_sticktrace->Terminate();
+	delete m_sticktrace;
+	m_sticktrace = nullptr;
 	delete m_stickrun;
 	m_stickrun = nullptr;
 
@@ -451,6 +541,30 @@ void CStickTestDlg::OnBnClickedBtnTest9()
 {
 	std::string error_message;
 	m_stickrun->CallFunction(&error_message, "SCR2.Test9");
+}
+
+LRESULT CStickTestDlg::OnUserCommand(WPARAM, LPARAM)
+{
+	SticktraceDef::DebuggerCommand command;
+	std::string strParam1;
+	std::string strParam2;
+	{
+		AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
+		command = m_incmd.command;
+		strParam1 = m_incmd.strParam1;
+		strParam2 = m_incmd.strParam2;
+		m_incmd.command = SticktraceDef::DebuggerCommand::NONE;
+		acs.WakeConditionVariable();
+	}
+	switch (command)
+	{
+	case SticktraceDef::DebuggerCommand::SAVE_SCRIPT:
+		OnSaveScript(strParam1, strParam2);
+		break;
+	default:
+		break;
+	}
+	return 1;
 }
 
 void ShowMessage(const wchar_t* text)
@@ -854,13 +968,13 @@ tolua_endmodule(tolua_S);
   
  void CStickTestDlg::OnBnClickedBtnShowEditor()
  {
-	 m_sticktrace.ShowWindow(true);
+	 m_sticktrace->ShowWindow(true);
  }
 
 
  void CStickTestDlg::OnBnClickedBtnHideEditor()
  {
-	 m_sticktrace.ShowWindow(false);
+	 m_sticktrace->ShowWindow(false);
  }
 
 
@@ -872,51 +986,76 @@ tolua_endmodule(tolua_S);
 
  void CStickTestDlg::OnBnClickedBtnStopScript()
  {
-	 m_sticktrace.SetScriptMode(Sticktrace::Mode::STOP);
+	 m_sticktrace->SetScriptMode(SticktraceDef::Mode::STOP);
  }
 
 
  void CStickTestDlg::OnBnClickedBtnResumeScript()
  {
-	 m_sticktrace.SetScriptMode(Sticktrace::Mode::RUN);
+	 m_sticktrace->SetScriptMode(SticktraceDef::Mode::RUN);
  }
 
 
  void CStickTestDlg::OnBnClickedBtnSuspendScript()
  {
-	 m_sticktrace.SetScriptMode(Sticktrace::Mode::SUSPEND);
+	 m_sticktrace->SetScriptMode(SticktraceDef::Mode::SUSPEND);
  }
 
 
  void CStickTestDlg::OnBnClickedBtnNextScript()
  {
-	 m_sticktrace.SetScriptMode(Sticktrace::Mode::PROCEED_NEXT);
+	 m_sticktrace->SetScriptMode(SticktraceDef::Mode::PROCEED_NEXT);
  }
 
  void CStickTestDlg::OnBnClickedBtnInitStickrun()
  {
-	 if (m_stickrun != nullptr)
-	 {
-		 m_sticktrace.ClearStickrun();
-		 delete m_stickrun;
-		 m_stickrun = nullptr;
-	 }
-	 m_stickrun = new Stickrun(luastick_init);
-	 m_sticktrace.SetStickrun(m_stickrun, OnScriptCallback, this, 100);
+	if (m_sticktrace != nullptr)
+	{
+		m_sticktrace->Terminate();
+		delete m_sticktrace;
+		m_sticktrace = nullptr;
+		delete m_stickrun;
+		m_stickrun = nullptr;
+	}
+	m_stickrun = new Stickrun(luastick_init);
+	m_sticktrace = new Sticktrace();
+	m_sticktrace->Initialize(
+		m_hWnd,
+		L"Dynamic Draw Project",
+		L"",
+		L"StickTest",
+		(DWORD)-1,
+		DGT_DebuggerCallback,
+		this
+	);
+	m_sticktrace->AttachStickrun(
+		m_stickrun,
+		OnScriptCallback,
+		this,
+		100
+	);
 
 	 m_stickrun->NewSession();
-
 	 std::string error_message;
 	 m_stickrun->DoString(&error_message, script1, "script1");
-
 	 m_stickrun->MakeSandboxEnv("SCR2", true);
 	 m_stickrun->DoSandboxString(&error_message, "SCR2", script2, "script2");
+
+	 //::Sleep(2000);
+	 // ::BringWindowToTop(m_hWnd);
+	 //::SetForegroundWindow(m_hWnd);
+	 //::SetFocus(m_hWnd);
 }
 
 
  void CStickTestDlg::OnOK()
  {
-	 if (!m_sticktrace.Terminate())
+	 if (m_sticktrace->IsScriptModified())
+	 {
+		 MessageBox(L"Save the script before to close the window.");
+		 return;
+	 }
+	 if (!m_sticktrace->Terminate())
 	 {
 		 MessageBox(L"You have to stop the script running before you quit the application.");
 		 return;
@@ -928,7 +1067,7 @@ tolua_endmodule(tolua_S);
 
  void CStickTestDlg::OnCancel()
  {
-	 if (!m_sticktrace.Terminate())
+	 if (!m_sticktrace->Terminate())
 	 {
 		 MessageBox(L"You have to stop the script running before you quit the application.");
 		 return;

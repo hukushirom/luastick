@@ -59,7 +59,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;LIBMBA_API=extern;FD_ENGLISH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\lua-5.4.0\src;..\..\LuaStick\src;..\..\LuaStick\files;libmba-0.9.1\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\lua-5.4.3\src;..\..\LuaStick\src;..\..\LuaStick\files;libmba-0.9.1\src</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -86,7 +86,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_USRDLL;LIBMBA_API=extern;FD_ENGLISH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\lua-5.4.0\src;..\..\LuaStick\src;..\..\LuaStick\files;libmba-0.9.1\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\lua-5.4.3\src;..\..\LuaStick\src;..\..\LuaStick\files;libmba-0.9.1\src</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>

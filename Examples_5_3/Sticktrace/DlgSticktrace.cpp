@@ -130,6 +130,8 @@ BEGIN_MESSAGE_MAP(CDlgSticktrace, BASE_CLASS)
 	ON_BN_CLICKED(IDC_SCE_BTN_DELETE_WATCH, &CDlgSticktrace::OnBnClickedSceBtnDeleteWatch)
 	ON_BN_CLICKED(IDC_SCE_CHK_DEBUG_MODE, &CDlgSticktrace::OnBnClickedSceChkDebugMode)
 	ON_BN_CLICKED(IDC_SCE_BTN_FIND_NEXT, &CDlgSticktrace::OnBnClickedSceBtnFindNext)
+// 21.05.07 Fukushiro M. 1行追加 ()
+	ON_BN_CLICKED(IDC_SCE_BTN_GOTO_LINE, &CDlgSticktrace::OnBnClickedSceBtnGotoLine)
 	ON_EN_CHANGE(IDC_SCE_EDT_KEYWORD, &CDlgSticktrace::OnChangeSceEdtKeyword)
 	ON_WM_INITMENUPOPUP()
 	ON_MESSAGE(WM_USER_DDEDIT_DBLCLKED, &CDlgSticktrace::OnUserDdEditDblClked)
@@ -2690,6 +2692,13 @@ void CDlgSticktrace::OnBnClickedSceBtnFindNext()
 {
 	PostMessage(WM_COMMAND, ID_EDIT_FIND_NEXT_TEXT);
 }
+
+//----- 21.05.07 Fukushiro M. 追加始 ()-----
+void CDlgSticktrace::OnBnClickedSceBtnGotoLine()
+{
+	PostMessage(WM_COMMAND, ID_SCE_EDIT_GOTO_LINE);
+}
+//----- 21.05.07 Fukushiro M. 追加終 ()-----
 
 void CDlgSticktrace::OnChangeSceEdtKeyword()
 {

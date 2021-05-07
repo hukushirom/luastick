@@ -5,6 +5,7 @@
 #include "Resource.h"
 #include "Astrwstr.h"
 #include "UtilString.h"
+#include "UtilWin.h"
 #include "UtilStr.h"
 #include "UtilGraphics.h"	// For FCEditDraw.
 #include "RegBase.h"		// For FCRegBase.
@@ -28,13 +29,18 @@ CDlgSticktrace::CDlgSticktrace()
 	, m_accelerator(NULL)
 	, m_bIsBtnOnPaneBorder(FALSE)	// ペインボーダー上でボタンが押されているか？
 	, m_hwndWhenBorderMoving(NULL)
+	, m_DGT_debuggerCallbackFunc(nullptr)
+	, m_debuggerCallbackData(nullptr)
+	, m_isScriptEditable(FALSE)
 {
 	m_breakpointFast.suspendMode = (LONG)Mode::STOP;
 	m_breakpointFast.breakpointCount = 0;
 
+	m_scriptModify.isScriptModified = 0;	// 1:Script is modified/0:Not modified.
+
 	m_breakpointSlow.m_runToCursorLineIndex = -1;
 
-	m_debugMode.debugMode = 0;
+	m_debugMode.debugMode = 1;
 }
 
 CDlgSticktrace::~CDlgSticktrace()
@@ -49,13 +55,13 @@ void CDlgSticktrace::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SCE_EDT_ERROR, m_errorout);
 }
 
-
 BEGIN_MESSAGE_MAP(CDlgSticktrace, BASE_CLASS)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_SCE_TAB_OUTPUT, &CDlgSticktrace::OnTcnSelchangeSceTabOutput)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_WM_MOUSEMOVE()
 	ON_WM_TIMER()
+	ON_NOTIFY(TCN_SELCHANGING, IDC_SCE_TAB_SCRIPT, &CDlgSticktrace::OnTcnSelchangingSceTabScript)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_SCE_TAB_SCRIPT, &CDlgSticktrace::OnTcnSelchangeSceTabScript)
 	ON_MESSAGE(WM_USER_COMMAND, &CDlgSticktrace::OnUserCommand)
 	ON_MESSAGE(WM_USER_BREAKPOINT_UPDATED, &CDlgSticktrace::OnUserBreakpointUpdated)
@@ -65,6 +71,12 @@ BEGIN_MESSAGE_MAP(CDlgSticktrace, BASE_CLASS)
 	ON_BN_CLICKED(IDC_SCE_BTN_DEBUG_STOP, &CDlgSticktrace::OnBnClickedSceBtnDebugStop)
 	ON_BN_CLICKED(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT, &CDlgSticktrace::OnBnClickedSceBtnDebugStepToNext)
 	ON_MESSAGE(WM_IDLEUPDATECMDUI, &CDlgSticktrace::OnIdleUpdateCmdUI)
+	ON_COMMAND(ID_FILE_SAVE, &CDlgSticktrace::OnFileSave)
+	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE, &CDlgSticktrace::OnUpdateFileSave)
+	ON_COMMAND(ID_EDIT_SCRIPT_EDIT, &CDlgSticktrace::OnEditScriptEdit)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_SCRIPT_EDIT, &CDlgSticktrace::OnUpdateEditScriptEdit)
+	ON_COMMAND(ID_SCE_EDIT_INPUT_LINE, &CDlgSticktrace::OnSceEditInputLine)
+	ON_UPDATE_COMMAND_UI(ID_SCE_EDIT_INPUT_LINE, &CDlgSticktrace::OnUpdateEditInputLine)
 	ON_COMMAND(ID_SCE_EDIT_GOTO_LINE, &CDlgSticktrace::OnSceEditGotoLine)
 	ON_UPDATE_COMMAND_UI(ID_SCE_EDIT_GOTO_LINE, &CDlgSticktrace::OnUpdateSceEditGotoLine)
 	ON_COMMAND(ID_SCE_WIN_KEYWORD, &CDlgSticktrace::OnSceWinKeyword)
@@ -73,10 +85,10 @@ BEGIN_MESSAGE_MAP(CDlgSticktrace, BASE_CLASS)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_FIND_NEXT_TEXT, &CDlgSticktrace::OnUpdateEditFindNextText)
 	ON_COMMAND(ID_EDIT_FIND_PREV_TEXT, &CDlgSticktrace::OnEditFindPrevText)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_FIND_PREV_TEXT, &CDlgSticktrace::OnUpdateEditFindPrevText)
-	ON_COMMAND(ID_SCE_OUTWIN_GOTO_LOCATION, &CDlgSticktrace::OnSceOutwinGotoLocation)
-	ON_UPDATE_COMMAND_UI(ID_SCE_OUTWIN_GOTO_LOCATION, &CDlgSticktrace::OnUpdateSceOutwinGotoLocation)
-	ON_COMMAND(ID_SCE_OUTWIN_CLEAR, &CDlgSticktrace::OnSceOutwinClear)
-	ON_UPDATE_COMMAND_UI(ID_SCE_OUTWIN_CLEAR, &CDlgSticktrace::OnUpdateSceOutwinClear)
+	ON_COMMAND(ID_SCE_WIN_CLEAR_ERROR, &CDlgSticktrace::OnSceWinClearError)
+	ON_UPDATE_COMMAND_UI(ID_SCE_WIN_CLEAR_ERROR, &CDlgSticktrace::OnUpdateSceWinClearError)
+	ON_COMMAND(ID_SCE_WIN_CLEAR_OUTPUT, &CDlgSticktrace::OnSceWinClearOutput)
+	ON_UPDATE_COMMAND_UI(ID_SCE_WIN_CLEAR_OUTPUT, &CDlgSticktrace::OnUpdateSceWinClearOutput)
 	ON_COMMAND(ID_SCE_DEBUG_TOGGLE_BREAKPOINT, &CDlgSticktrace::OnSceDebugToggleBreakpoint)
 	ON_UPDATE_COMMAND_UI(ID_SCE_DEBUG_TOGGLE_BREAKPOINT, &CDlgSticktrace::OnUpdateSceDebugToggleBreakpoint)
 	ON_COMMAND(ID_SCE_DEBUG_CLEAR_BREAKPOINT, &CDlgSticktrace::OnSceDebugClearBreakpoint)
@@ -111,20 +123,27 @@ BEGIN_MESSAGE_MAP(CDlgSticktrace, BASE_CLASS)
 	ON_UPDATE_COMMAND_UI(ID_SCE_WIN_VARIABLE_VALUE, &CDlgSticktrace::OnUpdateSceWinVariableValue)
 	ON_COMMAND(ID_HELP, &CDlgSticktrace::OnHelp)
 	ON_UPDATE_COMMAND_UI(ID_HELP, &CDlgSticktrace::OnUpdateHelp)
+	ON_COMMAND(ID_OPTION_AUTO_ALTKEY, &CDlgSticktrace::OnOptionAutoAltkey)
+	ON_UPDATE_COMMAND_UI(ID_OPTION_AUTO_ALTKEY, &CDlgSticktrace::OnUpdateOptionAutoAltkey)
 	ON_BN_CLICKED(IDC_SCE_BTN_SET_VARIABLE, &CDlgSticktrace::OnBnClickedSceBtnSetVariable)
 	ON_BN_CLICKED(IDC_SCE_BTN_ADD_WATCH, &CDlgSticktrace::OnBnClickedSceBtnAddWatch)
 	ON_BN_CLICKED(IDC_SCE_BTN_DELETE_WATCH, &CDlgSticktrace::OnBnClickedSceBtnDeleteWatch)
-	ON_NOTIFY(NM_CLICK, IDC_SCE_LSV_WATCH, &CDlgSticktrace::OnNMClickSceLsvWatch)
+	ON_BN_CLICKED(IDC_SCE_CHK_DEBUG_MODE, &CDlgSticktrace::OnBnClickedSceChkDebugMode)
+	ON_BN_CLICKED(IDC_SCE_BTN_FIND_NEXT, &CDlgSticktrace::OnBnClickedSceBtnFindNext)
+// 21.05.07 Fukushiro M. 1行追加 ()
+	ON_BN_CLICKED(IDC_SCE_BTN_GOTO_LINE, &CDlgSticktrace::OnBnClickedSceBtnGotoLine)
+	ON_EN_CHANGE(IDC_SCE_EDT_KEYWORD, &CDlgSticktrace::OnChangeSceEdtKeyword)
+	ON_WM_INITMENUPOPUP()
 	ON_MESSAGE(WM_USER_DDEDIT_DBLCLKED, &CDlgSticktrace::OnUserDdEditDblClked)
 	ON_MESSAGE(WM_USER_TEXT_EDIT_CURLINE_CHANGED, &CDlgSticktrace::OnUserTextEditCurlineChanged)
-	ON_BN_CLICKED(IDC_SCE_CHK_DEBUG_MODE, &CDlgSticktrace::OnBnClickedSceChkDebugMode)
-	ON_WM_INITMENUPOPUP()
+	ON_NOTIFY(NM_CLICK, IDC_SCE_LSV_WATCH, &CDlgSticktrace::OnNMClickSceLsvWatch)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_SCE_LSV_WATCH, &CDlgSticktrace::OnLvnItemchangedSceLsvWatch)
 	ON_WM_DESTROY()
+	ON_WM_CTLCOLOR()
+	ON_WM_NCACTIVATE()
 END_MESSAGE_MAP()
 
 // CDlgSticktrace メッセージ ハンドラー。
-
 
 BOOL CDlgSticktrace::OnInitDialog()
 {
@@ -178,7 +197,7 @@ BOOL CDlgSticktrace::OnInitDialog()
 	// フォント設定。
 	// スクリプトエディター。
 	FCRegBase::InitRegFont(m_font, FDFT_SCRIPT_DEBUGGER);
-	GetDlgItem(IDC_SCE_EDT_SCRIPT)->SetFont(&m_font);
+	m_textEditor.SetFont(&m_font);
 
 	// スクリプトIDリストを更新。
 	UpdateScriptIdList();
@@ -203,15 +222,17 @@ BOOL CDlgSticktrace::OnInitDialog()
 	m_textEditor.SetLimitText(640000);
 	m_textEditor.SetContextMenu(IDR_POPUP, 0);
 	m_textEditor.SetAccelerator(IDR_TEXT_EDITOR_ACCELERATOR);
-	m_textEditor.SetReadOnly(TRUE);
+	m_textEditor.SetReadOnly(!m_isScriptEditable);
 
 	const auto isDebugMode = (::InterlockedCompareExchange(&m_debugMode.debugMode, 0, 0) != 0);
 	m_textEditor.ActivateBreakpoint(isDebugMode);
 	m_textEditor.SetTabSize(2);
-	//int s[]{ 10, 20, 30, 40, 50 };
-	//m_textEditor.SetTabStops(5, s);
+	//tab[]{ 10, 20, 30, 40, 50 ... };
 	m_textEditor.SetTabStops(10);
-
+//----- 20.07.25 Fukushiro M. 追加始 ()-----
+	m_errorout.SetContextMenu(IDR_POPUP, 1);
+	m_output.SetContextMenu(IDR_POPUP, 1);
+//----- 20.07.25 Fukushiro M. 追加終 ()-----
 	//----- ウォッチリストコントロールの設定 -----
 	CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
 	// フォーカス無し状態でも選択マークが表示されるようにスタイル変更。
@@ -279,6 +300,66 @@ BOOL CDlgSticktrace::OnInitDialog()
 				  // 例外 : OCX プロパティ ページは必ず FALSE を返します。
 }
 
+void CDlgSticktrace::SetDebuggerCallback(SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc, void * debuggerCallbackData)
+{
+	m_DGT_debuggerCallbackFunc = DGT_debuggerCallbackFunc;
+	m_debuggerCallbackData = debuggerCallbackData;
+}
+
+/// <summary>
+/// Set the visibility of the debugger window.
+/// This function works at the main application's thread.
+/// </summary>
+/// <param name="show">true:Visible/false:Invisible</param>
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_Show(bool show)
+{
+	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
+	m_incmd.command = InCmd::Command::SHOW;
+	m_incmd.i64Param1 = show ? 1 : 0;
+	PostMessage(WM_USER_COMMAND);
+	// Wait for the command to be accepted by the Sticktrace Window.
+	if (!acs.SleepConditionVariable(10000))
+		return false;
+	return true;
+}
+
+/// <summary>
+/// Check the debugger window is visible or not.
+/// This function works at the main application's thread.
+/// </summary>
+/// <param name="isVisible">true:Visible/false:Invisible</param>
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_IsVisible(bool & isVisible)
+{
+	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
+	m_incmd.command = InCmd::Command::IS_VISIBLE;
+	PostMessage(WM_USER_COMMAND);
+	// Wait for the command to be accepted by the Sticktrace Window.
+	if (!acs.SleepConditionVariable(10000))
+		return false;
+	isVisible = (m_incmd.i64Param1 != 0);
+	return true;
+}
+
+/// <summary>
+/// Check the script is modified or not.
+/// This function works at the main application's thread.
+/// </summary>
+/// <param name="isModified">true:Modified/false:Not modified</param>
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_IsScriptModified(bool & isModified)
+{
+	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
+	m_incmd.command = InCmd::Command::IS_SCRIPT_MODIFIED;
+	PostMessage(WM_USER_COMMAND);
+	// Wait for the command to be accepted by the Sticktrace Window.
+	if (!acs.SleepConditionVariable(10000))
+		return false;
+	isModified = (m_incmd.i64Param1 != 0);
+	return true;
+}
+
 /// <summary>
 /// Tcs the set source.
 /// This function works at the main application's thread.
@@ -286,8 +367,8 @@ BOOL CDlgSticktrace::OnInitDialog()
 /// <param name="sandbox">Name of sandbox.</param>
 /// <param name="name">The name.</param>
 /// <param name="src">The source.</param>
-/// <returns></returns>
-bool CDlgSticktrace::TC_SetSource(const std::string& sandbox, const std::string& name, const std::string& src)
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_SetSource(const char * sandbox, const char * name, const char * src)
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = InCmd::Command::SET_SOURCE;
@@ -305,8 +386,8 @@ bool CDlgSticktrace::TC_SetSource(const std::string& sandbox, const std::string&
 /// Returns debug mode or not.
 /// This function works at the main application's thread.
 /// </summary>
-/// <returns></returns>
-bool CDlgSticktrace::TC_IsDebugMode()
+/// <returns>true:Debug mode/false:Not debug mode</returns>
+bool CDlgSticktrace::APT_IsDebugMode()
 {
 	return (::InterlockedCompareExchange(&m_debugMode.debugMode, 0, 0) != 0);
 }
@@ -318,8 +399,8 @@ bool CDlgSticktrace::TC_IsDebugMode()
 /// </summary>
 /// <param name="name">The name.</param>
 /// <param name="lineIndex">Index of the line.</param>
-/// <returns></returns>
-bool CDlgSticktrace::TC_IsBreakpoint(const char * name, int lineIndex)
+/// <returns>true:hit to the breakpoint/false:do not hit</returns>
+bool CDlgSticktrace::APT_IsBreakpoint(const char * name, int lineIndex)
 {
 	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
 	switch (mode)
@@ -331,6 +412,9 @@ bool CDlgSticktrace::TC_IsBreakpoint(const char * name, int lineIndex)
 	}
 	if (::InterlockedCompareExchange(&m_breakpointFast.breakpointCount, 0, 0) == 0)
 		return false;
+	if (::InterlockedCompareExchange(&m_scriptModify.isScriptModified, 0, 0) != 0)
+		return false;
+
 	{
 		AutoLeaveCS acs(m_breakpointSlow.cs);
 		if ((int)m_breakpointSlow.lineIndexToIsBreak.size() <= lineIndex)
@@ -353,7 +437,7 @@ bool CDlgSticktrace::TC_IsBreakpoint(const char * name, int lineIndex)
 ///// This function works at the main application's thread.
 ///// </summary>
 ///// <returns></returns>
-//bool CDlgSticktrace::TC_IsSuspended()
+//bool CDlgSticktrace::APT_IsSuspended()
 //{
 //	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
 //	switch (mode)
@@ -370,7 +454,7 @@ bool CDlgSticktrace::TC_IsBreakpoint(const char * name, int lineIndex)
 ///// This function works at the main application's thread.
 ///// </summary>
 ///// <returns></returns>
-//int CDlgSticktrace::TC_GetMode()
+//int CDlgSticktrace::APT_GetMode()
 //{
 //	return (int)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
 //}
@@ -380,8 +464,8 @@ bool CDlgSticktrace::TC_IsBreakpoint(const char * name, int lineIndex)
 /// Tcs the on suspended.
 /// This function works at the main application's thread.
 /// </summary>
-/// <returns></returns>
-bool CDlgSticktrace::TC_OnSuspended()
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_OnSuspended()
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = InCmd::Command::ON_SUSPENDED;
@@ -396,8 +480,8 @@ bool CDlgSticktrace::TC_OnSuspended()
 /// Tcs the on suspended.
 /// This function works at the main application's thread.
 /// </summary>
-/// <returns></returns>
-bool CDlgSticktrace::TC_OnResumed()
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_OnResumed()
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = InCmd::Command::ON_RESUMED;
@@ -413,8 +497,8 @@ bool CDlgSticktrace::TC_OnResumed()
 /// </summary>
 /// <param name="name">The name.</param>
 /// <param name="lineIndex">Index of the line.</param>
-/// <returns></returns>
-bool CDlgSticktrace::TC_Jump(const char * name, int lineIndex)
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_Jump(const char * name, int lineIndex)
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = InCmd::Command::JUMP;
@@ -429,9 +513,10 @@ bool CDlgSticktrace::TC_Jump(const char * name, int lineIndex)
 
 /// <summary>
 /// This function notify the beginning of new session.
+/// This function works at the main application's thread.
 /// </summary>
-/// <returns></returns>
-bool CDlgSticktrace::TC_NewSession()
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_NewSession()
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = InCmd::Command::NEW_SESSION;
@@ -446,11 +531,12 @@ bool CDlgSticktrace::TC_NewSession()
 /// Tcs the on start.
 /// This function works at the main application's thread.
 /// </summary>
-/// <returns></returns>
-bool CDlgSticktrace::TC_OnStart()
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_OnStart(SticktraceDef::ExecType execType)
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = InCmd::Command::ON_START;
+	m_incmd.i64Param1 = (__int64)execType;
 	PostMessage(WM_USER_COMMAND);
 	// Wait for the command to be accepted by the Sticktrace Window.
 	if (!acs.SleepConditionVariable(10000))
@@ -462,11 +548,12 @@ bool CDlgSticktrace::TC_OnStart()
 /// Tcs the on stop.
 /// This function works at the main application's thread.
 /// </summary>
-/// <returns></returns>
-bool CDlgSticktrace::TC_OnStop()
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_OnStop(SticktraceDef::ExecType execType)
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = InCmd::Command::ON_STOP;
+	m_incmd.i64Param1 = (__int64)execType;
 	PostMessage(WM_USER_COMMAND);
 	// Wait for the command to be accepted by the Sticktrace Window.
 	if (!acs.SleepConditionVariable(10000))
@@ -479,8 +566,8 @@ bool CDlgSticktrace::TC_OnStop()
 /// This function works at the main application's thread.
 /// </summary>
 /// <param name="message">The message.</param>
-/// <returns></returns>
-bool CDlgSticktrace::TC_OutputError(const char * message)
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_OutputError(const char * message)
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = InCmd::Command::OUTPUT_ERROR;
@@ -497,8 +584,8 @@ bool CDlgSticktrace::TC_OutputError(const char * message)
 /// This function works at the main application's thread.
 /// </summary>
 /// <param name="message">The message.</param>
-/// <returns></returns>
-bool CDlgSticktrace::TC_OutputDebug(const char * message)
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_OutputDebug(const char * message)
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = InCmd::Command::OUTPUT_DEBUG;
@@ -515,8 +602,8 @@ bool CDlgSticktrace::TC_OutputDebug(const char * message)
 /// This function works at the main application's thread.
 /// </summary>
 /// <param name="data">The data.</param>
-/// <returns></returns>
-bool CDlgSticktrace::TC_SetWatch(const std::string& data)
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_SetWatch(const char * data)
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = InCmd::Command::SET_WATCH;
@@ -532,7 +619,8 @@ bool CDlgSticktrace::TC_SetWatch(const std::string& data)
 /// Notification of variable setting.
 /// </summary>
 /// <param name="succeeded">true:variable was set/false:not set</param>
-bool CDlgSticktrace::TC_SetVariableNotify(bool succeeded)
+/// <returns>true:accepted/false:timeout</returns>
+bool CDlgSticktrace::APT_SetVariableNotify(bool succeeded)
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = InCmd::Command::SET_VARIABLE_NOTIFY;
@@ -545,24 +633,24 @@ bool CDlgSticktrace::TC_SetVariableNotify(bool succeeded)
 }
 
 /// <summary>
-/// Tcs the get command.
+/// Wait any command is set by debugger window.
 /// This function works at the main application's thread.
 /// </summary>
 /// <param name="paramA">The parameter.</param>
 /// <param name="waitMilliseconds">The wait milliseconds.</param>
-/// <returns></returns>
-SticktraceCommand CDlgSticktrace::TC_GetCommand(std::string & paramA, uint32_t waitMilliseconds)
+/// <returns>Command</returns>
+SticktraceDef::SuspendCommand CDlgSticktrace::APT_WaitCommandIsSet(StickString & paramA, uint32_t waitMilliseconds)
 {
 	AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
-	if (m_outcmd.command == SticktraceCommand::NONE)
+	if (m_outcmd.command == SticktraceDef::SuspendCommand::NONE)
 	{
 		// Wait for being set the command by the Sticktrace Window.
 		if (!acs.SleepConditionVariable(waitMilliseconds))
-			return SticktraceCommand::NONE;
+			return SticktraceDef::SuspendCommand::NONE;
 	}
-	paramA = m_outcmd.strParamA;
-	const auto command = m_outcmd.command;
-	m_outcmd.command = SticktraceCommand::NONE;
+	paramA = m_outcmd.strParamA.c_str();
+	auto command = m_outcmd.command;
+	m_outcmd.command = SticktraceDef::SuspendCommand::NONE;
 	return command;
 }
 
@@ -682,7 +770,7 @@ void CDlgSticktrace::UpdateWatchWindow()
 
 	{
 		AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
-		m_outcmd.command = SticktraceCommand::GET_VARIABLE;
+		m_outcmd.command = SticktraceDef::SuspendCommand::GET_VARIABLE;
 		m_outcmd.strParamA = data;
 		acs.WakeConditionVariable();
 	}
@@ -780,6 +868,11 @@ void CDlgSticktrace::InitLayoutAll()
 		IDC_SCE_BTN_SET_VARIABLE,
 		IDC_SCE_STC_LINE_NUMBER			// 行番号
 	);
+
+	// ウィンドウの右下と左下に追従して移動。
+	InitLayout(FCDlgLayoutRec::HOOK_LEFT | FCDlgLayoutRec::HOOK_RIGHT | FCDlgLayoutRec::HOOK_BOTTOM,
+		IDC_SCE_STC_MESSAGE
+	);
 } // void CDlgSticktrace::InitLayoutAll ()
 
 CRect CDlgSticktrace::GetBorderRect() const
@@ -815,6 +908,7 @@ void CDlgSticktrace::MoveBorder(int dx)
 		IDC_SCE_LSV_WATCH,				// ウォッチウィンドウ。
 		IDC_SCE_EDT_VARIABLE_NAME,		// 変数名ウィンドウ。
 		IDC_SCE_EDT_VARIABLE_VALUE,		// 変数値ウィンドウ。
+		IDC_SCE_STC_MESSAGE,			// メッセージ
 		IDC_SCE_STC_LINE_NUMBER,		// 行番号。
 	};
 	for (int i = 0; i != _countof(ids); i++)
@@ -826,6 +920,7 @@ void CDlgSticktrace::MoveBorder(int dx)
 		{
 		case IDC_SCE_TAB_SCRIPT:				// Tab control for script.
 		case IDC_SCE_EDT_SCRIPT:				// スクリプトウィンドウ。
+		case IDC_SCE_STC_MESSAGE:				// メッセージ。
 			rt.right += dx;
 			break;
 		case IDC_SCE_STC_BORDER:				// ボーダーウィンドウ
@@ -880,8 +975,9 @@ void CDlgSticktrace::SetSource(const std::string & sandbox, const std::string & 
 		tabCtrl->InsertItem(0, L"");
 	tabCtrl->SetCurSel(curIndex);
 
-	OnTcnSelchangeSceTabScript(nullptr, nullptr);
+	m_textEditor.ClearMarker(CFCTextEdit::MarkerType::MARKER_NOTIFY);
 
+	OnTcnSelchangeSceTabScript(nullptr, nullptr);
 }
 
 /// <summary>
@@ -980,10 +1076,17 @@ bool CDlgSticktrace::JumpErrorLocation()
 /// <returns></returns>
 void CDlgSticktrace::NewSession()
 {
+	m_textEditor.SetWindowText(L"");
+	m_textEditor.SetContentName("");
+	m_textEditor.ClearAllMarker();
+	m_sandbox.clear();
 	// Clear the error message window.
-	OutputError("");
-	// Clear the error position mark.
-	Jump("", -1, CFCTextEdit::MARKER_NOTIFY, false);
+	OnSceWinClearError();
+	OnSceWinClearOutput();
+	m_isScriptEditable = FALSE;
+	OnSceDebugClearBreakpoint();
+	m_sourceNameArray.clear();
+	m_nameToSandSource.clear();
 }
 
 /// <summary>
@@ -991,17 +1094,23 @@ void CDlgSticktrace::NewSession()
 /// Usually this function is called from the main application asynchronously.
 /// This function works at the Sticktrace Window's thread.
 /// </summary>
-void CDlgSticktrace::OnStart()
+void CDlgSticktrace::OnStart(SticktraceDef::ExecType execType)
 {
 	::InterlockedExchange(&m_breakpointFast.suspendMode, (LONG)Mode::RUN);
-	// Update the display status of script control buttons.
-	PostMessage(WM_IDLEUPDATECMDUI);
-//----- 20.06.05  削除始 ()-----
-//	// Clear the error message window.
-//	OutputError("");
-//	// Clear the error position mark.
-//	Jump("", -1, CFCTextEdit::MARKER_NOTIFY, false);
-//----- 20.06.05  削除終 ()-----
+
+	m_textEditor.ClearMarker(CFCTextEdit::MarkerType::MARKER_NOTIFY);
+
+	// If this function is called via function calling, the editor should not recover the editable mode at OnStop function.
+	// Because the function calling might be done frequently.
+	if (execType == SticktraceDef::ExecType::ON_CALL)
+		m_isScriptEditable = FALSE;
+	if (!m_textEditor.IsReadOnly())
+	{
+		// You cannot edit script while script running.
+		m_textEditor.SetReadOnly(TRUE);
+		// Update the display status of script control buttons.
+		PostMessage(WM_IDLEUPDATECMDUI);
+	}
 }
 
 /// <summary>
@@ -1009,11 +1118,19 @@ void CDlgSticktrace::OnStart()
 /// Usually this function is called from the main application asynchronously.
 /// This function works at the Sticktrace Window's thread.
 /// </summary>
-void CDlgSticktrace::OnStop()
+void CDlgSticktrace::OnStop(SticktraceDef::ExecType execType)
 {
 	::InterlockedExchange(&m_breakpointFast.suspendMode, (LONG)Mode::STOP);
-	// Update the display status of script control buttons.
-	PostMessage(WM_IDLEUPDATECMDUI);
+	if (m_isScriptEditable != !m_textEditor.IsReadOnly())
+	{
+		m_textEditor.SetReadOnly(!m_isScriptEditable);
+		// Update the display status of script control buttons.
+		PostMessage(WM_IDLEUPDATECMDUI);
+	}
+	// Erase the trace line marker on the text editor.
+	m_textEditor.ClearMarker(CFCTextEdit::MARKER_TRACELINE);
+	if (m_textEditor.IsThereMarkerRegion())
+		m_textEditor.RedrawMarker();
 }
 
 /// <summary>
@@ -1067,7 +1184,13 @@ void CDlgSticktrace::OutputError(const std::string & message)
 {
 	std::wstring wmessage;
 	Astrwstr::astr_to_wstr(wmessage, message);
-	m_errorout.SetWindowText(wmessage.c_str());
+// 20.07.16 Fukushiro M. 1行変更 ()
+//	m_errorout.SetWindowText(wmessage.c_str());
+	if (wmessage.back() != L'\n')
+		wmessage += L"\r\n";
+	auto len = m_errorout.GetWindowTextLength();
+	m_errorout.SetSel(len, len);
+	m_errorout.ReplaceSel(wmessage.c_str());
 }
 
 /// <summary>
@@ -1094,7 +1217,7 @@ void CDlgSticktrace::OutputDebug(const std::string & message)
 void CDlgSticktrace::SetWatch(const std::string & data)
 {
 	auto receiveddata = data.c_str();
-	std::vector<WatchInfo> varIconIndentNameTypeValueArray;
+	std::vector<SticktraceDef::WatchInfo> varIconIndentNameTypeValueArray;
 	Stickutil::Unserialize(varIconIndentNameTypeValueArray, receiveddata);
 	// ウォッチウィンドウ。
 	CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
@@ -1352,6 +1475,26 @@ void CDlgSticktrace::OnTimer(UINT_PTR nIDEvent)
 }
 
 /// <summary>
+/// Called when the script tab control selection will be changed.
+/// </summary>
+/// <param name="pNMHDR">The p NMHDR.</param>
+/// <param name="pResult">The p result.</param>
+void CDlgSticktrace::OnTcnSelchangingSceTabScript(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	if (m_textEditor.IsModified())
+	{
+		MessageBox(L"Script was changed. Save it before changing the selection of the script tab.", nullptr, MB_OK);
+		// Inhibit to change the tab selection.
+		*pResult = 1;
+	}
+	else
+	{
+		// Allow to change the tab selection.
+		*pResult = 0;
+	}
+}
+
+/// <summary>
 /// Called when the script tab control selection was changed.
 /// </summary>
 /// <param name="pNMHDR">The p NMHDR.</param>
@@ -1361,16 +1504,32 @@ void CDlgSticktrace::OnTcnSelchangeSceTabScript(NMHDR *pNMHDR, LRESULT *pResult)
 	CTabCtrl* tabCtrl = (CTabCtrl*)GetDlgItem(IDC_SCE_TAB_SCRIPT);
 	const auto & scriptName = m_sourceNameArray.at(tabCtrl->GetCurSel());
 	const auto & sand_src = m_nameToSandSource.at(scriptName);
-	m_sandbox = sand_src.first;
-	m_textEditor.SetContentName(scriptName);
-	m_textEditor.SetWindowText(sand_src.second.c_str());
-	// SetDlgItemText(IDC_SCE_EDT_SCRIPT, src.c_str());
+
+	std::wstring wtext;
+	UtilWin::GetWindowText(&m_textEditor, wtext);
+	if (
+		m_sandbox != sand_src.first ||
+		m_textEditor.GetContentName() != scriptName ||
+		wtext != sand_src.second
+		)
+	{
+		// Do not reset the source code to the editor, if the source code is not changed.
+		// Because this function is called when the source code is saved, not only when the tab selection changing.
+		m_sandbox = sand_src.first;
+		m_textEditor.SetContentName(scriptName);
+		m_textEditor.SetWindowText(sand_src.second.c_str());
+	}
+	else
+	{
+		m_textEditor.ResetModified();
+	}
+
 	if (pResult != nullptr) *pResult = 0;
 }
 
 LRESULT CDlgSticktrace::OnUserCommand(WPARAM, LPARAM)
 {
-	InCmd::Command command;
+	CDlgSticktrace::InCmd::Command command;
 	std::string strParam1;
 	std::string strParam2;
 	std::string strParam3;
@@ -1383,53 +1542,71 @@ LRESULT CDlgSticktrace::OnUserCommand(WPARAM, LPARAM)
 		strParam3 = m_incmd.strParam3;
 		i64Param1 = m_incmd.i64Param1;
 		m_incmd.command = CDlgSticktrace::InCmd::Command::NONE;
+
+		// Some commands that require the return value must be described before acs.WakeConditionVariable() is called.
+		switch (command)
+		{
+		case CDlgSticktrace::InCmd::Command::IS_VISIBLE:
+			m_incmd.i64Param1 = IsWindowVisible() ? 1 : 0;
+			break;
+		case CDlgSticktrace::InCmd::Command::IS_SCRIPT_MODIFIED:
+			m_incmd.i64Param1 = m_textEditor.IsModified() ? 1 : 0;
+			break;
+		}
+
+		switch (command)
+		{
+		case CDlgSticktrace::InCmd::Command::NONE:
+			break;
+		case CDlgSticktrace::InCmd::Command::SHOW:
+			ShowWindow((i64Param1 != 0) ? SW_SHOW : SW_HIDE);
+			EnableWindow((i64Param1 != 0));
+			if (i64Param1 != 0)
+				::SetForegroundWindow(m_hWnd);
+			break;
+		case CDlgSticktrace::InCmd::Command::SET_SOURCE:
+		{
+			std::wstring wsrc;
+			Astrwstr::astr_to_wstr(wsrc, strParam3);
+			SetSource(strParam1, strParam2, wsrc);
+			break;
+		}
+		case CDlgSticktrace::InCmd::Command::NEW_SESSION:
+			NewSession();
+			break;
+		case CDlgSticktrace::InCmd::Command::ON_START:
+			OnStart((SticktraceDef::ExecType)i64Param1);
+			break;
+		case CDlgSticktrace::InCmd::Command::ON_STOP:
+			OnStop((SticktraceDef::ExecType)i64Param1);
+			break;
+		case CDlgSticktrace::InCmd::Command::ON_SUSPENDED:
+			OnSuspended();
+			break;
+		case CDlgSticktrace::InCmd::Command::ON_RESUMED:
+			OnResumed();
+			break;
+		case CDlgSticktrace::InCmd::Command::JUMP:
+			Jump(strParam1, (int)i64Param1, CFCTextEdit::MarkerType::MARKER_TRACELINE, false);
+			break;
+		case CDlgSticktrace::InCmd::Command::OUTPUT_ERROR:
+			OutputError(strParam1);
+			break;
+		case CDlgSticktrace::InCmd::Command::OUTPUT_DEBUG:
+			OutputDebug(strParam1);
+			break;
+		case CDlgSticktrace::InCmd::Command::SET_WATCH:
+			SetWatch(strParam1);
+			break;
+		case CDlgSticktrace::InCmd::Command::SET_VARIABLE_NOTIFY:
+			SetVariableNotify(i64Param1 != 0);
+			break;
+		default:
+			break;
+		}
+
 		acs.WakeConditionVariable();
 	}
-	switch (command)
-	{
-	case CDlgSticktrace::InCmd::Command::NONE:
-		break;
-	case CDlgSticktrace::InCmd::Command::SET_SOURCE:
-	{
-		std::wstring wsrc;
-		Astrwstr::astr_to_wstr(wsrc, strParam3);
-		SetSource(strParam1, strParam2, wsrc);
-		break;
-	}
-	case CDlgSticktrace::InCmd::Command::NEW_SESSION:
-		NewSession();
-		break;
-	case CDlgSticktrace::InCmd::Command::ON_START:
-		OnStart();
-		break;
-	case CDlgSticktrace::InCmd::Command::ON_STOP:
-		OnStop();
-		break;
-	case CDlgSticktrace::InCmd::Command::ON_SUSPENDED:
-		OnSuspended();
-		break;
-	case CDlgSticktrace::InCmd::Command::ON_RESUMED:
-		OnResumed();
-		break;
-	case CDlgSticktrace::InCmd::Command::JUMP:
-		Jump(strParam1, (int)i64Param1, CFCTextEdit::MarkerType::MARKER_TRACELINE, false);
-		break;
-	case CDlgSticktrace::InCmd::Command::OUTPUT_ERROR:
-		OutputError(strParam1);
-		break;
-	case CDlgSticktrace::InCmd::Command::OUTPUT_DEBUG:
-		OutputDebug(strParam1);
-		break;
-	case CDlgSticktrace::InCmd::Command::SET_WATCH:
-		SetWatch(strParam1);
-		break;
-	case CDlgSticktrace::InCmd::Command::SET_VARIABLE_NOTIFY:
-		SetVariableNotify(i64Param1 != 0);
-		break;
-	default:
-		break;
-	}
-
 	return 1;
 }
 
@@ -1439,6 +1616,7 @@ LRESULT CDlgSticktrace::OnUserBreakpointUpdated(WPARAM, LPARAM)
 	{
 		AutoLeaveCS acs(m_breakpointSlow.cs);
 		m_breakpointSlow.lineIndexToIsBreak.clear();
+		m_breakpointSlow.lineIndexAndSourceNameSet.clear();
 		for (const auto & bp : breakpoint)
 		{
 			if ((int)m_breakpointSlow.lineIndexToIsBreak.size() <= bp.first.second)
@@ -1488,183 +1666,329 @@ LRESULT CDlgSticktrace::OnUserTextEditMarkerClicked(WPARAM wParam, LPARAM lParam
 
 void CDlgSticktrace::OnBnClickedSceBtnDebugContinue()
 {
-	TRACE(L"OnBnClickedSceBtnDebugContinue\n");
+	// TRACE(L"OnBnClickedSceBtnDebugContinue\n");
 	// ::InterlockedCompareExchange(&m_breakpointFast.suspendMode, (LONG)Mode::RUN, (LONG)Mode::SUSPEND);
 	{
 		AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
-		m_outcmd.command = SticktraceCommand::RESUME;
+		m_outcmd.command = SticktraceDef::SuspendCommand::RESUME;
 		acs.WakeConditionVariable();
 	}
-	// // Update the display status of script control buttons.
-	// PostMessage(WM_IDLEUPDATECMDUI);
-	::SetFocus(NULL);
+//----- 20.07.16 Fukushiro M. 削除始 ()-----
+//	// // Update the display status of script control buttons.
+//	// PostMessage(WM_IDLEUPDATECMDUI);
+//	::SetFocus(NULL);
+//----- 20.07.16 Fukushiro M. 削除終 ()-----
+	m_textEditor.SetFocus();
 	// (CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)
 }
 
 
 void CDlgSticktrace::OnBnClickedSceBtnDebugBreak()
 {
-	TRACE(L"OnBnClickedSceBtnDebugBreak\n");
+	// TRACE(L"OnBnClickedSceBtnDebugBreak\n");
 
 	::InterlockedCompareExchange(&m_breakpointFast.suspendMode, (LONG)Mode::SUSPEND, (LONG)Mode::RUN);
-	// Update the display status of script control buttons.
-	PostMessage(WM_IDLEUPDATECMDUI);
-	::SetFocus(NULL);
+//----- 20.07.16 Fukushiro M. 削除始 ()-----
+//	// Update the display status of script control buttons.
+//	PostMessage(WM_IDLEUPDATECMDUI);
+//----- 20.07.16 Fukushiro M. 削除終 ()-----
+	m_textEditor.SetFocus();
 }
 
 
 void CDlgSticktrace::OnBnClickedSceBtnDebugStop()
 {
-	TRACE(L"OnBnClickedSceBtnDebugStop\n");
+	// TRACE(L"OnBnClickedSceBtnDebugStop\n");
 	::InterlockedCompareExchange(&m_breakpointFast.suspendMode, (LONG)Mode::STOPPING, (LONG)Mode::RUN);
 	::InterlockedCompareExchange(&m_breakpointFast.suspendMode, (LONG)Mode::STOPPING, (LONG)Mode::SUSPEND);
 	{
 		AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
-		m_outcmd.command = SticktraceCommand::STOP;
+		m_outcmd.command = SticktraceDef::SuspendCommand::STOP;
 		acs.WakeConditionVariable();
 	}
-	::SetFocus(NULL);
+	m_textEditor.SetFocus();
 }
 
 void CDlgSticktrace::OnBnClickedSceBtnDebugStepToNext()
 {
-	TRACE(L"OnBnClickedSceBtnDebugStepToNext\n");
+	// TRACE(L"OnBnClickedSceBtnDebugStepToNext\n");
 	//::InterlockedCompareExchange(&m_breakpointFast.suspendMode, (LONG)Mode::PROCEED_TO_NEXT, (LONG)Mode::SUSPEND);
 	{
 		AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
-		m_outcmd.command = SticktraceCommand::PROCEED_NEXT;
+		m_outcmd.command = SticktraceDef::SuspendCommand::PROCEED_NEXT;
 		acs.WakeConditionVariable();
 	}
 	// // Update the display status of script control buttons.
 	// PostMessage(WM_IDLEUPDATECMDUI);
-	::SetFocus(NULL);
+	m_textEditor.SetFocus();
 }
 
 LRESULT CDlgSticktrace::OnIdleUpdateCmdUI(WPARAM, LPARAM)
 {
 	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
 	const auto isDebugMode = (::InterlockedCompareExchange(&m_debugMode.debugMode, 0, 0) != 0);
+	const BOOL isScriptModified = (::InterlockedCompareExchange(&m_scriptModify.isScriptModified, 0, 0) != 0);
 	switch (mode)
 	{
 	case CDlgSticktrace::Mode::STOP:
 		((CButton*)GetDlgItem(IDC_SCE_CHK_DEBUG_MODE))->SetCheck(isDebugMode ? BST_CHECKED : BST_UNCHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE))->SetCheck(BST_UNCHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK))->SetCheck(BST_UNCHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_STOP))->SetCheck(BST_UNCHECKED);
+//----- 20.07.16 Fukushiro M. 削除始 ()-----
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE))->SetCheck(BST_UNCHECKED);
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK))->SetCheck(BST_UNCHECKED);
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_STOP))->SetCheck(BST_UNCHECKED);
+//----- 20.07.16 Fukushiro M. 削除終 ()-----
 
-		GetDlgItem(IDC_SCE_CHK_DEBUG_MODE)->EnableWindow(TRUE);
+		GetDlgItem(IDC_SCE_CHK_DEBUG_MODE)->EnableWindow(!isScriptModified);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->EnableWindow(FALSE);
-		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(TRUE);
+		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(!isScriptModified);
+		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(!isScriptModified);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(!isScriptModified);
 		break;
 	case CDlgSticktrace::Mode::STOPPING:
 		((CButton*)GetDlgItem(IDC_SCE_CHK_DEBUG_MODE))->SetCheck(isDebugMode ? BST_CHECKED : BST_UNCHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE))->SetCheck(BST_UNCHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK))->SetCheck(BST_UNCHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_STOP))->SetCheck(BST_UNCHECKED);
+//----- 20.07.16 Fukushiro M. 削除始 ()-----
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE))->SetCheck(BST_UNCHECKED);
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK))->SetCheck(BST_UNCHECKED);
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_STOP))->SetCheck(BST_UNCHECKED);
+//----- 20.07.16 Fukushiro M. 削除終 ()-----
 
 		GetDlgItem(IDC_SCE_CHK_DEBUG_MODE)->EnableWindow(FALSE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(TRUE);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(FALSE);
 		break;
 	case CDlgSticktrace::Mode::RUN:
 		((CButton*)GetDlgItem(IDC_SCE_CHK_DEBUG_MODE))->SetCheck(isDebugMode ? BST_CHECKED : BST_UNCHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE))->SetCheck(BST_CHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK))->SetCheck(BST_UNCHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_STOP))->SetCheck(BST_UNCHECKED);
+//----- 20.07.16 Fukushiro M. 削除始 ()-----
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE))->SetCheck(BST_CHECKED);
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK))->SetCheck(BST_UNCHECKED);
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_STOP))->SetCheck(BST_UNCHECKED);
+//----- 20.07.16 Fukushiro M. 削除終 ()-----
 
 		GetDlgItem(IDC_SCE_CHK_DEBUG_MODE)->EnableWindow(FALSE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(TRUE);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->EnableWindow(!isScriptModified);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->EnableWindow(!isScriptModified);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(FALSE);
 		break;
 	case CDlgSticktrace::Mode::SUSPEND:
 		((CButton*)GetDlgItem(IDC_SCE_CHK_DEBUG_MODE))->SetCheck(isDebugMode ? BST_CHECKED : BST_UNCHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE))->SetCheck(BST_UNCHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK))->SetCheck(BST_CHECKED);
-		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_STOP))->SetCheck(BST_UNCHECKED);
+//----- 20.07.16 Fukushiro M. 削除始 ()-----
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE))->SetCheck(BST_UNCHECKED);
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK))->SetCheck(BST_CHECKED);
+//		((CButton*)GetDlgItem(IDC_SCE_BTN_DEBUG_STOP))->SetCheck(BST_UNCHECKED);
+//----- 20.07.16 Fukushiro M. 削除終 ()-----
 
 		GetDlgItem(IDC_SCE_CHK_DEBUG_MODE)->EnableWindow(FALSE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(TRUE);
-		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(TRUE);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE)->EnableWindow(!isScriptModified);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->EnableWindow(FALSE);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->EnableWindow(!isScriptModified);
+		GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->EnableWindow(!isScriptModified);
+		GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->EnableWindow(!isScriptModified);
+		GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->EnableWindow(!isScriptModified);
+		GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->EnableWindow(!isScriptModified);
 		break;
 	default:
 		break;
 	}
+
+	if (isScriptModified != m_textEditor.IsModified())
+	{
+		::InterlockedExchange(&m_scriptModify.isScriptModified, (LONG)(m_textEditor.IsModified() ? 1 : 0));
+
+		CTabCtrl* tabCtrl = (CTabCtrl*)GetDlgItem(IDC_SCE_TAB_SCRIPT);
+
+		TCITEM tcitem;
+		memset(&tcitem, 0, sizeof(tcitem));
+		tcitem.mask = TCIF_TEXT;
+//----- 20.06.11  削除始 ()-----
+//		wchar_t textbuff[Stickrun::SCRIPT_NAME_MAX + 5];
+//		tcitem.pszText = textbuff;
+//		tcitem.cchTextMax = _countof(textbuff);
+//		tabCtrl->GetItem(tabCtrl->GetCurSel(), &tcitem);
+//----- 20.06.11  削除終 ()-----
+
+		std::wstring wstrName;
+		Astrwstr::astr_to_wstr(wstrName, m_textEditor.GetContentName());
+		if (m_textEditor.IsModified())
+			wstrName += L" *";
+		tcitem.pszText = (wchar_t *)wstrName.c_str();
+
+//----- 20.06.11  削除始 ()-----
+//		if (wstrName != textbuff)
+//		{
+//			::wcscpy_s(textbuff, wstrName.c_str());
+//			tabCtrl->SetItem(tabCtrl->GetCurSel(), &tcitem);
+//		}
+//----- 20.06.11  削除終 ()-----
+		tabCtrl->SetItem(tabCtrl->GetCurSel(), &tcitem);
+
+		if (m_textEditor.IsModified())
+		{
+			m_textEditor.ActivateBreakpoint(FALSE);
+			m_textEditor.RedrawMarker();
+			SetDlgItemText(IDC_SCE_STC_MESSAGE, L"Breakpoints are deactivated because script is modified.");
+		}
+		else
+		{
+			m_textEditor.ActivateBreakpoint(isDebugMode);
+			m_textEditor.RedrawMarker();
+			SetDlgItemText(IDC_SCE_STC_MESSAGE, L"");
+		}
+	}
 	return 1;
 }
 
+void CDlgSticktrace::OnFileSave()
+{
+	if (m_DGT_debuggerCallbackFunc != nullptr)
+	{
+		std::wstring wtext;
+		UtilWin::GetWindowText(&m_textEditor, wtext);
+		std::wstring wtextTrim = wtext;
+		UtilString::Trim(wtextTrim);
+		if (wtext != wtextTrim)
+		{	//----- If there are some spaces at the front of text or at the end of text -----
+			// Front new line must be erased from source code. Because Lua load function trim the input source code automatically.
+			// So if source code was not trimed previously, source code inside of Lua and inside of editor did not correspond.
+			wtext = wtextTrim;
+			int startChar, endChar;
+			m_textEditor.GetSel(startChar, endChar);
+			m_textEditor.SetSel(0, -1);
+			m_textEditor.ReplaceSel(wtext.c_str(), TRUE);
+			m_textEditor.SetSel(startChar, endChar);
+		}
+		
+		std::string atext;
+		Astrwstr::wstr_to_astr(atext, wtext);
+
+		SticktraceDef::DebuggerCallbackParam param;
+		param.strParam1 = m_textEditor.GetContentName().c_str();
+		param.strParam2 = atext.c_str();
+		m_DGT_debuggerCallbackFunc(m_dialogId, SticktraceDef::DebuggerCommand::SAVE_SCRIPT, &param, m_debuggerCallbackData);
+	}
+}
+
+void CDlgSticktrace::OnUpdateFileSave(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(m_textEditor.IsModified());
+}
+
+void CDlgSticktrace::OnEditScriptEdit()
+{
+	m_isScriptEditable = !m_isScriptEditable;
+	m_textEditor.SetReadOnly(!m_isScriptEditable);
+}
+
+void CDlgSticktrace::OnUpdateEditScriptEdit(CCmdUI * pCmdUI)
+{
+	// m_DGT_debuggerCallbackFunc is called when debugger save the script code.
+	pCmdUI->Enable(!m_sourceNameArray.empty() && m_DGT_debuggerCallbackFunc != nullptr);
+	pCmdUI->SetCheck(m_isScriptEditable ? 1 : 0);
+}
+
+void CDlgSticktrace::OnSceEditInputLine()
+{
+	GetDlgItem(IDC_SCE_EDT_LINE_NUMBER)->SetFocus();
+} // CDlgSticktrace::OnSceEditInputLine.
+
+void CDlgSticktrace::OnUpdateEditInputLine(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(TRUE);
+} // CDlgSticktrace::OnUpdateEditInputLine.
+
 void CDlgSticktrace::OnSceEditGotoLine()
 {
+	std::wstring wstrLine;
+	UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_LINE_NUMBER, wstrLine);
+	auto lineNumber = std::wcstoul(wstrLine.c_str(), nullptr, 10);
+	auto charIndex = m_textEditor.LineIndex(lineNumber - 1);
+	m_textEditor.SetSel(charIndex, charIndex);
+	m_textEditor.SetFocus();
 } // CDlgSticktrace::OnSceEditGotoLine.
 
 void CDlgSticktrace::OnUpdateSceEditGotoLine(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(FALSE);
+	std::wstring wstrLine;
+	UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_LINE_NUMBER, wstrLine);
+	wchar_t * wcpNext;
+	auto lineNumber = std::wcstoul(wstrLine.c_str(), &wcpNext, 10);
+	if (lineNumber == ULONG_MAX || lineNumber == 0 || *wcpNext != L'\0')
+		pCmdUI->Enable(FALSE);
+	else
+		pCmdUI->Enable(TRUE);
 } // CDlgSticktrace::OnUpdateSceEditGotoLine.
 
 void CDlgSticktrace::OnSceWinKeyword()
 {
+	GetDlgItem(IDC_SCE_EDT_KEYWORD)->SetFocus();
 } // CDlgSticktrace::OnSceWinKeyword.
 
 void CDlgSticktrace::OnUpdateSceWinKeyword(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(FALSE);
+	pCmdUI->Enable(TRUE);
 } // CDlgSticktrace::OnUpdateSceWinKeyword.
 
 void CDlgSticktrace::OnEditFindNextText()
 {
+	std::wstring keyword;
+	UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_KEYWORD, keyword);
+	UtilString::Trim(keyword);
+	if (!m_textEditor.SearchForward(keyword))
+		SetDlgItemText(IDC_SCE_STC_MESSAGE, L"The search word does not exist.");
 } // CDlgSticktrace::OnEditFindNextText.
 
 void CDlgSticktrace::OnUpdateEditFindNextText(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(FALSE);
+	std::wstring keyword;
+	UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_KEYWORD, keyword);
+	UtilString::Trim(keyword);
+	pCmdUI->Enable(!keyword.empty());
 } // CDlgSticktrace::OnUpdateEditFindNextText.
 
 void CDlgSticktrace::OnEditFindPrevText()
 {
+	std::wstring keyword;
+	UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_KEYWORD, keyword);
+	UtilString::Trim(keyword);
+	if (!m_textEditor.SearchBackward(keyword))
+		SetDlgItemText(IDC_SCE_STC_MESSAGE, L"The search word does not exist.");
 } // CDlgSticktrace::OnEditFindPrevText.
 
 void CDlgSticktrace::OnUpdateEditFindPrevText(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(FALSE);
+	OnUpdateEditFindNextText(pCmdUI);
 } // CDlgSticktrace::OnUpdateEditFindPrevText.
 
-void CDlgSticktrace::OnSceOutwinGotoLocation()
+void CDlgSticktrace::OnSceWinClearError()
 {
-} // CDlgSticktrace::OnSceOutwinGotoLocation.
+	m_errorout.SetWindowText(L"");
+} // CDlgSticktrace::OnSceWinClearError.
 
-void CDlgSticktrace::OnUpdateSceOutwinGotoLocation(CCmdUI *pCmdUI)
+void CDlgSticktrace::OnUpdateSceWinClearError(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(FALSE);
-} // CDlgSticktrace::OnUpdateSceOutwinGotoLocation.
+	pCmdUI->Enable(TRUE);
+} // CDlgSticktrace::OnUpdateSceWinClearError.
 
-void CDlgSticktrace::OnSceOutwinClear()
+void CDlgSticktrace::OnSceWinClearOutput()
 {
-} // CDlgSticktrace::OnSceOutwinClear.
+	m_output.SetWindowText(L"");
+} // CDlgSticktrace::OnSceWinClearOutput.
 
-void CDlgSticktrace::OnUpdateSceOutwinClear(CCmdUI *pCmdUI)
+void CDlgSticktrace::OnUpdateSceWinClearOutput(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(FALSE);
-} // CDlgSticktrace::OnUpdateSceOutwinClear.
+	pCmdUI->Enable(TRUE);
+} // CDlgSticktrace::OnUpdateSceWinClearOutput.
 
 //********************************************************************************************
 /*!
@@ -1699,56 +2023,93 @@ void CDlgSticktrace::OnUpdateSceDebugToggleBreakpoint(CCmdUI* pCmdUI)
 
 void CDlgSticktrace::OnSceDebugClearBreakpoint()
 {
+	AutoLeaveCS acs(m_breakpointSlow.cs);
+	m_breakpointSlow.lineIndexToIsBreak.clear();
+	m_breakpointSlow.lineIndexAndSourceNameSet.clear();
+	m_breakpointSlow.m_runToCursorSourceName.clear();
+	m_breakpointSlow.m_runToCursorLineIndex = -1;
+	::InterlockedExchange(&m_breakpointFast.breakpointCount, 0);
 } // CDlgSticktrace::OnSceDebugClearBreakpoint.
 
 void CDlgSticktrace::OnUpdateSceDebugClearBreakpoint(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(FALSE);
+	pCmdUI->Enable(::InterlockedCompareExchange(&m_breakpointFast.breakpointCount, 0, 0) != 0);
 } // CDlgSticktrace::OnUpdateSceDebugClearBreakpoint.
 
 void CDlgSticktrace::OnSceDebugMode()
 {
-	const auto isDebugMode = (IsDlgButtonChecked(IDC_SCE_CHK_DEBUG_MODE) == BST_CHECKED);
-	CheckDlgButton(IDC_SCE_CHK_DEBUG_MODE, isDebugMode ? BST_UNCHECKED : BST_CHECKED);
-	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_CHK_DEBUG_MODE, BN_CLICKED), 0);
+//----- 20.07.16 Fukushiro M. 変更前 ()-----
+//	const auto isDebugMode = (IsDlgButtonChecked(IDC_SCE_CHK_DEBUG_MODE) == BST_CHECKED);
+//	CheckDlgButton(IDC_SCE_CHK_DEBUG_MODE, isDebugMode ? BST_UNCHECKED : BST_CHECKED);
+//	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_CHK_DEBUG_MODE, BN_CLICKED), 0);
+//----- 20.07.16 Fukushiro M. 変更後 ()-----
+	const auto isDebugModeNew = (::InterlockedCompareExchange(&m_debugMode.debugMode, 0, 0) == 0);
+	::InterlockedExchange(&m_debugMode.debugMode, isDebugModeNew ? 1 : 0);
+	m_textEditor.ActivateBreakpoint(isDebugModeNew);
+	m_textEditor.RedrawMarker();
+//----- 20.07.16 Fukushiro M. 変更終 ()-----
 } // CDlgSticktrace::OnSceDebugMode.
 
 void CDlgSticktrace::OnUpdateSceDebugMode(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(GetDlgItem(IDC_SCE_CHK_DEBUG_MODE)->IsWindowEnabled());
-	const auto isDebugMode = (IsDlgButtonChecked(IDC_SCE_CHK_DEBUG_MODE) == BST_CHECKED);
+//----- 20.07.16 Fukushiro M. 変更前 ()-----
+//	pCmdUI->Enable(GetDlgItem(IDC_SCE_CHK_DEBUG_MODE)->IsWindowEnabled());
+//	const auto isDebugMode = (IsDlgButtonChecked(IDC_SCE_CHK_DEBUG_MODE) == BST_CHECKED);
+//	pCmdUI->SetCheck(isDebugMode ? BST_CHECKED : BST_UNCHECKED);
+//----- 20.07.16 Fukushiro M. 変更後 ()-----
+	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
+	const auto isDebugMode = (::InterlockedCompareExchange(&m_debugMode.debugMode, 0, 0) != 0);
+	const BOOL isScriptModified = (::InterlockedCompareExchange(&m_scriptModify.isScriptModified, 0, 0) != 0);
+	if (mode == CDlgSticktrace::Mode::STOP)
+		pCmdUI->Enable(!isScriptModified);
+	else
+		pCmdUI->Enable(FALSE);
 	pCmdUI->SetCheck(isDebugMode ? BST_CHECKED : BST_UNCHECKED);
-
+//----- 20.07.16 Fukushiro M. 変更終 ()-----
 } // CDlgSticktrace::OnUpdateSceDebugMode.
 
 void CDlgSticktrace::OnSceDebugContinue()
 {
-	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_BTN_DEBUG_CONTINUE, BN_CLICKED), 0);
+	AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
+	m_outcmd.command = SticktraceDef::SuspendCommand::RESUME;
+	acs.WakeConditionVariable();
 } // CDlgSticktrace::OnSceDebugContinue.
 
 void CDlgSticktrace::OnUpdateSceDebugContinue(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_DEBUG_CONTINUE)->IsWindowEnabled());
+	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
+	const BOOL isScriptModified = (::InterlockedCompareExchange(&m_scriptModify.isScriptModified, 0, 0) != 0);
+	if (mode == CDlgSticktrace::Mode::SUSPEND)
+		pCmdUI->Enable(!isScriptModified);
+	else
+		pCmdUI->Enable(FALSE);
 } // CDlgSticktrace::OnUpdateSceDebugContinue.
 
 void CDlgSticktrace::OnSceDebugBreak()
 {
-	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_BTN_DEBUG_BREAK, BN_CLICKED), 0);
+	::InterlockedCompareExchange(&m_breakpointFast.suspendMode, (LONG)Mode::SUSPEND, (LONG)Mode::RUN);
 } // CDlgSticktrace::OnSceDebugBreak.
 
 void CDlgSticktrace::OnUpdateSceDebugBreak(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_DEBUG_BREAK)->IsWindowEnabled());
+	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
+	const BOOL isScriptModified = (::InterlockedCompareExchange(&m_scriptModify.isScriptModified, 0, 0) != 0);
+	if (mode == CDlgSticktrace::Mode::RUN)
+		pCmdUI->Enable(!isScriptModified);
+	else
+		pCmdUI->Enable(FALSE);
 } // CDlgSticktrace::OnUpdateSceDebugBreak.
 
 void CDlgSticktrace::OnSceDebugStepToNext()
 {
-	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT, BN_CLICKED), 0);
+	AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
+	m_outcmd.command = SticktraceDef::SuspendCommand::PROCEED_NEXT;
+	acs.WakeConditionVariable();
 } // CDlgSticktrace::OnSceDebugStepToNext.
 
 void CDlgSticktrace::OnUpdateSceDebugStepToNext(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_DEBUG_STEP_TO_NEXT)->IsWindowEnabled());
+	OnUpdateSceDebugContinue(pCmdUI);
 } // CDlgSticktrace::OnUpdateSceDebugStepToNext.
 
 void CDlgSticktrace::OnSceDebugRunToCursor()
@@ -1769,55 +2130,238 @@ void CDlgSticktrace::OnSceDebugRunToCursor()
 	}
 	{
 		AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
-		m_outcmd.command = SticktraceCommand::RESUME;
+		m_outcmd.command = SticktraceDef::SuspendCommand::RESUME;
 		acs.WakeConditionVariable();
 	}
 } // CDlgSticktrace::OnSceDebugRunToCursor.
 
 void CDlgSticktrace::OnUpdateSceDebugRunToCursor(CCmdUI *pCmdUI)
 {
-	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
-	pCmdUI->Enable(mode == Mode::SUSPEND);
+	OnUpdateSceDebugContinue(pCmdUI);
 } // CDlgSticktrace::OnUpdateSceDebugRunToCursor.
 
 void CDlgSticktrace::OnSceDebugStop()
 {
-	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_BTN_DEBUG_STOP, BN_CLICKED), 0);
+	::InterlockedCompareExchange(&m_breakpointFast.suspendMode, (LONG)Mode::STOPPING, (LONG)Mode::RUN);
+	::InterlockedCompareExchange(&m_breakpointFast.suspendMode, (LONG)Mode::STOPPING, (LONG)Mode::SUSPEND);
+	{
+		AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
+		m_outcmd.command = SticktraceDef::SuspendCommand::STOP;
+		acs.WakeConditionVariable();
+	}
 } // CDlgSticktrace::OnSceDebugStop.
 
 void CDlgSticktrace::OnUpdateSceDebugStop(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_DEBUG_STOP)->IsWindowEnabled());
+	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
+	const BOOL isScriptModified = (::InterlockedCompareExchange(&m_scriptModify.isScriptModified, 0, 0) != 0);
+	if (mode == CDlgSticktrace::Mode::RUN || mode == CDlgSticktrace::Mode::SUSPEND)
+		pCmdUI->Enable(!isScriptModified);
+	else
+		pCmdUI->Enable(FALSE);
 } // CDlgSticktrace::OnUpdateSceDebugStop.
 
-void CDlgSticktrace::OnSceDebugSetVariable()
+void CDlgSticktrace::OnSceDebugSetVariable ()
 {
-	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_BTN_SET_VARIABLE, BN_CLICKED), 0);
+	// Get the variable name.
+	std::string varName;
+	UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_VARIABLE_NAME, varName);
+	UtilString::Trim(varName);
+	// Get the value of variable.
+	std::string varValue;
+	UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_VARIABLE_VALUE, varValue);
+	UtilString::Trim(varValue);
+
+	if (varName.empty())
+	{
+		MessageBox(L"Variable name is not filled.", nullptr, MB_OK);
+		return;
+	}
+	if (varValue.empty())
+	{
+		MessageBox(L"Variable value is not filled.", nullptr, MB_OK);
+		return;
+	}
+
+	__int32 varType;
+	std::string newValue;
+	if (_stricmp(varValue.c_str(), "nil") == 0)
+	{
+		varType = LUA_TNIL;
+		newValue = "";
+	}
+	else if (_stricmp(varValue.c_str(), "true") == 0)
+	{
+		varType = LUA_TBOOLEAN;
+		newValue = "true";
+	}
+	else if (_stricmp(varValue.c_str(), "false") == 0)
+	{
+		varType = LUA_TBOOLEAN;
+		newValue = "false";
+	}
+	else if (1 < varValue.length() && varValue.front() == '\"' && varValue.back() == '\"')
+	{
+		varType = LUA_TSTRING;
+		newValue = varValue.substr(1, varValue.length() - 2);
+	}
+	else
+	{
+		// Assume it is a numeric.
+		char* endPtr;
+		(void)::strtod(varValue.c_str(), &endPtr);
+		if (endPtr[0] != '\0')
+		{
+			MessageBox(L"Form of the variable value is wrong.", nullptr, MB_OK);
+			return;
+		}
+		varType = LUA_TNUMBER;
+		newValue = varValue;
+	}
+	std::string data;
+	Stickutil::Serialize(data, m_sandbox);
+	Stickutil::Serialize(data, varName);
+	Stickutil::Serialize(data, varType);
+	Stickutil::Serialize(data, newValue);
+	{
+		AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
+		m_outcmd.command = SticktraceDef::SuspendCommand::SET_VARIABLE;
+		m_outcmd.strParamA = data;
+		acs.WakeConditionVariable();
+	}
 } // CDlgSticktrace::OnSceDebugSetVariable.
 
 void CDlgSticktrace::OnUpdateSceDebugSetVariable(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_SET_VARIABLE)->IsWindowEnabled());
+	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
+	const BOOL isScriptModified = (::InterlockedCompareExchange(&m_scriptModify.isScriptModified, 0, 0) != 0);
+	if (mode == CDlgSticktrace::Mode::SUSPEND)
+	{
+		// Get the variable name.
+		std::string varName;
+		UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_VARIABLE_NAME, varName);
+		UtilString::Trim(varName);
+		// Get the value of variable.
+		std::string varValue;
+		UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_VARIABLE_VALUE, varValue);
+		UtilString::Trim(varValue);
+		pCmdUI->Enable(!isScriptModified && !varName.empty() && !varValue.empty());
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
 } // CDlgSticktrace::OnUpdateSceDebugSetVariable.
 
 void CDlgSticktrace::OnSceDebugAddWatch()
 {
-	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_BTN_ADD_WATCH, BN_CLICKED), 0);
+	// 変数名を取得。
+	std::wstring wstr;
+	UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_VARIABLE_NAME, wstr);
+	UtilString::Trim(wstr);
+	if (!wstr.empty())
+	{
+		// 行を追加。
+		CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
+		const int itemCount = pLsvWatch->GetItemCount();
+
+		LVITEM lvi;
+		lvi.mask = LVIF_TEXT | LVIF_IMAGE;
+		lvi.iItem = itemCount;
+		lvi.iSubItem = 0;
+		lvi.pszText = (wchar_t*)wstr.c_str();
+		lvi.iImage = 4;
+		pLsvWatch->InsertItem(&lvi);
+
+		// ウォッチウィンドウを更新。
+		UpdateWatchWindow();
+	}
 } // CDlgSticktrace::OnSceDebugAddWatch.
 
 void CDlgSticktrace::OnUpdateSceDebugAddWatch(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_ADD_WATCH)->IsWindowEnabled());
+	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
+	const BOOL isScriptModified = (::InterlockedCompareExchange(&m_scriptModify.isScriptModified, 0, 0) != 0);
+	if (mode == CDlgSticktrace::Mode::STOP || mode == CDlgSticktrace::Mode::SUSPEND)
+	{
+		// Get the variable name.
+		std::string varName;
+		UtilDlg::GetDlgItemText(this, IDC_SCE_EDT_VARIABLE_NAME, varName);
+		UtilString::Trim(varName);
+		pCmdUI->Enable(!isScriptModified && !varName.empty());
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
 } // CDlgSticktrace::OnUpdateSceDebugAddWatch.
 
-void CDlgSticktrace::OnSceDebugDeleteWatch()
+void CDlgSticktrace::OnSceDebugDeleteWatch ()
 {
-	PostMessage(WM_COMMAND, MAKELPARAM(IDC_SCE_BTN_DELETE_WATCH, BN_CLICKED), 0);
+	// e.g.
+	//
+	// X      indent=0
+	// A      indent=0
+	// |-B    indent=1
+	// |-C    indent=1  <-- curSel
+	// |-D    indent=1
+	// Z      indent=0
+	//
+	CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
+	auto curSel = UtilDlg::GetCurSel(pLsvWatch);
+	if (curSel != -1)
+	{
+		LVITEM item;
+		memset(&item, 0, sizeof(item));
+		item.mask = LVIF_INDENT;
+
+		// Move curSel upward until indent=0
+		//
+		// X      indent=0
+		// A      indent=0  <-- curSel
+		// |-B    indent=1
+		// |-C    indent=1
+		// |-D    indent=1
+		// Z      indent=0
+		//
+		for (;;)
+		{
+			item.iItem = curSel;
+			pLsvWatch->GetItem(&item);
+			if (item.iIndent == 0) break;
+			curSel--;
+		}
+
+		// Delete curSel item until indent=0
+		//
+		// X      indent=0
+		// Z      indent=0  <-- curSel
+		//
+		for (;;)
+		{
+			pLsvWatch->DeleteItem(curSel);
+			if (curSel == pLsvWatch->GetItemCount()) break;
+			item.iItem = curSel;
+			pLsvWatch->GetItem(&item);
+			if (item.iIndent == 0) break;
+		}
+	}
 } // CDlgSticktrace::OnSceDebugDeleteWatch.
 
 void CDlgSticktrace::OnUpdateSceDebugDeleteWatch(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(GetDlgItem(IDC_SCE_BTN_DELETE_WATCH)->IsWindowEnabled());
+	const auto mode = (CDlgSticktrace::Mode)::InterlockedCompareExchange(&m_breakpointFast.suspendMode, 0, 0);
+	const BOOL isScriptModified = (::InterlockedCompareExchange(&m_scriptModify.isScriptModified, 0, 0) != 0);
+	if (mode == CDlgSticktrace::Mode::STOP || mode == CDlgSticktrace::Mode::SUSPEND)
+	{
+		CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
+		auto curSel = UtilDlg::GetCurSel(pLsvWatch);
+		pCmdUI->Enable(!isScriptModified && curSel != -1);
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
 } // CDlgSticktrace::OnUpdateSceDebugDeleteWatch.
 
 void CDlgSticktrace::OnSceWinError()
@@ -1865,6 +2409,7 @@ void CDlgSticktrace::OnSceWinVariableName()
 	tabCtrl->SetCurSel(TAB_INDEX_WATCH);
 	// Notify the tab selection has been changed.
 	OnTcnSelchangeSceTabOutput(nullptr, nullptr);
+	((CEdit *)GetDlgItem(IDC_SCE_EDT_VARIABLE_NAME))->SetSel(0, -1);
 	GetDlgItem(IDC_SCE_EDT_VARIABLE_NAME)->SetFocus();
 } // CDlgSticktrace::OnSceWinVariableName.
 
@@ -1896,6 +2441,16 @@ void CDlgSticktrace::OnUpdateHelp(CCmdUI *pCmdUI)
 	pCmdUI->Enable(FALSE);
 } // CDlgSticktrace::OnUpdateHelp.
 
+void CDlgSticktrace::OnOptionAutoAltkey()
+{
+	FCRegBase::SetIsAutoAlt(!FCRegBase::GetIsAutoAlt());
+}
+
+void CDlgSticktrace::OnUpdateOptionAutoAltkey(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetCheck(FCRegBase::GetIsAutoAlt());
+}
+
 /// <summary>
 /// Called when [the change variable button clicked].
 /// </summary>
@@ -1912,12 +2467,12 @@ void CDlgSticktrace::OnBnClickedSceBtnSetVariable()
 
 	if (varName.empty())
 	{
-		::MessageBox(GetSafeHwnd(), L"Variable name is not filled.", nullptr, MB_OK);
+		MessageBox(L"Variable name is not filled.", nullptr, MB_OK);
 		return;
 	}
 	if (varValue.empty())
 	{
-		::MessageBox(GetSafeHwnd(), L"Variable value is not filled.", nullptr, MB_OK);
+		MessageBox(L"Variable value is not filled.", nullptr, MB_OK);
 		return;
 	}
 
@@ -1950,7 +2505,7 @@ void CDlgSticktrace::OnBnClickedSceBtnSetVariable()
 		(void)::strtod(varValue.c_str(), &endPtr);
 		if (endPtr[0] != '\0')
 		{
-			::MessageBox(GetSafeHwnd(), L"Form of the variable value is wrong.", nullptr, MB_OK);
+			MessageBox(L"Form of the variable value is wrong.", nullptr, MB_OK);
 			return;
 		}
 		varType = LUA_TNUMBER;
@@ -1963,7 +2518,7 @@ void CDlgSticktrace::OnBnClickedSceBtnSetVariable()
 	Stickutil::Serialize(data, newValue);
 	{
 		AutoLeaveCS acs(m_outcmd.cs, m_outcmd.cv);
-		m_outcmd.command = SticktraceCommand::SET_VARIABLE;
+		m_outcmd.command = SticktraceDef::SuspendCommand::SET_VARIABLE;
 		m_outcmd.strParamA = data;
 		acs.WakeConditionVariable();
 	}
@@ -2133,6 +2688,27 @@ void CDlgSticktrace::OnBnClickedSceChkDebugMode()
 	m_textEditor.RedrawMarker();
 }
 
+void CDlgSticktrace::OnBnClickedSceBtnFindNext()
+{
+	PostMessage(WM_COMMAND, ID_EDIT_FIND_NEXT_TEXT);
+}
+
+//----- 21.05.07 Fukushiro M. 追加始 ()-----
+void CDlgSticktrace::OnBnClickedSceBtnGotoLine()
+{
+	PostMessage(WM_COMMAND, ID_SCE_EDIT_GOTO_LINE);
+}
+//----- 21.05.07 Fukushiro M. 追加終 ()-----
+
+void CDlgSticktrace::OnChangeSceEdtKeyword()
+{
+	// FIND_NEXT_TEXT command start the search from the end of selection.
+	// So change the end of selection to the first character of the selection.
+	int startChar, endChar;
+	m_textEditor.GetSel(startChar, endChar);
+	m_textEditor.SetSel(startChar, startChar);
+	PostMessage(WM_COMMAND, ID_EDIT_FIND_NEXT_TEXT);
+}
 
 //BOOL CDlgSticktrace::PreTranslateMessage(MSG* pMsg)
 //{
@@ -2253,6 +2829,44 @@ void CDlgSticktrace::OnLvnItemchangedSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult
 
 BOOL CDlgSticktrace::PreTranslateMessage(MSG* pMsg)
 {
+	// TRACE(L"CDlgSticktrace::PreTranslateMessage %x %x %x\n", pMsg->message, pMsg->wParam, pMsg->lParam);
+	// キーダウン && 自動ALT && not CTRL-KEY not SHIFT-KEY && not MENU-KEY && NotCapture の場合。
+	if (
+		pMsg->message == WM_KEYDOWN &&
+		FCRegBase::GetIsAutoAlt() &&
+		0 <= GetKeyState(VK_CONTROL) &&
+		0 <= GetKeyState(VK_SHIFT) &&
+		0 <= GetKeyState(VK_MENU)
+		)
+	{
+		bool isAlt = true;
+		switch (::GetDlgCtrlID(pMsg->hwnd))
+		{
+			case IDC_SCE_EDT_KEYWORD:
+			case IDC_SCE_EDT_LINE_NUMBER:
+			case IDC_SCE_EDT_VARIABLE_NAME:
+			case IDC_SCE_EDT_VARIABLE_VALUE:
+				isAlt = false;
+				break;
+			case IDC_SCE_EDT_SCRIPT:
+				if (m_isScriptEditable)
+					isAlt = false;
+				break;
+		}
+		if (isAlt)
+		{
+			// 仮想キーを実際のキャラクタに変換。
+			UINT dwAft = ::MapVirtualKey(pMsg->wParam, 2);
+			// 通常のキー（スペースキーから~の次）の場合。
+			if (0x20 <= dwAft && dwAft <= 0x7f)
+			{
+				// ALTキーを押しながらのキーとしてメッセージを投げる。
+				SendMessage(WM_SYSCOMMAND, SC_KEYMENU, dwAft);
+				return TRUE;
+			}
+		}
+	}
+
 	// コントロールにCtrl+C,Ctrl+V,Ctrl+X,Ctrl+Zを配信する。
 	if (m_accelerator != NULL && ::TranslateAccelerator(m_hWnd, m_accelerator, pMsg))
 		return TRUE;
@@ -2260,11 +2874,57 @@ BOOL CDlgSticktrace::PreTranslateMessage(MSG* pMsg)
 		return BASE_CLASS::PreTranslateMessage(pMsg);
 }
 
-
 void CDlgSticktrace::OnDestroy()
 {
+	CListCtrl* pLsvWatch = (CListCtrl*)GetDlgItem(IDC_SCE_LSV_WATCH);
+	pLsvWatch->SetImageList(nullptr, LVSIL_SMALL);
+
+
 	BASE_CLASS::OnDestroy();
 
 	::DestroyAcceleratorTable(m_accelerator);
 	m_accelerator = NULL;
 }
+
+HBRUSH CDlgSticktrace::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = BASE_CLASS::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	// Change the color of the message text to red.
+	int ctrlId;
+	auto hwndParent = ::GetParent(pWnd->m_hWnd);
+	if (hwndParent == m_hWnd)
+		ctrlId = ::GetDlgCtrlID(pWnd->m_hWnd);
+	else
+		ctrlId = ::GetDlgCtrlID(hwndParent);
+	if (ctrlId == IDC_SCE_STC_MESSAGE)
+	{
+		pDC->SetTextColor(RGB(255, 0, 0));
+	}
+
+	// TODO: 既定値を使用したくない場合は別のブラシを返します。
+	return hbr;
+}
+
+/// <summary>
+/// Called when taskbar will be activated.
+/// </summary>
+/// <param name="bActive"></param>
+/// <returns></returns>
+BOOL CDlgSticktrace::OnNcActivate(BOOL bActive)
+{
+	// TRACE(L"CDlgSticktrace::OnNcActivate\n");
+
+	// Usually the dialog is focused when the taskbar is activated.
+	// If the dialog has the focus, keyboard shortcut does not work. So, move the focus to the script editor.
+	if (::GetFocus() == m_hWnd)
+		GetDlgItem(IDC_SCE_EDT_SCRIPT)->SetFocus();
+
+	return BASE_CLASS::OnNcActivate(bActive);
+}
+
+//BOOL CDlgSticktrace::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult)
+//{
+//
+//	return CFCDlgModelessBase::OnWndMsg(message, wParam, lParam, pResult);
+//}

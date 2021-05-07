@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "DlgModelessBase.h"	// Superclass.
-#include "UtilSync.h"
+#include "UtilSync.h"			// For AutoCS,AutoLeaveCS.
 #include "TextEdit.h"
 #include "DdEdit.h"
 #include "Sticktrace.h"
@@ -40,20 +40,25 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual BOOL OnInitDialog();
-	bool TC_SetSource(const std::string& sandbox, const std::string& name, const std::string& src);
-	bool TC_IsDebugMode();
-	bool TC_IsBreakpoint(const char* name, int lineIndex);
-	bool TC_OnSuspended();
-	bool TC_OnResumed();
-	bool TC_Jump(const char * name, int lineIndex);
-	bool TC_NewSession();
-	bool TC_OnStart();
-	bool TC_OnStop();
-	bool TC_OutputError(const char * message);
-	bool TC_OutputDebug(const char * message);
-	bool TC_SetWatch(const std::string& data);
-	bool TC_SetVariableNotify(bool succeeded);
-	SticktraceCommand TC_GetCommand(std::string & paramA, uint32_t waitMilliseconds);
+	virtual void SetDebuggerCallback(SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc, void* debuggerCallbackData);
+
+	bool APT_Show(bool show);
+	bool APT_IsVisible(bool & isVisible);
+	bool APT_IsScriptModified(bool & isModified);
+	bool APT_SetSource(const char * sandbox, const char * name, const char * src);
+	bool APT_IsDebugMode();
+	bool APT_IsBreakpoint(const char* name, int lineIndex);
+	bool APT_OnSuspended();
+	bool APT_OnResumed();
+	bool APT_Jump(const char * name, int lineIndex);
+	bool APT_NewSession();
+	bool APT_OnStart(SticktraceDef::ExecType execType);
+	bool APT_OnStop(SticktraceDef::ExecType execType);
+	bool APT_OutputError(const char * message);
+	bool APT_OutputDebug(const char * message);
+	bool APT_SetWatch(const char * data);
+	bool APT_SetVariableNotify(bool succeeded);
+	SticktraceDef::SuspendCommand APT_WaitCommandIsSet(StickString & paramA, uint32_t waitMilliseconds);
 
 private:
 	HACCEL	m_accelerator;
@@ -62,13 +67,22 @@ private:
 	CFCDdEdit m_output;
 	CFCDdEdit m_errorout;
 	CFont m_font;					// エディターフォント。
-	// BOOL m_bIsDebugMode;				// デバッグモード？
-	CImageList m_watchImage;			// ウォッチリストのイメージリスト。
+	CImageList m_watchImage;		// ウォッチリストのイメージリスト。
 
-	BOOL			m_bIsBtnOnPaneBorder;	// ペインボーダー上でボタンが押されているか？
-	CRect			m_rtBar;				// ペインボーダー移動中のワーク。ボーダー位置を記録。
-	HWND			m_hwndWhenBorderMoving;	// Focused window when border moving.
-	
+	SticktraceDef::DebuggerCallbackFunc m_DGT_debuggerCallbackFunc;
+	void* m_debuggerCallbackData;
+
+	BOOL m_isScriptEditable;
+
+	BOOL m_bIsBtnOnPaneBorder;		// ペインボーダー上でボタンが押されているか？
+	CRect m_rtBar;					// ペインボーダー移動中のワーク。ボーダー位置を記録。
+	HWND m_hwndWhenBorderMoving;	// Focused window when border moving.
+
+	struct
+	{
+		LONG isScriptModified;	// 1:Script is modified/0:Not modified.
+	} m_scriptModify;
+
 	/// <summary>
 	/// Data for synchronous communication from the application thread to the DlgSticktrace thread.
 	/// </summary>
@@ -77,6 +91,9 @@ private:
 		enum class Command
 		{
 			NONE,
+			SHOW,
+			IS_VISIBLE,
+			IS_SCRIPT_MODIFIED,
 			SET_SOURCE,
 			NEW_SESSION,
 			ON_START,
@@ -102,7 +119,6 @@ private:
 		~InCmd() = default;
 	} m_incmd;
 
-
 	/// <summary>
 	/// Data for synchronous communication from the DlgSticktrace thread to the application thread.
 	/// </summary>
@@ -110,10 +126,10 @@ private:
 	{
 		AutoCS cs;	// Locking object to protect this area.
 		AutoCV cv;	// Locking object to protect this area.
-		SticktraceCommand command;
+		SticktraceDef::SuspendCommand command;
 		std::string strParamA;
 
-		OutCmd() : command(SticktraceCommand::NONE) {}
+		OutCmd() : command(SticktraceDef::SuspendCommand::NONE) {}
 		~OutCmd() = default;
 	} m_outcmd;
 
@@ -172,8 +188,8 @@ protected:
 	void Jump(const std::string & name, int lineIndex, CFCTextEdit::MarkerType markerType, bool selectLine);
 	bool JumpErrorLocation();
 	void NewSession();
-	void OnStart();
-	void OnStop();
+	void OnStart(SticktraceDef::ExecType execType);
+	void OnStop(SticktraceDef::ExecType execType);
 	void OnSuspended();
 	void OnResumed();
 	void OutputError(const std::string & message);
@@ -196,6 +212,12 @@ public:
 	afx_msg void OnBnClickedSceBtnDebugStop();
 	afx_msg void OnBnClickedSceBtnDebugStepToNext();
 	afx_msg LRESULT OnIdleUpdateCmdUI(WPARAM, LPARAM);
+	afx_msg void OnFileSave();
+	afx_msg void OnUpdateFileSave(CCmdUI *pCmdUI);
+	afx_msg void OnEditScriptEdit();
+	afx_msg void OnUpdateEditScriptEdit(CCmdUI *pCmdUI);
+	afx_msg void OnSceEditInputLine();
+	afx_msg void OnUpdateEditInputLine(CCmdUI *pCmdUI);
 	afx_msg void OnSceEditGotoLine();
 	afx_msg void OnUpdateSceEditGotoLine(CCmdUI *pCmdUI);
 	afx_msg void OnSceWinKeyword();
@@ -204,10 +226,10 @@ public:
 	afx_msg void OnUpdateEditFindNextText(CCmdUI *pCmdUI);
 	afx_msg void OnEditFindPrevText();
 	afx_msg void OnUpdateEditFindPrevText(CCmdUI *pCmdUI);
-	afx_msg void OnSceOutwinGotoLocation();
-	afx_msg void OnUpdateSceOutwinGotoLocation(CCmdUI *pCmdUI);
-	afx_msg void OnSceOutwinClear();
-	afx_msg void OnUpdateSceOutwinClear(CCmdUI *pCmdUI);
+	afx_msg void OnSceWinClearError();
+	afx_msg void OnUpdateSceWinClearError(CCmdUI *pCmdUI);
+	afx_msg void OnSceWinClearOutput();
+	afx_msg void OnUpdateSceWinClearOutput(CCmdUI *pCmdUI);
 	afx_msg void OnSceDebugToggleBreakpoint();
 	afx_msg void OnUpdateSceDebugToggleBreakpoint(CCmdUI *pCmdUI);
 	afx_msg void OnSceDebugClearBreakpoint();
@@ -245,12 +267,28 @@ public:
 	afx_msg void OnBnClickedSceBtnSetVariable();
 	afx_msg void OnBnClickedSceBtnAddWatch();
 	afx_msg void OnBnClickedSceBtnDeleteWatch();
+	afx_msg void OnBnClickedSceChkDebugMode();
+	afx_msg void OnBnClickedSceBtnFindNext();
+// 21.05.07 Fukushiro M. 1行追加 ()
+	afx_msg void OnBnClickedSceBtnGotoLine();
+	afx_msg void OnChangeSceEdtKeyword();
 	afx_msg void OnNMClickSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg LRESULT OnUserDdEditDblClked(WPARAM wParam, LPARAM);
 	afx_msg LRESULT OnUserTextEditCurlineChanged(WPARAM wParam, LPARAM lParam);
-	afx_msg void OnBnClickedSceChkDebugMode();
 	afx_msg void OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu);
 	afx_msg void OnLvnItemchangedSceLsvWatch(NMHDR *pNMHDR, LRESULT *pResult);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnDestroy();
+	afx_msg void OnTcnSelchangingSceTabScript(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+//	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
+//	afx_msg void OnSetFocus(CWnd* pOldWnd);
+//	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
+//	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+//	afx_msg void OnActivateApp(BOOL bActive, DWORD dwThreadID);
+//	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg BOOL OnNcActivate(BOOL bActive);
+//	afx_msg void OnMDIActivate(BOOL bActivate, CWnd* pActivateWnd, CWnd* pDeactivateWnd);
+	afx_msg void OnOptionAutoAltkey();
+	afx_msg void OnUpdateOptionAutoAltkey(CCmdUI *pCmdUI);
 };
