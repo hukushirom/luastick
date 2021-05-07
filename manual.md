@@ -10,8 +10,8 @@
 **lua-5.3.5**
 - lua-5.3.5 source code and Visual Studio project.
 
-**lua-5.4.0**
-- lua-5.4.0 Visual Studio project.
+**lua-5.4.3**
+- lua-5.4.3 Visual Studio project.
 
 **Examples_5_3**  
 - Examples for lua 5.3
@@ -67,11 +67,13 @@ Followings are directories in the Examples_X_X.
 
 ## Building steps  
 
+For Lua 5.3.5
+
 1. Start Visual Studio 2017.  
 2. Open the solution 'BuildAll.sln'.  
 3. Build.  
 
-Lua 5.4.0 is not released yet. After released, you will become to be able to build examples for lua 5.4, take the following steps.  
+For Lua 5.4.3
 
 1. Open the solution 'Build_5_4.sln'.  
 2. Build.  
@@ -1475,7 +1477,7 @@ They are defined using \<stickconv ...\> tag in 'Sticklib.h'.
 
 ## Appendix  
 
-### How to debug
+### How to debug  
 
 <img src="https://github.com/hukushirom/luastick/blob/master/Examples_5_3/Sticktrace/image01.png">
 
@@ -1496,4 +1498,13 @@ They are defined using \<stickconv ...\> tag in 'Sticklib.h'.
 7. Click (6) then 'c1' will be added into the watch window.
 
 8. Click (7) to expnd the array 'c1'.
+
+### Built-in commands for Sticktrace  
+
+**STICKTRACE.DebugBreak()**
+- Pause the Lua program execution on the next line.  
+
+**STICKTRACE.OutputDebugMessage(x)**
+- Send x to the message box in the debugger.  
+
 
