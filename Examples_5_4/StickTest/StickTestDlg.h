@@ -445,8 +445,10 @@ protected:
 protected:
 	HICON m_hIcon;
 
-	Stickrun* m_stickrun;
-	Sticktrace* m_sticktrace;
+	Stickrun* m_stickrun1;
+	Sticktrace* m_sticktrace1;
+	Stickrun* m_stickrun2;
+	Sticktrace* m_sticktrace2;
 
 	/// <summary>
 	/// Data for synchronous communication from the application thread to the DlgSticktrace thread.
@@ -473,6 +475,7 @@ protected:
 	/// <param name="param" io="in">Parameters for the command.</param>
 	/// <returns>true:Accepted/false:Timeout</returns>
 	virtual bool DGT_DebuggerCallback(
+		unsigned int dialogId,
 		SticktraceDef::DebuggerCommand command,
 		SticktraceDef::DebuggerCallbackParam* param
 	);

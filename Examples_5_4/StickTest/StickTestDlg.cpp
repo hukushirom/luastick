@@ -86,6 +86,9 @@ Test6 = function()
   ShowMessage(r1 .. r2 .. "\r\n")
 end
 
+)";
+
+std::string script3 = u8R"(
 Test7 = function()
 	-------- test 1 ------
 	function locals()
@@ -224,8 +227,10 @@ CStickTestDlg* ToStickTestDlg(void* data)
 
 CStickTestDlg::CStickTestDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_STICKTEST_DIALOG, pParent)
-	, m_stickrun(nullptr)
-	, m_sticktrace(nullptr)
+	, m_stickrun1(nullptr)
+	, m_stickrun2(nullptr)
+	, m_sticktrace1(nullptr)
+	, m_sticktrace2(nullptr)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -237,7 +242,7 @@ void CStickTestDlg::DoDataExchange(CDataExchange* pDX)
 
 void CStickTestDlg::DebugOutput(const char* message)
 {
-	m_sticktrace->OutputDebug(message);
+	m_sticktrace1->OutputDebug(message);
 }
 
 void CStickTestDlg::OnSaveScript(const std::string & name, const std::string & code)
@@ -246,37 +251,50 @@ void CStickTestDlg::OnSaveScript(const std::string & name, const std::string & c
 	if (name == "script1")
 	{
 		script1 = code;
-
-		m_sticktrace->DetachStickrun();
-		delete m_stickrun;
-		m_stickrun = new Stickrun(luastick_init);
-		m_sticktrace->AttachStickrun(
-			m_stickrun,
+		m_sticktrace1->DetachStickrun();
+		delete m_stickrun1;
+		m_stickrun1 = new Stickrun(luastick_init);
+		m_sticktrace1->AttachStickrun(
+			m_stickrun1,
 			OnScriptCallback,
 			this,
 			100
 		);
-
 		// Do not call Stickrun::NewSession when saving.
-		m_stickrun->DoString(&error_message, script1, "script1");
+		m_stickrun1->DoString(&error_message, script1, "script1");
 
 	}
 	else if (name == "script2")
 	{
 		script2 = code;
 
-		m_sticktrace->DetachStickrun();
-		delete m_stickrun;
-		m_stickrun = new Stickrun(luastick_init);
-		m_sticktrace->AttachStickrun(
-			m_stickrun,
+		m_sticktrace1->DetachStickrun();
+		delete m_stickrun1;
+		m_stickrun1 = new Stickrun(luastick_init);
+		m_sticktrace1->AttachStickrun(
+			m_stickrun1,
 			OnScriptCallback,
 			this,
 			100
 		);
-
 		// Do not call Stickrun::NewSession when saving.
-		m_stickrun->DoSandboxString(&error_message, "SCR2", script2, "script2");
+		m_stickrun1->DoSandboxString(&error_message, "SCR2", script2, "script2");
+	}
+	else if (name == "script3")
+	{
+		script3 = code;
+
+		m_sticktrace2->DetachStickrun();
+		delete m_stickrun2;
+		m_stickrun2 = new Stickrun(luastick_init);
+		m_sticktrace2->AttachStickrun(
+			m_stickrun2,
+			OnScriptCallback,
+			this,
+			100
+		);
+		// Do not call Stickrun::NewSession when saving.
+		m_stickrun2->DoSandboxString(&error_message, "SCR3", script3, "script3");
 	}
 }
 
@@ -307,7 +325,7 @@ END_MESSAGE_MAP()
 
 // CStickTestDlg メッセージ ハンドラー
 
-bool CStickTestDlg::DGT_DebuggerCallback(SticktraceDef::DebuggerCommand command, SticktraceDef::DebuggerCallbackParam * param)
+bool CStickTestDlg::DGT_DebuggerCallback(unsigned int dialogId, SticktraceDef::DebuggerCommand command, SticktraceDef::DebuggerCallbackParam * param)
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
 	m_incmd.command = command;
@@ -327,7 +345,7 @@ bool CStickTestDlg::DGT_DebuggerCallback(
 	void* userData
 )
 {
-	return ((CStickTestDlg*)userData)->DGT_DebuggerCallback(command, param);
+	return ((CStickTestDlg*)userData)->DGT_DebuggerCallback(dialogId, command, param);
 }
 
 void CStickTestDlg::OnScriptCallback(
@@ -354,26 +372,6 @@ BOOL CStickTestDlg::OnInitDialog()
 	//  Framework は、この設定を自動的に行います。
 	SetIcon(m_hIcon, TRUE);			// 大きいアイコンの設定
 	SetIcon(m_hIcon, FALSE);		// 小さいアイコンの設定
-
-//----- 20.06.13 Fukushiro M. 削除始 ()-----
-//	m_stickrun = new Stickrun(luastick_init);
-//	m_sticktrace = new Sticktrace();
-//	m_sticktrace->Initialize(
-//		L"Dynamic Draw Project",
-//		L"",
-//		L"StickTest",
-//		(DWORD)-1,
-//		DGT_DebuggerCallback,
-//		this
-//	);
-//	m_sticktrace->AttachStickrun(
-//		m_stickrun,
-//		OnScriptCallback,
-//		this,
-//		100
-//	);
-//----- 20.06.13 Fukushiro M. 削除終 ()-----
-
 	OnBnClickedBtnInitStickrun();
 	
 	return TRUE;  // フォーカスをコントロールに設定した場合を除き、TRUE を返します。
@@ -421,43 +419,25 @@ void CStickTestDlg::OnBnClickedBtnTest1()
 	std::string error_message;
 	int a;
 	std::string b;
-	m_stickrun->CallFunction(&error_message, "Test1", Stickrun::Out(a), Stickrun::Out(b));
-
-
-	/*
-	::lua_getglobal(m_stickrun, "Test1");
-	auto luaType = ::lua_type(m_stickrun, -1);
-	if (luaType != LUA_TFUNCTION)
-	{
-		return;
-	}
-	int iArgsCount = 0;
-	int iRetvCount = 0;
-	const auto ret = ::lua_pcall(m_stickrun, iArgsCount, iRetvCount, 0);
-	switch (ret)
-	{
-	case LUA_OK:
-		break;
-	case LUA_YIELD:
-	case LUA_ERRRUN:
-	case LUA_ERRSYNTAX:
-	case LUA_ERRMEM:
-	case LUA_ERRGCMM:
-	case LUA_ERRERR:
-		return;
-	}
-	*/
+	m_stickrun1->CallFunction(&error_message, "Test1", Stickrun::Out(a), Stickrun::Out(b));
 }
 
 // SticktraceWindow stickTrace;
 
 void CStickTestDlg::OnDestroy()
 {
-	m_sticktrace->Terminate();
-	delete m_sticktrace;
-	m_sticktrace = nullptr;
-	delete m_stickrun;
-	m_stickrun = nullptr;
+	m_sticktrace1->Terminate();
+	delete m_sticktrace1;
+	m_sticktrace1 = nullptr;
+	delete m_stickrun1;
+	m_stickrun1 = nullptr;
+
+
+	m_sticktrace2->Terminate();
+	delete m_sticktrace2;
+	m_sticktrace2 = nullptr;
+	delete m_stickrun2;
+	m_stickrun2 = nullptr;
 
 	CDialogEx::OnDestroy();
 }
@@ -466,81 +446,53 @@ void CStickTestDlg::OnBnClickedBtnTest2()
 {
 	std::string error_message;
 	int ii = 10;
-	m_stickrun->CallFunction(&error_message, "Test2", *this);
-
-
-// Stickrun::ClassObj(this, "lm__CStickTestDlg__"));
-
-/*
-	::lua_getglobal(m_stickrun, "Test2");
-	auto luaType = ::lua_type(m_stickrun, -1);
-	if (luaType != LUA_TFUNCTION)
-	{
-		return;
-	}
-	int iArgsCount = 0;
-	int iRetvCount = 0;
-	const auto ret = ::lua_pcall(m_stickrun, iArgsCount, iRetvCount, 0);
-	switch (ret)
-	{
-	case LUA_OK:
-		break;
-	case LUA_YIELD:
-	case LUA_ERRRUN:
-	case LUA_ERRSYNTAX:
-	case LUA_ERRMEM:
-	case LUA_ERRGCMM:
-	case LUA_ERRERR:
-		return;
-	}
-	*/
+	m_stickrun1->CallFunction(&error_message, "Test2", *this);
 }
-
 
 void CStickTestDlg::OnBnClickedBtnTest3()
 {
 	std::string error_message;
-	m_stickrun->CallFunction(&error_message, "Test3");
+	m_stickrun1->CallFunction(&error_message, "Test3");
 }
 
 void CStickTestDlg::OnBnClickedBtnTest4()
 {
 	std::string error_message;
-	m_stickrun->CallFunction(&error_message, "Test4");
+	m_stickrun1->CallFunction(&error_message, "Test4");
 }
 
 
 void CStickTestDlg::OnBnClickedBtnTest5()
 {
 	std::string error_message;
-	m_stickrun->CallFunction(&error_message, "SCR2.Test5");
+	m_stickrun1->CallFunction(&error_message, "SCR2.Test5");
 }
 
 
 void CStickTestDlg::OnBnClickedBtnTest6()
 {
 	std::string error_message;
-	m_stickrun->CallFunction(&error_message, "SCR2.Test6");
+	m_stickrun1->CallFunction(&error_message, "SCR2.Test6");
 }
 
 
 void CStickTestDlg::OnBnClickedBtnTest7()
 {
 	std::string error_message;
-	m_stickrun->CallFunction(&error_message, "SCR2.Test7");
+	m_stickrun2->CallFunction(&error_message, "SCR3.Test7");
 }
 
 
 void CStickTestDlg::OnBnClickedBtnTest8()
 {
 	std::string error_message;
-	m_stickrun->CallFunction(&error_message, "SCR2.Test8");
+	m_stickrun2->CallFunction(&error_message, "SCR3.Test8");
 }
 
 void CStickTestDlg::OnBnClickedBtnTest9()
 {
 	std::string error_message;
-	m_stickrun->CallFunction(&error_message, "SCR2.Test9");
+	m_stickrun2->CallFunction(&error_message, "SCR3.Test9");
 }
 
 LRESULT CStickTestDlg::OnUserCommand(WPARAM, LPARAM)
@@ -705,321 +657,66 @@ int NM2::MyFunc2(double & v1, __int64 v2)
 
 const char * X::A::ABC = "abc";
 
-
-#if 0
-
-static void StickPushTable(lua_State * L, const char * name)
+void CStickTestDlg::OnBnClickedBtnShowEditor()
 {
-	if (name == nullptr || *name == '\0')
-	{
-		//    |         |
-		//    |---------|      +---------+--------------+
-		//    |   _G    |----->| Key     |    Value     |
-		//    +---------+      |---------|--------------|
-		//                     :         :              :
-		lua_pushglobaltable(L);
-		return;
-	}
-
-	//    |         | 
-	//    |---------| 
-	//  -1|  name   | 
-	//    |---------|     +--------+--------+ 
-	//  -2|   _G    |---->| Key    | Value  | 
-	//    +---------+     |--------|--------|     +--------+--------+
-	//                    | "NM1"  | table  |---->| Key    | Value  |
-	//                    |--------|--------|     |--------|--------|
-	//                    :        :        :     :        :        :
-	lua_pushstring(L, name);
-
-	//    |         | 
-	//    |---------| 
-	//  -1|  table  |--------------------------+
-	//    |---------|     +--------+--------+  |
-	//  -2|   _G    |---->| Key    | Value  |  |
-	//    +---------+     |--------|--------|  |   +--------+--------+
-	//                    | "NM1"  | table  |--+-->| Key    | Value  |
-	//                    |--------|--------|      |--------|--------|
-	//                    :        :        :      :        :        :
-	lua_rawget(L, -2);
-	if (!lua_istable(L, -1))
-	{	//----- if table does not exist -----
-		// create new table.
-
-		//
-		//    |         | 
-		//    |---------|
-		//  -1|   _G    |
-		//    +---------+
-		lua_pop(L, 1);
-
-		//    |         | 
-		//    |---------|      +--------+--------+
-		//  -1|  table  |----->| Key    | Value  |
-		//    |---------|      |--------|--------|
-		//  -2|   _G    |      :        :        :
-		//    +---------+
-		lua_newtable(L);
-
-		//    |         | 
-		//    |---------|
-		//  -1|  name   | 
-		//    |---------|      +--------+--------+
-		//  -2|  table  |----->| Key    | Value  |
-		//    |---------|      |--------|--------|
-		//  -3|   _G    |      :        :        :
-		//    +---------+
-		lua_pushstring(L, name);
-
-		//    |         | 
-		//    |---------|
-		//  -1|  table  |--+
-		//    |---------|  |
-		//  -2|  name   |  |
-		//    |---------|  |   +--------+--------+
-		//  -3|  table  |--+-->| Key    | Value  |
-		//    |---------|      |--------|--------|
-		//  -4|   _G    |      :        :        :
-		//    +---------+
-		lua_pushvalue(L, -2);
-
-		//    |         | 
-		//    |---------|
-		//  -1|  table  |---------------------------+
-		//    |---------|      +--------+--------+  |
-		//  -2|   _G    |----->| Key    | Value  |  |
-		//    +---------+      |--------|--------|  |   +--------+--------+
-		//                     | "NM1"  | table  |--+-->| Key    | Value  |
-		//                     |--------|--------|      |--------|--------|
-		//                     :        :        :      :        :        :
-		lua_rawset(L, -4);
-	}
-}
-
-static void StickPop(lua_State * L)
-{
-	lua_pop(L, 1);
+	 m_sticktrace1->ShowWindow(true);
+	 m_sticktrace2->ShowWindow(true);
 }
 
 
-
-void luastick_init(lua_State* L)
+void CStickTestDlg::OnBnClickedBtnHideEditor()
 {
-	//    |         |
-	//    |---------|      +---------+--------------+
-	//    |   _G    |----->| Key     |    Value     |
-	//    +---------+      |---------|--------------|
-	//                     :         :              :
-	lua_pushglobaltable(L);
-
-	//    |         |
-	//    |---------|      +---------+--------------+
-	//    |   _G    |----->| Key     |    Value     |
-	//    +---------+      |---------|--------------|
-	//                     |"MyFunc1"|_Stick_MyFunc1|
-	//                     |---------|--------------|
-	//                     |"MyFunc2"|_Stick_MyFunc2|
-	//                     |---------|--------------|
-	//                     :         :              :
-	static struct luaL_Reg globalFuncs[] =
-	{
-		{ "MyFunc1", _Stick_MyFunc1 },
-		{ "MyFunc2", _Stick_MyFunc2 },
-		{ nullptr, nullptr },
-	};
-	luaL_setfuncs(L, globalFuncs, 0);
-
-	//    |         |
-	//    |---------|
-	//  -1|  table  |---------------------------+
-	//    |---------|      +--------+--------+  |
-	//  -2|   _G    |----->| Key    | Value  |  |
-	//    +---------+      |--------|--------|  |   +--------+--------+
-	//                     | "NM1"  | table  |--+-->| Key    | Value  |
-	//                     |--------|--------|      |--------|--------|
-	//                     :        :        :      :        :        :
-	StickPushTable(L, "NM1");
-
-	//    |         |
-	//    |---------|
-	//  -1|  table  |-----------------------------------------------------+
-	//    |---------|                                                     |
-	//  -2|  table  |----------------------------+                        |
-	//    |---------|      +---------+--------+  |                        |
-	//  -3|   _G    |----->| Key     | Value  |  |                        |
-	//    +---------+      |---------|--------|  |   +--------+--------+  |   +--------+--------+
-	//                     | "NM1"   | table  |--+-->| Key    | Value  |  +-->| Key    | Value  |
-	//                     |---------|--------|      |--------|--------|  |   |--------|--------|
-	//                     |"NM1_NM1"| table  |--+   :        :        :  |   :        :        :
-	//                     |---------|--------|  |                        |
-	//                     :         :        :  +------------------------+
-	StickPushTable(L, "NM1_NM1");
-
-	//    |         |
-	//    |---------|
-	//  -1|  table  |-----------------------------------------------------+
-	//    |---------|                                                     |
-	//  -2|  table  |----------------------------+                        |
-	//    |---------|      +---------+--------+  |                        |
-	//  -3|   _G    |----->| Key     | Value  |  |                        |
-	//    +---------+      |---------|--------|  |   +--------+--------+  |   +---------+--------------------------------+
-	//                     | "NM1"   | table  |--+-->| Key    | Value  |  +-->| Key     | Value                          |
-	//                     |---------|--------|      |--------|--------|  |   |---------|--------------------------------|
-	//                     |"NM1_NM1"| table  |--+   :        :        :  |   |"MyFunc1"|_Stick_NM1_Stick_NM1_NM1_MyFunc1|
-	//                     |---------|--------|  |                        |   |---------+--------------------------------|
-	//                     :         :        :  +------------------------+   |"MyFunc2"|_Stick_NM1_Stick_NM1_NM1_MyFunc2|
-	//                                                                        |---------+--------------------------------|
-	//                                                                        :         :                                :
-	static struct luaL_Reg funcs[] =
-	{
-		{ "MyFunc1", _Stick_NM1_Stick_NM1_NM1_MyFunc1 },
-		{ "MyFunc2", _Stick_NM1_Stick_NM1_NM1_MyFunc2 },
-		{ nullptr, nullptr },
-	};
-	luaL_setfuncs(L, funcs, 0);
-
-	//    |         |
-	//    |         |
-	//    +---------+
-	lua_pop(L, 3);
+	 m_sticktrace1->ShowWindow(false);
+	 m_sticktrace2->ShowWindow(false);
 }
 
 
-
-
-
-
-
-
-lua_rawget
-int lua_rawget (lua_State *L, int index);
-Similar to lua_gettable, but does a raw access (i.e., without metamethods).
-
-lua_gettable
-int lua_gettable (lua_State *L, int index);
-Pushes onto the stack the value t[k], where t is the value at the given index and k is the value at the top of the stack.
-This function pops the key from the stack, pushing the resulting value in its place. As in Lua, this function may trigger a metamethod for the "index" event (see §2.4).
-Returns the type of the pushed value.
-
-
-
-TOLUA_API void tolua_module (lua_State* L, const char* name, int hasvar)
+LRESULT CStickTestDlg::OnIdleUpdateCmdUI(WPARAM, LPARAM)
 {
-  if (name)
-  {
-    /* tolua module */
-    lua_pushstring(L,name);
-    lua_rawget(L,-2);
-    if (!lua_istable(L,-1))  /* check if module already exists */
-    {
-      lua_pop(L,1);
-      lua_newtable(L);
-      lua_pushstring(L,name);
-      lua_pushvalue(L,-2);
-      lua_rawset(L,-4);       /* assing module into module */
-    }
-  }
-  else
-    tolua_push_globals_table(L);
-
-
-
-TOLUA_API void tolua_beginmodule (lua_State* L, const char* name)
-{
-  if (name)
-  {
-    lua_pushstring(L,name);
-    lua_rawget(L,-2);
-  }
-  else
-    tolua_push_globals_table(L);
-}
-
-
-TOLUA_API void tolua_function (lua_State* L, const char* name, lua_CFunction func)
-{
-  lua_pushstring(L,name);
-  lua_pushcfunction(L,func);
-  lua_rawset(L,-3);
-}
-
-
-TOLUA_API void tolua_endmodule (lua_State* L)
-{
-  lua_pop(L,1);
-}
-
-
-
-
-
- tolua_open(tolua_S);
- tolua_reg_types(tolua_S);
- tolua_module(tolua_S,NULL,0);
- tolua_beginmodule(tolua_S,NULL);
- tolua_module(tolua_S,"__F_M",0);
- tolua_beginmodule(tolua_S,"__F_M");
- tolua_function(tolua_S,"SetCallback",tolua_FMEAStudio___F_M_SetCallback00);
- tolua_function(tolua_S,"CellNum",tolua_FMEAStudio___F_M_CellNum00);
-tolua_endmodule(tolua_S);
- tolua_endmodule(tolua_S);
- 
-#endif
-  
- void CStickTestDlg::OnBnClickedBtnShowEditor()
- {
-	 m_sticktrace->ShowWindow(true);
- }
-
-
- void CStickTestDlg::OnBnClickedBtnHideEditor()
- {
-	 m_sticktrace->ShowWindow(false);
- }
-
-
- LRESULT CStickTestDlg::OnIdleUpdateCmdUI(WPARAM, LPARAM)
- {
 	 return 1;
- }
+}
 
 
- void CStickTestDlg::OnBnClickedBtnStopScript()
- {
-	 m_sticktrace->SetScriptMode(SticktraceDef::Mode::STOP);
- }
+void CStickTestDlg::OnBnClickedBtnStopScript()
+{
+	 m_sticktrace1->SetScriptMode(SticktraceDef::Mode::STOP);
+	 m_sticktrace2->SetScriptMode(SticktraceDef::Mode::STOP);
+}
 
 
- void CStickTestDlg::OnBnClickedBtnResumeScript()
- {
-	 m_sticktrace->SetScriptMode(SticktraceDef::Mode::RUN);
- }
+void CStickTestDlg::OnBnClickedBtnResumeScript()
+{
+	 m_sticktrace1->SetScriptMode(SticktraceDef::Mode::RUN);
+	 m_sticktrace2->SetScriptMode(SticktraceDef::Mode::RUN);
+}
 
 
- void CStickTestDlg::OnBnClickedBtnSuspendScript()
- {
-	 m_sticktrace->SetScriptMode(SticktraceDef::Mode::SUSPEND);
- }
+void CStickTestDlg::OnBnClickedBtnSuspendScript()
+{
+	 m_sticktrace1->SetScriptMode(SticktraceDef::Mode::SUSPEND);
+	 m_sticktrace2->SetScriptMode(SticktraceDef::Mode::SUSPEND);
+}
 
 
- void CStickTestDlg::OnBnClickedBtnNextScript()
- {
-	 m_sticktrace->SetScriptMode(SticktraceDef::Mode::PROCEED_NEXT);
- }
+void CStickTestDlg::OnBnClickedBtnNextScript()
+{
+	 m_sticktrace1->SetScriptMode(SticktraceDef::Mode::PROCEED_NEXT);
+	 m_sticktrace2->SetScriptMode(SticktraceDef::Mode::PROCEED_NEXT);
+}
 
- void CStickTestDlg::OnBnClickedBtnInitStickrun()
- {
-	if (m_sticktrace != nullptr)
+void CStickTestDlg::OnBnClickedBtnInitStickrun()
+{
+	if (m_sticktrace1 != nullptr)
 	{
-		m_sticktrace->Terminate();
-		delete m_sticktrace;
-		m_sticktrace = nullptr;
-		delete m_stickrun;
-		m_stickrun = nullptr;
+		m_sticktrace1->Terminate();
+		delete m_sticktrace1;
+		m_sticktrace1 = nullptr;
+		delete m_stickrun1;
+		m_stickrun1 = nullptr;
 	}
-	m_stickrun = new Stickrun(luastick_init);
-	m_sticktrace = new Sticktrace();
-	m_sticktrace->Initialize(
+	m_stickrun1 = new Stickrun(luastick_init);
+	m_sticktrace1 = new Sticktrace();
+	m_sticktrace1->Initialize(
 		m_hWnd,
 		L"Dynamic Draw Project",
 		L"",
@@ -1028,50 +725,96 @@ tolua_endmodule(tolua_S);
 		DGT_DebuggerCallback,
 		this
 	);
-	m_sticktrace->AttachStickrun(
-		m_stickrun,
+	m_sticktrace1->AttachStickrun(
+		m_stickrun1,
 		OnScriptCallback,
 		this,
 		100
 	);
 
-	 m_stickrun->NewSession();
+	 m_stickrun1->NewSession();
 	 std::string error_message;
-	 m_stickrun->DoString(&error_message, script1, "script1");
-	 m_stickrun->MakeSandboxEnv("SCR2", true);
-	 m_stickrun->DoSandboxString(&error_message, "SCR2", script2, "script2");
+	 m_stickrun1->DoString(&error_message, script1, "script1");
+	 m_stickrun1->MakeSandboxEnv("SCR2", true);
+	 m_stickrun1->DoSandboxString(&error_message, "SCR2", script2, "script2");
 
-	 //::Sleep(2000);
-	 // ::BringWindowToTop(m_hWnd);
-	 //::SetForegroundWindow(m_hWnd);
-	 //::SetFocus(m_hWnd);
+
+
+
+
+	if (m_sticktrace2 != nullptr)
+	{
+		m_sticktrace2->Terminate();
+		delete m_sticktrace2;
+		m_sticktrace2 = nullptr;
+		delete m_stickrun2;
+		m_stickrun2 = nullptr;
+	}
+	m_stickrun2 = new Stickrun(luastick_init);
+	m_sticktrace2 = new Sticktrace();
+	m_sticktrace2->Initialize(
+		m_hWnd,
+		L"Dynamic Draw Project",
+		L"",
+		L"StickTest",
+		(DWORD)-2,
+		DGT_DebuggerCallback,
+		this
+	);
+	m_sticktrace2->AttachStickrun(
+		m_stickrun2,
+		OnScriptCallback,
+		this,
+		100
+	);
+
+	 m_stickrun2->NewSession();
+	 m_stickrun2->MakeSandboxEnv("SCR3", true);
+	 m_stickrun2->DoSandboxString(&error_message, "SCR3", script3, "script3");
 }
 
 
- void CStickTestDlg::OnOK()
- {
-	 if (m_sticktrace->IsScriptModified())
+void CStickTestDlg::OnOK()
+{
+	 if (m_sticktrace1->IsScriptModified())
 	 {
 		 MessageBox(L"Save the script before to close the window.");
 		 return;
 	 }
-	 if (!m_sticktrace->Terminate())
+	 if (!m_sticktrace1->Terminate())
+	 {
+		 MessageBox(L"You have to stop the script running before you quit the application.");
+		 return;
+	 }
+
+	 if (m_sticktrace2->IsScriptModified())
+	 {
+		 MessageBox(L"Save the script before to close the window.");
+		 return;
+	 }
+	 if (!m_sticktrace2->Terminate())
 	 {
 		 MessageBox(L"You have to stop the script running before you quit the application.");
 		 return;
 	 }
 
 	 CDialogEx::OnOK();
- }
+}
 
 
- void CStickTestDlg::OnCancel()
- {
-	 if (!m_sticktrace->Terminate())
+void CStickTestDlg::OnCancel()
+{
+	 if (!m_sticktrace1->Terminate())
+	 {
+		 MessageBox(L"You have to stop the script running before you quit the application.");
+		 return;
+	 }
+
+	 if (!m_sticktrace2->Terminate())
 	 {
 		 MessageBox(L"You have to stop the script running before you quit the application.");
 		 return;
 	 }
 
 	 CDialogEx::OnCancel();
- }
+}

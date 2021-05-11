@@ -2263,7 +2263,9 @@ public:
 			//                                                  |"OutputDebugMessage"|OutputDebugMessage|
 			//                                                  |--------------------|------------------|
 			//                                                  :                    :                  :
-			static struct luaL_Reg funcs[] =
+// 21.05.08 Fukushiro M. 1行変更 ()
+//			static struct luaL_Reg funcs[] =
+			struct luaL_Reg funcs[] =
 			{
 				{ "DebugBreak", m_luaToClassHook.debug_break },
 				{ "OutputDebugMessage", m_luaToClassHook.output_debug_message },
