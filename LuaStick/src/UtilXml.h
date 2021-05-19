@@ -142,7 +142,9 @@ private:
 		// Skip '<'.
 		xml++;
 		// Skip spaces.
-		xml = UtilString::SkipSpace(xml);
+// 21.05.18 Fukushiro M. 1行変更 ()
+//		xml = UtilString::SkipSpace(xml);
+		xml = UtilString::SkipSpaceTab(xml);
 
 		bool isStartTag = true;
 		if (*xml == '/')
@@ -151,7 +153,9 @@ private:
 			// Skip '/'.
 			xml++;
 			// Skip spaces.
-			xml = UtilString::SkipSpace(xml);
+// 21.05.18 Fukushiro M. 1行変更 ()
+//			xml = UtilString::SkipSpace(xml);
+			xml = UtilString::SkipSpaceTab(xml);
 		}
 
 		auto xmlTmp = UtilString::SkipName(xml);
@@ -350,14 +354,18 @@ private:
 			for (;;)
 			{
 				// " aaa = ..."  -> "aaa = ..."
-				xml = UtilString::SkipSpace(xml);
+// 21.05.18 Fukushiro M. 1行変更 ()
+//				xml = UtilString::SkipSpace(xml);
+				xml = UtilString::SkipSpaceTab(xml);
 
 				if (*xml == '/')
 				{
 					// "/ > "  -> " > "
 					xml++;
 					// " > "  -> "> "
-					xml = UtilString::SkipSpace(xml);
+// 21.05.18 Fukushiro M. 1行変更 ()
+//					xml = UtilString::SkipSpace(xml);
+					xml = UtilString::SkipSpaceTab(xml);
 					if (*xml != '>')
 						ThrowLeException(LeError::TAG_OCCURED_UNEXPECTED_PLACE, "Unexpected character was appeared", *xml);
 					// "> "  -> " "
@@ -382,12 +390,16 @@ private:
 				const std::string attrName(xml, xmlNext);
 				xml = xmlNext;
 				// " = ..."  -> "= ..."
-				xml = UtilString::SkipSpace(xml);
+// 21.05.18 Fukushiro M. 1行変更 ()
+//				xml = UtilString::SkipSpace(xml);
+				xml = UtilString::SkipSpaceTab(xml);
 				if (*xml != '=')
 					ThrowLeSystemError();
 				xml++;	// Skip '='
 				// " "hello" "  -> ""hello" "
-				xml = UtilString::SkipSpace(xml);
+// 21.05.18 Fukushiro M. 1行変更 ()
+//				xml = UtilString::SkipSpace(xml);
+				xml = UtilString::SkipSpaceTab(xml);
 				// ""hello" bbb = "world" " -> " bbb = "world" "
 				xmlNext = UtilString::SkipDqSentence(xml);
 				// get dq content.

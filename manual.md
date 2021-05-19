@@ -330,7 +330,8 @@ It describes the parameter for HTML API manual.
 /// <stick export="true" />  
 /// <param name="v1" io="inout">The value 1</param>  
 /// <param name="v2" io="in">The value 2</param>  
-static void MyFunc(double & v1, int v2);  
+/// <param name="obj" io="out" autodel="true">Create and return an object instance.</param>  
+static void MyFunc(double & v1, int v2, MyObj *& obj);  
 ```  
 #### Attributes  
 
@@ -369,6 +370,10 @@ static void MyFunc(int*& array);
 // LuaStick cannot export int* to Lua. By declaring the type as void*, LuaStick becomes enable to export 'array' as lightuserdata.  
 ```  
 
+##### autodel  
+
+Optional. It's valid when io="out" and the variable is an instance of a class. The specified instance is deleted automatically by Lua.  
+
 ##### text content  
 
 Optional. LuaStick outputs the text content to the HTML API manual. It describes the parameter.  
@@ -405,6 +410,10 @@ Optional. It changes the type of return value.
 ##### ltype  
 
 Optional. It declares the type of return value when the function called in Lua script.  
+
+##### autodel  
+
+Optional. It's valid when the function returns an instance of a class. The specified instance is deleted automatically by Lua.  
 
 ##### text content  
 

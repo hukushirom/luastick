@@ -325,12 +325,13 @@ END_MESSAGE_MAP()
 
 // CStickTestDlg メッセージ ハンドラー
 
-bool CStickTestDlg::DGT_DebuggerCallback(unsigned int dialogId, SticktraceDef::DebuggerCommand command, SticktraceDef::DebuggerCallbackParam * param)
+bool CStickTestDlg::DGT_DebuggerCallback(unsigned int dialogId, SticktraceDef::DebuggerCallbackParam * param)
 {
 	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
-	m_incmd.command = command;
-	m_incmd.strParam1 = param->strParam1;
-	m_incmd.strParam2 = param->strParam2;
+	m_incmd.Clear();
+	m_incmd.command = param->command;
+	m_incmd.strParam1 = (param->strParam1 != nullptr) ? param->strParam1 : "";
+	m_incmd.strParam2 = (param->strParam2 != nullptr) ? param->strParam2 : "";
 	PostMessage(WM_USER_COMMAND);
 	// Wait for the command to be accepted by the Sticktrace Window.
 	if (!acs.SleepConditionVariable(10000))
@@ -340,12 +341,11 @@ bool CStickTestDlg::DGT_DebuggerCallback(unsigned int dialogId, SticktraceDef::D
 
 bool CStickTestDlg::DGT_DebuggerCallback(
 	unsigned int dialogId, 
-	SticktraceDef::DebuggerCommand command,
 	SticktraceDef::DebuggerCallbackParam* param,
 	void* userData
 )
 {
-	return ((CStickTestDlg*)userData)->DGT_DebuggerCallback(dialogId, command, param);
+	return ((CStickTestDlg*)userData)->DGT_DebuggerCallback(dialogId, param);
 }
 
 void CStickTestDlg::OnScriptCallback(
@@ -505,7 +505,9 @@ LRESULT CStickTestDlg::OnUserCommand(WPARAM, LPARAM)
 		command = m_incmd.command;
 		strParam1 = m_incmd.strParam1;
 		strParam2 = m_incmd.strParam2;
-		m_incmd.command = SticktraceDef::DebuggerCommand::NONE;
+// 21.05.18 Fukushiro M. 1行変更 ()
+//		m_incmd.command = SticktraceDef::DebuggerCommand::NONE;
+		m_incmd.Clear();
 		acs.WakeConditionVariable();
 	}
 	switch (command)
@@ -513,6 +515,14 @@ LRESULT CStickTestDlg::OnUserCommand(WPARAM, LPARAM)
 	case SticktraceDef::DebuggerCommand::SAVE_SCRIPT:
 		OnSaveScript(strParam1, strParam2);
 		break;
+	case SticktraceDef::DebuggerCommand::ON_ERROR_OUTPUT:
+	case SticktraceDef::DebuggerCommand::ON_DEBUG_OUTPUT:
+	{
+		std::wstring wstrText;
+		Sticklib::astring_to_wstring(wstrText, strParam1);
+		ShowMessage(wstrText.c_str());
+		break;
+	}
 	default:
 		break;
 	}

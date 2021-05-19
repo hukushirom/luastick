@@ -87,8 +87,13 @@ struct StickInstanceWrapper
 
 // Converter definition.
 
-/// <stickconv type1="std::vector<__int64>" type2="std::vector<int>" type1to2="Sticklib::vector_to_vector<int,__int64>" type2to1="Sticklib::vector_to_vector<__int64,int>" />
+/// <stickconv type1="std::vector<__int64>" type2="std::vector<__int16>" type1to2="Sticklib::vector_to_vector<__int16,__int64>" type2to1="Sticklib::vector_to_vector<__int64,__int16>" />
 /// <stickconv type1="std::vector<__int64>" type2="std::vector<__int32>" type1to2="Sticklib::vector_to_vector<__int32,__int64>" type2to1="Sticklib::vector_to_vector<__int64,__int32>" />
+/// <stickconv type1="std::vector<__int64>" type2="std::vector<int>" type1to2="Sticklib::vector_to_vector<int,__int64>" type2to1="Sticklib::vector_to_vector<__int64,int>" />
+/// <stickconv type1="std::vector<__int64>" type2="std::vector<long>" type1to2="Sticklib::vector_to_vector<long,__int64>" type2to1="Sticklib::vector_to_vector<__int64,long>" />
+/// <stickconv type1="std::vector<__int64>" type2="std::vector<short>" type1to2="Sticklib::vector_to_vector<short,__int64>" type2to1="Sticklib::vector_to_vector<__int64,short>" />
+/// <stickconv type1="std::vector<__int64>" type2="std::vector<size_t>" type1to2="Sticklib::vector_to_vector<size_t,__int64>" type2to1="Sticklib::vector_to_vector<__int64,size_t>" />
+/// <stickconv type1="std::vector<double>" type2="std::vector<float>" type1to2="Sticklib::vector_to_vector<float,double>" type2to1="Sticklib::vector_to_vector<double,float>" />
 /// <stickconv type1="std::vector<std::string>" type2="std::vector<std::wstring>" type1to2="Sticklib::vector_to_vector<std::wstring,std::string>" type2to1="Sticklib::vector_to_vector<std::string,std::wstring>" />
 /// <stickconv type1="std::vector<double>" type2="std::unordered_set<double>" type1to2="Sticklib::vector_to_uset<double,double>" type2to1="Sticklib::uset_to_vector<double,double>" />
 /// <stickconv type1="std::vector<__int64>" type2="std::unordered_set<__int64>" type1to2="Sticklib::vector_to_uset<__int64,__int64>" type2to1="Sticklib::uset_to_vector<__int64,__int64>" />

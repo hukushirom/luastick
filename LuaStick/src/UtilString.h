@@ -24,27 +24,29 @@ public:
 		return std::wstring(buffer.data(), buffer.size() - 1);
 	}
 
-	/// <summary>
-	/// Skips the space.
-	/// </summary>
-	/// <param name="text">The text.</param>
-	/// <returns>next text pointer</returns>
-	static const wchar_t* SkipSpace(const wchar_t* text)
-	{
-		while (*text == L' ') text++;
-		return text;
-	}
-
-	/// <summary>
-	/// Skips the space.
-	/// </summary>
-	/// <param name="text">The text.</param>
-	/// <returns>next text pointer</returns>
-	static const char* SkipSpace(const char* text)
-	{
-		while (*text == ' ') text++;
-		return text;
-	}
+//----- 21.05.18 Fukushiro M. 削除始 ()-----
+//	/// <summary>
+//	/// Skips the space.
+//	/// </summary>
+//	/// <param name="text">The text.</param>
+//	/// <returns>next text pointer</returns>
+//	static const wchar_t* SkipSpace(const wchar_t* text)
+//	{
+//		while (*text == L' ') text++;
+//		return text;
+//	}
+//
+//	/// <summary>
+//	/// Skips the space.
+//	/// </summary>
+//	/// <param name="text">The text.</param>
+//	/// <returns>next text pointer</returns>
+//	static const char* SkipSpace(const char* text)
+//	{
+//		while (*text == ' ') text++;
+//		return text;
+//	}
+//----- 21.05.18 Fukushiro M. 削除終 ()-----
 
 	/// <summary>
 	/// Skips the space and tab.
@@ -56,6 +58,19 @@ public:
 		while (*text == ' ' || *text == '\t') text++;
 		return text;
 	}
+
+//----- 21.05.18 Fukushiro M. 追加始 ()-----
+	/// <summary>
+	/// Skips the space and tab.
+	/// </summary>
+	/// <param name="text">The text.</param>
+	/// <returns>next text pointer</returns>
+	static const wchar_t* SkipSpaceTab(const wchar_t* text)
+	{
+		while (*text == L' ' || *text == L'\t') text++;
+		return text;
+	}
+//----- 21.05.18 Fukushiro M. 追加終 ()-----
 
 	/// <summary>
 	/// Skips until next space.
@@ -98,7 +113,9 @@ public:
 	{
 		bool isError = false;
 		std::wstring optBuff;
-		for (const wchar_t* cmdLineTop = commandLine; *cmdLineTop != L'\0'; cmdLineTop = UtilString::SkipSpace(cmdLineTop))
+// 21.05.18 Fukushiro M. 1行変更 ()
+//		for (const wchar_t* cmdLineTop = commandLine; *cmdLineTop != L'\0'; cmdLineTop = UtilString::SkipSpace(cmdLineTop))
+		for (const wchar_t* cmdLineTop = commandLine; *cmdLineTop != L'\0'; cmdLineTop = UtilString::SkipSpaceTab(cmdLineTop))
 		{
 			if (*cmdLineTop == L'-')
 			{
@@ -508,7 +525,9 @@ public:
 	static const char * SkipDqSentence(const char * cp)
 	{
 		// Skip spaces in front of '\"'
-		cp = UtilString::SkipSpace(cp);
+// 21.05.18 Fukushiro M. 1行変更 ()
+//		cp = UtilString::SkipSpace(cp);
+		cp = UtilString::SkipSpaceTab(cp);
 		if (*cp != '\"')
 			ThrowLeSystemError();
 		cp++;	// Skip '"'

@@ -462,6 +462,12 @@ protected:
 		std::string strParam2;
 		InCmd() : command(SticktraceDef::DebuggerCommand::NONE) {}
 		~InCmd() = default;
+		void Clear()
+		{
+			command = SticktraceDef::DebuggerCommand::NONE;
+			strParam1.clear();
+			strParam2.clear();
+		}
 	} m_incmd;
 
 	/// <summary>
@@ -476,13 +482,11 @@ protected:
 	/// <returns>true:Accepted/false:Timeout</returns>
 	virtual bool DGT_DebuggerCallback(
 		unsigned int dialogId,
-		SticktraceDef::DebuggerCommand command,
 		SticktraceDef::DebuggerCallbackParam* param
 	);
 
 	static bool DGT_DebuggerCallback(
 		unsigned int dialogId,
-		SticktraceDef::DebuggerCommand command,
 		SticktraceDef::DebuggerCallbackParam* param,
 		void* userData
 	);

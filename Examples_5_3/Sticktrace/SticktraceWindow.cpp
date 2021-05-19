@@ -42,6 +42,10 @@ private:
 	bool NewSession();
 	bool OnStart(SticktraceDef::ExecType execType);
 	bool OnStop(SticktraceDef::ExecType execType);
+//----- 21.05.18 Fukushiro M. 削除始 ()-----
+//// 21.05.18 Fukushiro M. 1行追加 ()
+//	bool OnErrorStop(const char* message);
+//----- 21.05.18 Fukushiro M. 削除終 ()-----
 	bool OutputError(const char* message);
 	bool OutputDebug(const char* message);
 	bool SetWatch(const char * data);
@@ -268,6 +272,15 @@ bool SticktraceWindow::OnStop(SticktraceDef::ExecType execType)
 {
 	return m_stickTraceDlg->APT_OnStop(execType);
 }
+
+//----- 21.05.18 Fukushiro M. 削除始 ()-----
+////----- 21.05.18 Fukushiro M. 追加始 ()-----
+//bool SticktraceWindow::OnErrorStop(const char * message)
+//{
+//	return m_stickTraceDlg->APT_OnErrorStop(message);
+//}
+////----- 21.05.18 Fukushiro M. 追加終 ()-----
+//----- 21.05.18 Fukushiro M. 削除終 ()-----
 
 bool SticktraceWindow::OutputError(const char * message)
 {

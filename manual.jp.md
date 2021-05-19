@@ -330,7 +330,8 @@ HTMLヘルプに出力される、パラメーターの説明を記述する。
 /// <stick export="true" />  
 /// <param name="v1" io="inout">The value 1</param>  
 /// <param name="v2" io="in">The value 2</param>  
-static void MyFunc(double & v1, int v2);  
+/// <param name="obj" io="out" autodel="true">Create and return an object instance.</param>  
+static void MyFunc(double & v1, int v2, MyObj *& obj);  
 ```  
 #### 属性  
 
@@ -365,6 +366,10 @@ static void MyFunc(const int* array);
 static void MyFunc(int*& array);  
 // int* は Luaの型に変換できない。lightuserdata と定義することにより lightuserdata として変換可能になる。  
 ```  
+
+##### autodel  
+
+任意。io="out" 且つ クラスインスタンスを出力する場合のみ有効。この属性を指定したインスタンスはLuaの中で自動的に削除される。  
 
 ##### text content  
 
@@ -402,6 +407,10 @@ static int* MyFunc();
 ##### ltype  
 
 任意。返値の型をLua型に変換する際、変換先のLua型を指定する。  
+
+##### autodel  
+
+任意。クラスインスタンスを返す場合のみ有効。この属性を指定したインスタンスはLuaの中で自動的に削除される。  
 
 ##### text content  
 

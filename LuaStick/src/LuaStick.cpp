@@ -868,12 +868,19 @@ struct FuncRec
 	//      ~~~~~~~~~~~
 	std::unordered_map<std::string, std::string> argNameToRawCtype;
 
+//----- 21.05.19 Fukushiro M. 追加始 ()-----
+	// Argument name set which has autodel option.
+	// e.g. <param name="hello" autodel="true"...>  <param name="world" autodel="true"...>  <returns autodel="true">
+	// autoDelargNames={ "hello", "world", "__lstickvar_ret" }
+	std::unordered_set<std::string> autoDelArgNames;
+//----- 21.05.19 Fukushiro M. 追加終 ()-----
+
 	// Argument name -> summary.
 	// return value's summary is registered as "__lstickvar_ret".
 	// It's used for HTML help and definition of function's return variable.
-// 20.07.25 Fukushiro M. 1行変更 ()
-//	std::unordered_map<std::string, std::string> argNameToSummary;
-	std::vector<std::pair<std::string, std::string>> argNameToSummary;
+	std::unordered_map<std::string, std::string> argNameToSummary;
+// 21.05.19 Fukushiro M. 1行削除 ()
+//	std::vector<std::pair<std::string, std::string>> argNameToSummary;
 
 	// Input Argument names.
 	// e.g. int FuncA(const char* a, double b) -> inArgNames={"a", "b"}
@@ -1282,7 +1289,9 @@ std::string VariableRec::GetFullpathLuaname() const
 
 std::string FuncRec::GetWrapperFunctionName() const
 {
-	const int luaArgCount = (type == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)argNames.size();
+// 21.05.16 Fukushiro M. 1行変更 ()
+//	const int luaArgCount = (type == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)argNames.size();
+	const int luaArgCount = (type == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)inArgNames.size();
 	return FuncGroupRec::Get(parentId).GetWrapperFunctionName() + "__" + std::to_string(luaArgCount);
 }
 
@@ -1315,7 +1324,9 @@ std::string FuncRec::GetFullpathCname() const
 {
 	const auto & funcGroupRec = FuncGroupRec::Get(parentId);
 	const auto classFullpathCname = ClassRec::Get(funcGroupRec.parentId).GetFullpathCname();
-	return classFullpathCname + "::" + funcCname;
+// 21.05.19 Fukushiro M. 1行変更 ()
+//	return classFullpathCname + "::" + funcCname;
+	return (type == Type::CONSTRUCTOR) ? classFullpathCname : (classFullpathCname + "::" + funcCname);
 }
 
 std::string FuncGroupRec::GetWrapperFunctionName() const
@@ -4535,11 +4546,20 @@ static int ${wrapperFunctionName}(lua_State* L)
 			UtilString::TrimRight(uniqueName, '&', '*');
 			uniqueName = ClassRec::FullpathNameToUniqueName(uniqueName);
 			const auto pushFunc = LuaTypeToSetFuncName(funcRec.ArgNameToLuaType(argName));
+//----- 21.05.19 Fukushiro M. 変更前 ()-----
+//			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+//		// ${SRCMARKER}
+//		${pushFunc}(L, false, ${tmpArgName}, "${uniqueName}");
+//
+//)", pushFunc, tmpArgName, uniqueName);
+//----- 21.05.19 Fukushiro M. 変更後 ()-----
+			const std::string autoDel = (funcRec.autoDelArgNames.find(argName) != funcRec.autoDelArgNames.end()) ? "true" : "false";
 			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
-		${pushFunc}(L, false, ${tmpArgName}, "${uniqueName}");
+		${pushFunc}(L, ${autoDel}, ${tmpArgName}, "${uniqueName}");
 
-)", pushFunc, tmpArgName, uniqueName);
+)", pushFunc, autoDel, tmpArgName, uniqueName);
+//----- 21.05.19 Fukushiro M. 変更終 ()-----
 		}
 		else
 		{	//----- if not class object -----
@@ -5303,15 +5323,18 @@ static void RegisterStickdefTag(const UtilXml::Tag & tag)
 /// <param name="argNameToIO">The variable name to io hash.</param>
 /// <param name="argNameToAliasCtype">The variable name to ctype hash.</param>
 /// <param name="argNameToAliasLtype">The variable name to ltype hash.</param>
+/// <param name="autoDelArgNames">The variable name having autodel attribute.</param>
 /// <param name="xmlCommentArgNameToSummary">The variable name to summary hash.</param>
 static void HandleParamTag(
 	const UtilXml::Tag & tag,
 	std::unordered_map<std::string, std::string> & argNameToIO,
 	std::unordered_map<std::string, std::string> & argNameToAliasCtype,
 	std::unordered_map<std::string, LuaType> & argNameToAliasLtype,
-// 20.07.25 Fukushiro M. 1行変更 ()
-//	std::unordered_map<std::string, std::string> & xmlCommentArgNameToSummary
-	std::vector<std::pair<std::string, std::string>> & xmlCommentArgNameToSummary
+// 21.05.19 Fukushiro M. 1行追加 ()
+	std::unordered_set<std::string> & autoDelArgNames,
+	std::unordered_map<std::string, std::string> & xmlCommentArgNameToSummary
+// 21.05.19 Fukushiro M. 1行削除 ()
+//	std::vector<std::pair<std::string, std::string>> & xmlCommentArgNameToSummary
 )
 {
 	// e.g. "<param name="argbBack" io="in">"
@@ -5342,10 +5365,22 @@ static void HandleParamTag(
 			argNameToAliasLtype[name] = LuaType(ltype);
 		}
 
+//----- 21.05.19 Fukushiro M. 追加始 (For AdvanceSoft ＆標準化予定)-----
+		// get xxx from "autodel="xxx"
+		auto autodel = UtilMisc::FindMapValue(tag.attributes, "autodel");
+		if (!autodel.empty())
+		{
+			if (autodel == "true")
+				autoDelArgNames.insert(name);
+			else if (autodel != "false")
+				ThrowLeException(LeError::WRONG_DEFINED_TAG, tag.name, "Invalid value in attribute 'autodel'", autodel);
+		}
+//----- 21.05.19 Fukushiro M. 追加終 (For AdvanceSoft ＆標準化予定)-----
+
 		// get summary.
-// 20.07.25 Fukushiro M. 1行変更 ()
-//		xmlCommentArgNameToSummary[name] = UtilString::GetLangPart(LANG, tag.GetText());
-		xmlCommentArgNameToSummary.emplace_back(std::make_pair(name, UtilString::GetLangPart(LANG, tag.GetText())));
+		xmlCommentArgNameToSummary[name] = UtilString::GetLangPart(LANG, tag.GetText());
+// 21.05.19 Fukushiro M. 1行削除 ()
+//		xmlCommentArgNameToSummary.emplace_back(std::make_pair(name, UtilString::GetLangPart(LANG, tag.GetText())));
 	}
 } // HandleParamTag.
 
@@ -5357,14 +5392,17 @@ static void HandleParamTag(
 /// <param name="tag">The tag.</param>
 /// <param name="argNameToAliasCtype">The variable name to ctype hash.</param>
 /// <param name="argNameToAliasLtype">The variable name to ltype hash.</param>
+/// <param name="autoDelArgNames">The variable name having autodel attribute.</param>
 /// <param name="xmlCommentArgNameToSummary">The variable name to summary hash.</param>
 static void HandleReturnsTag(
 	const UtilXml::Tag & tag,
 	std::unordered_map<std::string, std::string> & argNameToAliasCtype,
 	std::unordered_map<std::string, LuaType> & argNameToAliasLtype,
-// 20.07.25 Fukushiro M. 1行変更 ()
-//	std::unordered_map<std::string, std::string> & xmlCommentArgNameToSummary
-	std::vector<std::pair<std::string, std::string>> & xmlCommentArgNameToSummary
+// 21.05.19 Fukushiro M. 1行追加 ()
+	std::unordered_set<std::string> & autoDelArgNames,
+	std::unordered_map<std::string, std::string> & xmlCommentArgNameToSummary
+// 21.05.19 Fukushiro M. 1行削除 ()
+//	std::vector<std::pair<std::string, std::string>> & xmlCommentArgNameToSummary
 )
 {
 	// get xxx from "ctype="xxx"
@@ -5383,10 +5421,22 @@ static void HandleReturnsTag(
 		argNameToAliasLtype["__lstickvar_ret"] = LuaType(ltype);
 	}
 
+//----- 21.05.19 Fukushiro M. 追加始 (For AdvanceSoft ＆標準化予定)-----
+	// get xxx from "autodel="xxx"
+	auto autodel = UtilMisc::FindMapValue(tag.attributes, "autodel");
+	if (!autodel.empty())
+	{
+		if (autodel == "true")
+			autoDelArgNames.insert("__lstickvar_ret");
+		else if (autodel != "false")
+			ThrowLeException(LeError::WRONG_DEFINED_TAG, tag.name, "Invalid value in attribute 'autodel'", autodel);
+	}
+//----- 21.05.19 Fukushiro M. 追加終 (For AdvanceSoft ＆標準化予定)-----
+
 	// get summary.
-// 20.07.25 Fukushiro M. 1行変更 ()
-//	xmlCommentArgNameToSummary["__lstickvar_ret"] = UtilString::GetLangPart(LANG, tag.GetText());
-	xmlCommentArgNameToSummary.emplace_back(std::make_pair("__lstickvar_ret", UtilString::GetLangPart(LANG, tag.GetText())));
+	xmlCommentArgNameToSummary["__lstickvar_ret"] = UtilString::GetLangPart(LANG, tag.GetText());
+// 21.05.19 Fukushiro M. 1行削除 ()
+//	xmlCommentArgNameToSummary.emplace_back(std::make_pair("__lstickvar_ret", UtilString::GetLangPart(LANG, tag.GetText())));
 
 } // HandleReturnsTag.
 
@@ -6537,11 +6587,17 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 	// variable name -> ltype alias.
 	// e.g. <param name="abc" ltype="lightuserdata" > -> { "abc" -> "lightuserdata" }
 	std::unordered_map<std::string, LuaType> xmlCommentArgNameToAliasLtype;
+//----- 21.05.19 Fukushiro M. 追加始 ()-----
+	// Argument name set which has autodel option.
+	// e.g. <param name="hello" autodel="true"...>  <param name="world" autodel="true"...>  <returns autodel="true">
+	// autoDelargNames={ "hello", "world", "__lstickvar_ret" }
+	std::unordered_set<std::string> xmlCommentAutoDelArgNames;
+//----- 21.05.19 Fukushiro M. 追加終 ()-----
 	// variable name -> summary
 	// e.g. <param name="abc">hello</param> -> { "abc" -> "hello" }
-// 20.07.25 Fukushiro M. 1行変更 ()
-//	std::unordered_map<std::string, std::string> xmlCommentArgNameToSummary;
-	std::vector<std::pair<std::string, std::string>> xmlCommentArgNameToSummary;
+	std::unordered_map<std::string, std::string> xmlCommentArgNameToSummary;
+// 21.05.19 Fukushiro M. 1行削除 ()
+//	std::vector<std::pair<std::string, std::string>> xmlCommentArgNameToSummary;
 
 	// exception name array. <exception cref="?????" ...>
 	std::vector<std::string> xmlCommentExceptions;
@@ -6563,6 +6619,8 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 		xmlCommentArgNameToIO.clear();
 		xmlCommentArgNameToAliasCtype.clear();
 		xmlCommentArgNameToAliasLtype.clear();
+// 21.05.19 Fukushiro M. 1行追加 ()
+		xmlCommentAutoDelArgNames.clear();
 		xmlCommentArgNameToSummary.clear();
 		xmlCommentExceptions.clear();
 		xmlCommentIsExport = false;
@@ -6617,6 +6675,8 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 									xmlCommentArgNameToIO,
 									xmlCommentArgNameToAliasCtype,
 									xmlCommentArgNameToAliasLtype,
+// 21.05.19 Fukushiro M. 1行追加 ()
+									xmlCommentAutoDelArgNames,
 									xmlCommentArgNameToSummary
 								);
 							else if (tag.name == "returns")
@@ -6624,6 +6684,8 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 									tag,
 									xmlCommentArgNameToAliasCtype,
 									xmlCommentArgNameToAliasLtype,
+// 21.05.19 Fukushiro M. 1行追加 ()
+									xmlCommentAutoDelArgNames,
 									xmlCommentArgNameToSummary
 								);
 							else if (tag.name == "exception")
@@ -6714,7 +6776,9 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							)
 						{
 							const std::string funcLuaname = xmlCommentLuaname.empty() ? funcCname : xmlCommentLuaname;
-							const int luaArgCount = (funcType == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)argNames.size();
+// 21.05.16 Fukushiro M. 1行変更 ()
+//							const int luaArgCount = (funcType == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)argNames.size();
+							const int luaArgCount = (funcType == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)inArgNames.size();
 							auto & funcLuanameToFuncGroupId =
 								(funcType == FuncRec::Type::METHOD) ?
 								classRec.methodFuncLuanameToFuncGroupId :
@@ -6738,6 +6802,8 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							funcRec.argNames = argNames;
 							funcRec.argNameToCtype = argNameToCtype;
 							funcRec.argNameToRawCtype = argNameToRawCtype;
+// 21.05.19 Fukushiro M. 1行追加 ()
+							funcRec.autoDelArgNames = xmlCommentAutoDelArgNames;
 							funcRec.argNameToSummary = xmlCommentArgNameToSummary;
 							funcRec.inArgNames = inArgNames;
 							funcRec.outArgNames = outArgNames;
@@ -6955,8 +7021,11 @@ static int ${funcGroupRec.GetWrapperFunctionName()}(lua_State* L)
 
 	for (const auto & argCountFuncId : funcGroupRec.argCountToFuncId)
 	{
-		const auto argCount = argCountFuncId.first;
+// 21.05.16 Fukushiro M. 1行削除 ()
+//		const auto argCount = argCountFuncId.first;
 		const auto & funcRec = FuncRec::Get(argCountFuncId.second);
+// 21.05.16 Fukushiro M. 1行追加 ()
+		const auto argCount = funcRec.inArgNames.size();
 		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
 	case ${argCount}:
 		// ${SRCMARKER}
@@ -7543,17 +7612,49 @@ static void OutputModuleFuncHtml(StringBuffer & buffer, const FuncRec & funcRec)
 	<dl class="element-member">
 
 )");
-		for (const auto variableName_Id : funcRec.argNameToSummary)
+
+//----- 21.05.19 Fukushiro M. 変更前 ()-----
+//		for (const auto variableName_Id : funcRec.argNameToSummary)
+//		{
+//			auto argName = (variableName_Id.first == "__lstickvar_ret") ? std::string("return_value") : variableName_Id.first;
+//			auto summary = variableName_Id.second;
+//			auto luaTypeName = funcRec.ArgNameToLuaType(variableName_Id.first).ToString();
+//			buffer << FORMHTML(u8R"(
+//		<dt>${argName}</dt>
+//		<dd>${luaTypeName} type: ${summary}</dd>
+//
+//)", argName, luaTypeName, summary);
+//		}
+//----- 21.05.19 Fukushiro M. 変更後 ()-----
+		std::vector<std::string> orderedArgName;
+		for (const auto & argName : argNames)
 		{
-			auto argName = (variableName_Id.first == "__lstickvar_ret") ? std::string("return_value") : variableName_Id.first;
-			auto summary = variableName_Id.second;
-			auto luaTypeName = funcRec.ArgNameToLuaType(variableName_Id.first).ToString();
-			buffer << FORMHTML(u8R"(
-		<dt>${argName}</dt>
+			if (funcRec.outArgNames.find(argName) != funcRec.outArgNames.end())
+				orderedArgName.emplace_back(argName);
+		}
+		for (const auto & argName : argNames)
+		{
+			if (funcRec.inArgNames.find(argName) != funcRec.inArgNames.end())
+				orderedArgName.emplace_back(argName);
+		}
+		for (const auto & argName  : orderedArgName)
+		{
+			auto variableName_Id = funcRec.argNameToSummary.find(argName);
+			if (variableName_Id != funcRec.argNameToSummary.end())
+			{
+				auto variableName = (variableName_Id->first == "__lstickvar_ret") ? std::string("return_value") : variableName_Id->first;
+				auto summary = variableName_Id->second;
+				auto luaTypeName = funcRec.ArgNameToLuaType(variableName_Id->first).ToString();
+				buffer << FORMHTML(u8R"(
+		<dt>${variableName}</dt>
 		<dd>${luaTypeName} type: ${summary}</dd>
 
-)", argName, luaTypeName, summary);
+)", variableName, luaTypeName, summary);
+			}
 		}
+//----- 21.05.19 Fukushiro M. 変更終 ()-----
+
+
 		buffer << FORMHTML(u8R"(
 	</dl>
 
