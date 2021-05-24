@@ -807,7 +807,6 @@ void CStickTestDlg::OnOK()
 		 MessageBox(L"You have to stop the script running before you quit the application.");
 		 return;
 	 }
-
 	 CDialogEx::OnOK();
 }
 

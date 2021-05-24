@@ -67,6 +67,7 @@ struct StickInstanceWrapper
 /// <sticktype name="array<boolean>" ctype="std::vector<bool>" getfunc="Sticklib::check_array<bool>" setfunc="Sticklib::push_array<bool>" />
 /// <sticktype name="array<string>" ctype="std::vector<std::string>" getfunc="Sticklib::check_array<std::string>" setfunc="Sticklib::push_array<std::string>" />
 /// <sticktype name="array<lightuserdata>" ctype="std::vector<void*>" getfunc="Sticklib::check_array<void*>" setfunc="Sticklib::push_array<void*>" />
+/// <sticktype name="array<classobject>" ctype="std::vector<Sticklib::classobject>" getfunc="Sticklib::check_classobjectarray" setfunc="Sticklib::push_classobjectarray" />
 /// <sticktype name="hash<number,number>" ctype="std::unordered_map<double,double>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<double,double>" />
 /// <sticktype name="hash<number,integer>" ctype="std::unordered_map<double,__int64>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<double,__int64>" />
 /// <sticktype name="hash<number,boolean>" ctype="std::unordered_map<double,bool>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<double,bool>" />
@@ -777,14 +778,119 @@ public:
 		}
 	}
 
-	static void check_classobject(void * & value, lua_State * L, int arg)
+	template<typename T>
+	static void check_classobject(T * & value, lua_State * L, int arg)
 	{
 		// lua_touserdata is valid for userdata and lightuserdata both.
 		auto wrapper = (StickInstanceWrapper *)lua_touserdata(L, arg);
 		if (!wrapper)
 			throw std::invalid_argument("The argument is not userdata nor lightuserdata");
-		value = wrapper->ptr;
+		value = (T *)wrapper->ptr;
 	}
+
+	/// <summary>
+	/// Gets std::vector from the stack.
+	/// This does not change the stack.
+	/// </summary>
+	/// <param name="v">std::vector.</param>
+	/// <param name="L">Lua.</param>
+	/// <param name="ud">The argument.</param>
+	template<typename T>
+	static void check_classobjectarray(std::vector<T *> & v, lua_State * L, int ud)
+	{
+		v.clear();
+
+		//       stack
+		//    :         :
+		//    |---------|      +----+---------+
+		//  ud|  table  |----->| Key|  Value  |
+		//    |---------|      |----|---------|
+		//    :         :      |  1 | object1 |
+		//                     |----|---------|
+		//                     |  2 | object2 |
+		//                     |----|---------|
+		//                     |  3 | object3 |
+		//                     |----|---------|
+		//                     :    :         :
+
+		for (lua_Integer n = 1;; n++)
+		{
+			//       stack
+			//    +---------+
+			//  -1| object1 |
+			//    |---------|
+			//    :         :
+			//    |---------|      +----+---------+
+			//  ud|  table  |----->| Key|  Value  |
+			//    |---------|      |----|---------|
+			//    :         :      |  1 | object1 |
+			//                     |----|---------|
+			//                     |  2 | object2 |
+			//                     |----|---------|
+			//                     :    :         :
+			//
+			if (::lua_rawgeti(L, ud, n) == LUA_TNIL) break;
+
+			//       stack
+			//    +---------+
+			//  -1| object1 |  ----> Sticklib::check_lvalue returns 5
+			//    |---------|
+			//    :         :
+			//    |---------|      +----+---------+
+			//  ud|  table  |----->| Key|  Value  |
+			//    |---------|      |----|---------|
+			//    :         :      |  1 | object1 |
+			//                     |----|---------|
+			//                     |  2 | object2 |
+			//                     |----|---------|
+			//                     :    :         :
+			//
+			T * value;
+			Sticklib::check_classobject<T>(value, L, -1);
+			v.emplace_back(value);
+
+			//       stack
+			//    :         :
+			//    |---------|      +----+---------+
+			//  ud|  table  |----->| Key|  Value  |
+			//    |---------|      |----|---------|
+			//    :         :      |  1 | object1 |
+			//                     |----|---------|
+			//                     |  2 | object2 |
+			//                     |----|---------|
+			//                     :    :         :
+			//
+			lua_pop(L, 1);
+		}
+		//       stack
+		//    +---------+
+		//  -1|LUA_TNIL |
+		//    |---------|
+		//    :         :
+		//    |---------|      +----+---------+
+		//  ud|  table  |----->| Key|  Value  |
+		//    |---------|      |----|---------|
+		//    :         :      |  1 | object1 |
+		//                     |----|---------|
+		//                     |  2 | object2 |
+		//                     |----|---------|
+		//                     :    :         :
+		//
+
+		//       stack
+		//    :         :
+		//    |---------|      +----+---------+
+		//  ud|  table  |----->| Key|  Value  |
+		//    |---------|      |----|---------|
+		//    :         :      |  1 | object1 |
+		//                     |----|---------|
+		//                     |  2 | object2 |
+		//                     |----|---------|
+		//                     :    :         :
+		//
+		lua_pop(L, 1);
+	}
+
 
 #if 0
 	/// <summary>
@@ -870,6 +976,7 @@ public:
 			throw std::invalid_argument("The argument is not correct type");
 		return p;
 	}
+
 
 private:
 //----- 20.01.16 Fukushiro M. 削除始 ()-----
@@ -1094,15 +1201,24 @@ public:
 	/// <param name="own">true:Own the class object. The class object will be deleted automatically./false:Do not won the class object.</param>
 	/// <param name="object">Class object.</param>
 	/// <param name="metatable_name">Name of the metatable.</param>
-	static void push_classobject(lua_State * L, bool own, Sticklib::classobject object, const char * metatable_name)
+	template<typename T>
+	static void push_classobject(lua_State * L, bool own, T * object, const char * metatable_name)
 	{
+		//                   Premise.
+		//       stack
+		//    +---------+
+		//  -1|   v1    |
+		//    |---------|
+		//    :         :
+		//
+
 		//       stack
 		//    |---------|            +------------------+
 		//  -1|userdata |----------->| allocated memory |
 		//    |---------|            +------------------+
-		//    :         :
-		//                           |------------------|
-		//                         sizeof(StickInstanceWrapper)
+		//  -2|   v1    |
+		//    |---------|            |------------------|
+		//    :         :          sizeof(StickInstanceWrapper)
 		//
 		auto ptr = (StickInstanceWrapper *)lua_newuserdata(L, sizeof(StickInstanceWrapper));
 		ptr->own = own;
@@ -1114,9 +1230,9 @@ public:
 		//    |---------|                          |   |                       registry         |
 		//  -2|userdata |---+                      V   V                    +-------+-------+   |
 		//    |---------|   |              +----------+--------+            | Key   | Value |   |
-		//    :         :   |              |   Key    | Value  |            |-------|-------|   |
-		//                  |              |----------|--------|            |regName| table |---+
-		//                  |              |  "__gc"  |c++func1<---+        +---A---+-------+
+		//    |   v1    |   |              |   Key    | Value  |            |-------|-------|   |
+		//    |---------|   |              |----------|--------|            |regName| table |---+
+		//    :         :   |              |  "__gc"  |c++func1<---+        +---A---+-------+
 		//                  |              +----------|--------+   |        :   |   :       :
 		//                  |              | "xxxxx"  |c++func2|   |            |
 		//                  |              +----------|--------+   |       metatable_name
@@ -1133,9 +1249,9 @@ public:
 		//    |---------|           |              |   |                       registry         |
 		//  -1|userdata |---+       |              V   V                    +-------+-------+   |
 		//    |---------|   |       |      +----------+--------+            | Key   | Value |   |
-		//    :         :   |       |      |   Key    | Value  |            |-------|-------|   |
-		//                  |       |      |----------|--------|            |regName| table |---+
-		//                  |       |      |  "__gc"  |c++func1<---+        +---A---+-------+
+		//    |   v1    |   |       |      |   Key    | Value  |            |-------|-------|   |
+		//    |---------|   |       |      |----------|--------|            |regName| table |---+
+		//    :         :   |       |      |  "__gc"  |c++func1<---+        +---A---+-------+
 		//                  |       |      +----------|--------+   |        :   |   :       :
 		//                  |       |      | "xxxxx"  |c++func2|   |            |
 		//                  |       |      +----------|--------+   |       metatable_name
@@ -1168,9 +1284,9 @@ public:
 		//    |---------|      +--------+--------+ -+
 		//  -2| result1 |      :                 :  |
 		//    |---------|      :                 :  |
-		//    :         :      :                 :  |v.size() prepared.
-		//                     :                 :  |
-		//                     :                 :  |
+		//    |   v2    |      :                 :  |v.size() prepared.
+		//    |---------|      :                 :  |
+		//    :         :      :                 :  |
 		//                     +- - - - - - - - -+ -+
 		//
 		lua_createtable(L, v.size(), 0);
@@ -1201,6 +1317,62 @@ public:
 			i++;
 		}
 	}
+
+//----- 21.05.25 Fukushiro M. 追加始 ()-----
+	template<typename T>
+	static void push_classobjectarray(lua_State * L, bool own, const std::vector<T *> & v, const char * metatable_name)
+	{
+		//                   Premise.
+		//       stack
+		//    +---------+
+		//  -1| result1 | <-- return value 1 from c++ function.
+		//    |---------|
+		//  -2|   v2    | <-- argument 2 for c++ function.
+		//    |---------|
+		//  -3|   v1    | <-- argument 1 for c++ function.
+		//    |---------|
+		//    :         :
+
+		//       stack
+		//    +---------+      +--------+--------+
+		//  -1|  table  |----->| Key    | Value  |
+		//    |---------|      +--------+--------+ -+
+		//  -2| result1 |      :                 :  |
+		//    |---------|      :                 :  |
+		//    |   v2    |      :                 :  |v.size() prepared.
+		//    |---------|      :                 :  |
+		//    :         :      :                 :  |
+		//                     +- - - - - - - - -+ -+
+		//
+		lua_createtable(L, v.size(), 0);
+
+		lua_Integer i = 1;
+		for (const auto & object : v)
+		{
+			//       stack
+			//    +---------+
+			//  -1| object  |
+			//    |---------|      +--------+--------+
+			//  -2|  table  |----->| Key    | Value  |
+			//    |---------|      +--------+--------+
+			//  -3| result1 |
+			//    |---------|
+			//    :         :
+			Sticklib::push_classobject<T>(L, own, object, metatable_name);
+
+			//       stack
+			//    +---------+      +--------+--------+
+			//  -1|  table  |----->| Key    | Value  |
+			//    |---------|      |--------+--------|
+			//  -2| result1 |      :        :        :
+			//    |---------|      |--------|--------|
+			//    :         :      |   i    | object |
+			//                     +--------+--------+
+			lua_rawseti(L, -2, i);
+			i++;
+		}
+	}
+//----- 21.05.25 Fukushiro M. 追加終 ()-----
 
 	template<typename K, typename V>
 	static void push_hash(lua_State * L, const std::unordered_map<K, V> & v)
@@ -2058,7 +2230,8 @@ public:
 		lua_setfield(L, -2, name);
 	}
 
-	static void set_classobject_to_table(lua_State * L, const char * name, bool own, Sticklib::classobject object, const char * metatable_name)
+	template<typename T>
+	static void set_classobject_to_table(lua_State * L, const char * name, bool own, T * object, const char * metatable_name)
 	{
 		//                 Premise.
 		//        stack

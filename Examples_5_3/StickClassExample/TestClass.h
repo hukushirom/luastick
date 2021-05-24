@@ -158,7 +158,7 @@ public:
 	/// <summary>
 	/// Create object.
 	/// </summary>
-	/// <returns>TestClass0 object</returns>
+	/// <returns autodel="true">TestClass0 object</returns>
 	static TestClass0 * Create0()
 	{
 		return new TestClass0();
@@ -208,6 +208,29 @@ public:
 		if (ea == EnumA::A)
 			ea = EnumA::B;
 	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Set title string.
+	/// </summary>
+	/// <param name="title" io="in">Title string</param>
+	void SetTitle(const std::string & title)
+	{
+		m_title = title;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Get title string.
+	/// </summary>
+	/// <returns>Title string</returns>
+	const std::string & GetTitle() const
+	{
+		return m_title;
+	}
+
+private:
+	std::string m_title;
 };
 
 /// <stick export="true" />
@@ -249,7 +272,7 @@ public:
 	/// <summary>
 	/// Return TestClass1 object.
 	/// </summary>
-	/// <returns>TestClass1 object</returns>
+	/// <returns autodel="true">TestClass1 object</returns>
 	static TestClass1 * Create1()
 	{
 		return new TestClass1();
@@ -274,6 +297,29 @@ public:
 	{
 		return 15;
 	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Set TestClass0 array.
+	/// </summary>
+	/// <param name="array" io="in">TestClass0 array.</param>
+	void SetClass0Array(const std::vector<TestClass0 *> & array)
+	{
+		m_class0Array = array;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Get TestClass0 array.
+	/// </summary>
+	/// <param name="array" io="out">TestClass0 array.</param>
+	void GetClass0Array(std::vector<TestClass0 *> & array)
+	{
+		array = m_class0Array;
+	}
+
+private:
+	std::vector<TestClass0 *> m_class0Array;
 };
 
 /// <stick export="true" />
@@ -312,7 +358,7 @@ public:
 	/// <summary>
 	/// Create TestClass2 object.
 	/// </summary>
-	/// <param io="out" name="testClass2">TestClass2 object</param>
+	/// <param io="out" name="testClass2" autodel="true">TestClass2 object</param>
 	static void Create2(TestClass2 * & testClass2)
 	{
 		testClass2 = new TestClass2();
