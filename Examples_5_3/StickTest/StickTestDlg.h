@@ -172,7 +172,7 @@ public:
 		/// <summary>
 		/// Add1s the specified a.
 		/// </summary>
-		/// <param name="a" io="out" ltype="classobject(::X::A)">a.</param>
+		/// <param name="a" io="out" ltype="class-object(::X::A)">a.</param>
 		int Add1(A * & a)
 		{
 			std::string xxx = XXX;
@@ -196,7 +196,7 @@ public:
 		/// Creates a.
 		/// </summary>
 		/// <param name="a" io="in">a.</param>
-		/// <returns ltype="classobject(::X::A)"></returns>
+		/// <returns ltype="class-object(::X::A)"></returns>
 		static A* CreateA(int a)
 		{
 			return new A(a);
@@ -533,5 +533,5 @@ public:
 /// To the stick test dialog.
 /// </summary>
 /// <param name="data" io="in">The data.</param>
-/// <returns ltype="classobject(::CStickTestDlg)"></returns>
+/// <returns ltype="class-object(::CStickTestDlg)"></returns>
 extern CStickTestDlg* ToStickTestDlg(void* data);

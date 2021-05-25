@@ -56,18 +56,21 @@ struct StickInstanceWrapper
 
 // Lua-type definition.
 
-/// <sticktype name="boolean" ctype="bool" getfunc="Sticklib::check_lvalue" setfunc="Sticklib::push_lvalue" />
-/// <sticktype name="integer" ctype="__int64" getfunc="Sticklib::check_lvalue" setfunc="Sticklib::push_lvalue" />
-/// <sticktype name="number" ctype="double" getfunc="Sticklib::check_lvalue" setfunc="Sticklib::push_lvalue" />
-/// <sticktype name="string" ctype="std::string" getfunc="Sticklib::check_lvalue" setfunc="Sticklib::push_lvalue" />
-/// <sticktype name="lightuserdata" ctype="void*" getfunc="Sticklib::check_lvalue" setfunc="Sticklib::push_lvalue" />
-/// <sticktype name="classobject" ctype="Sticklib::classobject" getfunc="Sticklib::check_classobject" setfunc="Sticklib::push_classobject" />
+//----- 21.05.25 Fukushiro M. 削除始 ()-----
+///// sticktype name="classobject" ctype="Sticklib::classobject" getfunc="Sticklib::check_classobject" setfunc="Sticklib::push_classobject" />
+///// sticktype name="array<classobject>" ctype="std::vector<Sticklib::classobject>" getfunc="Sticklib::check_classobjectarray" setfunc="Sticklib::push_classobjectarray" />
+//----- 21.05.25 Fukushiro M. 削除終 ()-----
+
+/// <sticktype name="boolean" ctype="bool" getfunc="Sticklib::check_lvalue<bool>" setfunc="Sticklib::push_lvalue<bool>" />
+/// <sticktype name="integer" ctype="__int64" getfunc="Sticklib::check_lvalue<__int64>" setfunc="Sticklib::push_lvalue<__int64>" />
+/// <sticktype name="number" ctype="double" getfunc="Sticklib::check_lvalue<double>" setfunc="Sticklib::push_lvalue<double>" />
+/// <sticktype name="string" ctype="std::string" getfunc="Sticklib::check_lvalue<std::string>" setfunc="Sticklib::push_lvalue<std::string>" />
+/// <sticktype name="lightuserdata" ctype="void*" getfunc="Sticklib::check_lvalue<void*>" setfunc="Sticklib::push_lvalue<void*>" />
 /// <sticktype name="array<number>" ctype="std::vector<double>" getfunc="Sticklib::check_array<double>" setfunc="Sticklib::push_array<double>" />
 /// <sticktype name="array<integer>" ctype="std::vector<__int64>" getfunc="Sticklib::check_array<__int64>" setfunc="Sticklib::push_array<__int64>" />
 /// <sticktype name="array<boolean>" ctype="std::vector<bool>" getfunc="Sticklib::check_array<bool>" setfunc="Sticklib::push_array<bool>" />
 /// <sticktype name="array<string>" ctype="std::vector<std::string>" getfunc="Sticklib::check_array<std::string>" setfunc="Sticklib::push_array<std::string>" />
 /// <sticktype name="array<lightuserdata>" ctype="std::vector<void*>" getfunc="Sticklib::check_array<void*>" setfunc="Sticklib::push_array<void*>" />
-/// <sticktype name="array<classobject>" ctype="std::vector<Sticklib::classobject>" getfunc="Sticklib::check_classobjectarray" setfunc="Sticklib::push_classobjectarray" />
 /// <sticktype name="hash<number,number>" ctype="std::unordered_map<double,double>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<double,double>" />
 /// <sticktype name="hash<number,integer>" ctype="std::unordered_map<double,__int64>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<double,__int64>" />
 /// <sticktype name="hash<number,boolean>" ctype="std::unordered_map<double,bool>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<double,bool>" />
@@ -537,7 +540,7 @@ public:
 			//                     |----|-----|
 			//                     :    :     :
 			T value;
-			Sticklib::check_lvalue(value, L, -1);
+			Sticklib::check_lvalue<T>(value, L, -1);
 			v.emplace_back(value);
 
 			//       stack
@@ -639,8 +642,8 @@ public:
 			//                     :    :     :
 			K key;
 			V value;
-			Sticklib::check_lvalue(key, L, -2);			// key="x1"
-			Sticklib::check_lvalue(value, L, -1);		// value=5
+			Sticklib::check_lvalue<K>(key, L, -2);			// key="x1"
+			Sticklib::check_lvalue<V>(value, L, -1);		// value=5
 			v[key] = value;
 
 			//       stack
@@ -757,20 +760,20 @@ public:
 		case LUA_TNUMBER:
 		{
 			double v;
-			check_lvalue(v, L, arg);
+			check_lvalue<double>(v, L, arg);
 			value = AnyValue(v);
 			break;
 		}
 		case LUA_TBOOLEAN:
 		{
 			bool v;
-			check_lvalue(v, L, arg);
+			check_lvalue<bool>(v, L, arg);
 			value = AnyValue(v);
 		}
 		case LUA_TSTRING:
 		{
 			std::string v;
-			check_lvalue(v, L, arg);
+			check_lvalue<std::string>(v, L, arg);
 			value = AnyValue(v.c_str());
 		}
 		default:
@@ -779,13 +782,13 @@ public:
 	}
 
 	template<typename T>
-	static void check_classobject(T * & value, lua_State * L, int arg)
+	static void check_classobject(T & value, lua_State * L, int arg)
 	{
 		// lua_touserdata is valid for userdata and lightuserdata both.
 		auto wrapper = (StickInstanceWrapper *)lua_touserdata(L, arg);
 		if (!wrapper)
 			throw std::invalid_argument("The argument is not userdata nor lightuserdata");
-		value = (T *)wrapper->ptr;
+		value = (T)wrapper->ptr;
 	}
 
 	/// <summary>
@@ -796,7 +799,7 @@ public:
 	/// <param name="L">Lua.</param>
 	/// <param name="ud">The argument.</param>
 	template<typename T>
-	static void check_classobjectarray(std::vector<T *> & v, lua_State * L, int ud)
+	static void check_classobjectarray(std::vector<T> & v, lua_State * L, int ud)
 	{
 		v.clear();
 
@@ -845,7 +848,7 @@ public:
 			//                     |----|---------|
 			//                     :    :         :
 			//
-			T * value;
+			T value;
 			Sticklib::check_classobject<T>(value, L, -1);
 			v.emplace_back(value);
 
@@ -969,7 +972,7 @@ public:
 	/// <param name="L">The l.</param>
 	/// <param name="arg">The argument.</param>
 	/// <returns></returns>
-	static void * check_classobject(lua_State *L, int ud, const char * tname)
+	static void * test_classobject(lua_State *L, int ud, const char * tname)
 	{
 		void * p = luaL_testudata(L, ud, tname);
 		if (p == nullptr)
@@ -1124,55 +1127,55 @@ public:
 	/// <param name="L">The l.</param>
 	/// <param name="value">value.</param>
 	template<typename T>
-	static void push_lvalue(lua_State * L, T const & value)
+	static void push_lvalue(lua_State * L, T const & value, bool own)
 	{
 		StickThrowRuntimeError(STICKERR_SYSTEM, (const char *)"push_lvalue");
 	}
 
 	template<>
-	static void push_lvalue<double>(lua_State * L, double const & value)
+	static void push_lvalue<double>(lua_State * L, double const & value, bool own)
 	{
 		lua_pushnumber(L, value);
 	}
 
 	template<>
-	static void push_lvalue<__int64>(lua_State * L, __int64 const & value)
+	static void push_lvalue<__int64>(lua_State * L, __int64 const & value, bool own)
 	{
 		lua_pushinteger(L, value);
 	}
 
 	template<>
-	static void push_lvalue<bool>(lua_State * L, bool const & value)
+	static void push_lvalue<bool>(lua_State * L, bool const & value, bool own)
 	{
 		lua_pushboolean(L, value ? 1 : 0);
 	}
 
 	template<>
-	static void push_lvalue<charConstP>(lua_State * L, charConstP const & value)
+	static void push_lvalue<charConstP>(lua_State * L, charConstP const & value, bool own)
 	{
 		lua_pushstring(L, value);
 	}
 
 	template<>
-	static void push_lvalue<charP>(lua_State * L, charP const & value)
+	static void push_lvalue<charP>(lua_State * L, charP const & value, bool own)
 	{
 		lua_pushstring(L, value);
 	}
 
 	template<>
-	static void push_lvalue<voidp>(lua_State * L, voidp const & value)
+	static void push_lvalue<voidp>(lua_State * L, voidp const & value, bool own)
 	{
 		lua_pushlightuserdata(L, value);
 	}
 
 	template<>
-	static void push_lvalue<std::string>(lua_State * L, std::string const & value)
+	static void push_lvalue<std::string>(lua_State * L, std::string const & value, bool own)
 	{
 		lua_pushlstring(L, value.c_str(), value.length());
 	}
 
 	template<>
-	static void push_lvalue<Sticklib::AnyValue>(lua_State * L, Sticklib::AnyValue const & value)
+	static void push_lvalue<Sticklib::AnyValue>(lua_State * L, Sticklib::AnyValue const & value, bool own)
 	{
 		switch (value.type)
 		{
@@ -1180,13 +1183,13 @@ public:
 			lua_pushnil(L);
 			break;
 		case AnyValue::Type::DOUBLE:
-			push_lvalue(L, value.doubleValue);
+			push_lvalue<double>(L, value.doubleValue, own);
 			break;
 		case AnyValue::Type::BOOL:
-			push_lvalue(L, value.boolValue);
+			push_lvalue<bool>(L, value.boolValue, own);
 			break;
 		case AnyValue::Type::CHARP:
-			push_lvalue(L, value.charpValue);
+			push_lvalue<charP>(L, value.charpValue, own);
 			break;
 		default:
 			throw std::invalid_argument("The type of argument is not supported");
@@ -1198,11 +1201,11 @@ public:
 	/// And push it on the lua-stack. Metatable is assigned to the userdata.
 	/// </summary>
 	/// <param name="L">Lua object</param>
-	/// <param name="own">true:Own the class object. The class object will be deleted automatically./false:Do not won the class object.</param>
 	/// <param name="object">Class object.</param>
+	/// <param name="own">true:Own the class object. The class object will be deleted automatically./false:Do not won the class object.</param>
 	/// <param name="metatable_name">Name of the metatable.</param>
 	template<typename T>
-	static void push_classobject(lua_State * L, bool own, T * object, const char * metatable_name)
+	static void push_classobject(lua_State * L, T const & object, bool own, const char * metatable_name)
 	{
 		//                   Premise.
 		//       stack
@@ -1265,7 +1268,7 @@ public:
 	}
 
 	template<typename T>
-	static void push_array(lua_State * L, const std::vector<T> & v)
+	static void push_array(lua_State * L, const std::vector<T> & v, bool own)
 	{
 		//                   Premise.
 		//       stack
@@ -1303,7 +1306,7 @@ public:
 			//  -3| result1 |
 			//    |---------|
 			//    :         :
-			Sticklib::push_lvalue(L, value);
+			Sticklib::push_lvalue<T>(L, value, own);
 
 			//       stack
 			//    +---------+      +--------+--------+
@@ -1320,7 +1323,7 @@ public:
 
 //----- 21.05.25 Fukushiro M. 追加始 ()-----
 	template<typename T>
-	static void push_classobjectarray(lua_State * L, bool own, const std::vector<T *> & v, const char * metatable_name)
+	static void push_classobjectarray(lua_State * L, const std::vector<T> & v, bool own)
 	{
 		//                   Premise.
 		//       stack
@@ -1358,7 +1361,7 @@ public:
 			//  -3| result1 |
 			//    |---------|
 			//    :         :
-			Sticklib::push_classobject<T>(L, own, object, metatable_name);
+			Sticklib::push_classobject<T>(L, object, own);
 
 			//       stack
 			//    +---------+      +--------+--------+
@@ -1375,7 +1378,7 @@ public:
 //----- 21.05.25 Fukushiro M. 追加終 ()-----
 
 	template<typename K, typename V>
-	static void push_hash(lua_State * L, const std::unordered_map<K, V> & v)
+	static void push_hash(lua_State * L, const std::unordered_map<K, V> & v, bool own)
 	{
 		//                   Premise.
 		//       stack
@@ -1412,7 +1415,7 @@ public:
 			//  -3| result1 |
 			//    |---------|
 			//    :         :
-			Sticklib::push_lvalue(L, kv.first);
+			Sticklib::push_lvalue<K>(L, kv.first, false);
 
 			//       stack
 			//    +---------+
@@ -1425,7 +1428,7 @@ public:
 			//  -4| result1 |
 			//    |---------|
 			//    :         :
-			Sticklib::push_lvalue(L, kv.second);
+			Sticklib::push_lvalue<V>(L, kv.second, own);
 
 			//       stack
 			//    +---------+      +---------+---------+
@@ -1984,7 +1987,7 @@ public:
 			//                                 |"GetValue"|  c-func2   |
 			//                                 +----------+------------+
 			//                                        metatable
-			Sticklib::set_lvalue_to_table(L, "__name", regName);
+			Sticklib::set_lvalue_to_table(L, "__name", regName, false);
 		}
 
 		// void lua_pushvalue (lua_State * L, int index);
@@ -2188,7 +2191,7 @@ public:
 	}
 
 	template<typename T>
-	static void set_lvalue_to_table(lua_State * L, const char * name, const T & value)
+	static void set_lvalue_to_table(lua_State * L, const char * name, const T & value, bool own)
 	{
 		//                 Premise.
 		//        stack
@@ -2212,7 +2215,7 @@ public:
 		//                       |   Key    | Value |
 		//                       |----------|-------|
 		//                       :          :       :
-		push_lvalue(L, value);
+		push_lvalue<T>(L, value, own);
 
 		//        stack
 		//     +----------+
@@ -2231,7 +2234,7 @@ public:
 	}
 
 	template<typename T>
-	static void set_classobject_to_table(lua_State * L, const char * name, bool own, T * object, const char * metatable_name)
+	static void set_classobject_to_table(lua_State * L, const char * name, T * object, bool own)
 	{
 		//                 Premise.
 		//        stack
@@ -2263,7 +2266,7 @@ public:
 		//     +----------+       |  class instance    |
 		//                        +--------------------+
 		//
-		push_classobject(L, own, object, metatable_name);
+		push_classobject<T>(L, object, own);
 
 		//        stack
 		//     +----------+

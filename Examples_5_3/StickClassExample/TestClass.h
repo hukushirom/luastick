@@ -4,6 +4,14 @@
 
 #pragma once
 
+/// <stickconv type1="::TestClass0*" type2="TC0*" type1to2="Sticklib::T_to_U<::TestClass0*,TC0*>" type2to1="Sticklib::T_to_U<TC0*,::TestClass0*>" />
+
+class TestClass0;
+
+using TC0 = TestClass0;
+
+
+
 /// <stick export="true" />
 /// <summary>
 /// Test Space.
@@ -159,7 +167,7 @@ public:
 	/// Create object.
 	/// </summary>
 	/// <returns autodel="true">TestClass0 object</returns>
-	static TestClass0 * Create0()
+	static TC0 * Create0()
 	{
 		return new TestClass0();
 	}

@@ -1328,7 +1328,7 @@ std::string FuncRec::GetFullpathLuanameForCall() const
 		return classFullpathLuaname.empty() ?
 			funcGroupRec.luaname
 			:
-			std::string("[") + classFullpathLuaname + " classobject]:" + funcGroupRec.luaname;
+			std::string("[") + classFullpathLuaname + " class-object]:" + funcGroupRec.luaname;
 	}
 	else
 		return GetFullpathLuaname();
@@ -1552,10 +1552,10 @@ static void NormalizeVarTypeSub(
 	const ClassRec & classRec
 )
 {
-	static const std::regex REX_ENUM(R"(\benum\b)");
-	static const std::regex REX_CLASS(R"(\bclass\b)");
-	static const std::regex REX_STRUCT(R"(\bstruct\b)");
-	static const std::regex REX_UNION(R"(\bunion\b)");
+	static const std::regex REX_ENUM(R"(\benum\s)");
+	static const std::regex REX_CLASS(R"(\bclass\s)");
+	static const std::regex REX_STRUCT(R"(\bstruct\s)");
+	static const std::regex REX_UNION(R"(\bunion\s)");
 	static const std::regex REX_CONST(R"(\bconst\b)");
 	static const std::regex SPACE_AMP(R"(\s+\&)");
 	static const std::regex SPACE_ASTAR(R"(\s+\*)");
@@ -3651,8 +3651,10 @@ static void ParseArgments(
 			std::string varType;
 			NormalizeVarType(varType, rawCtype, results[1].str(), classRec);
 
-			if (varType == "Sticklib::classobject")
-				ThrowLeException(LeError::NOT_SUPPORTED, "It is prohibited to use Sticklib::classobject as the type of argument.");
+//----- 21.05.25 Fukushiro M. 削除始 ()-----
+//			if (varType == "Sticklib::classobject")
+//				ThrowLeException(LeError::NOT_SUPPORTED, "It is prohibited to use Sticklib::classobject as the type of argument.");
+//----- 21.05.25 Fukushiro M. 削除終 ()-----
 
 			const auto varName = results[2].str();
 			// Argument name -> raw c++ Type.
@@ -3962,13 +3964,15 @@ static bool CheckFunction(
 					varCtype = successPath.back();
 					luaType = CtypeToLuaType(successPath.front());
 				}
-				else if (funcType == FuncRec::Type::CONSTRUCTOR && argName == "__lstickvar_ret")
-				{	//----- If the function is constructor and argName is its return value, specifies destination Lua-type -----
-
-// テスト。そもそもこのブロックは不要では。
-//					luaType = LuaType("classobject");
-					luaType = LuaType::NIL;
-				}
+//----- 21.05.25 Fukushiro M. 削除始 ()-----
+//				else if (funcType == FuncRec::Type::CONSTRUCTOR && argName == "__lstickvar_ret")
+//				{	//----- If the function is constructor and argName is its return value, specifies destination Lua-type -----
+//
+//// テスト。そもそもこのブロックは不要では。
+////					luaType = LuaType("classobject");
+//					luaType = LuaType::NIL;
+//				}
+//----- 21.05.25 Fukushiro M. 削除終 ()-----
 				else
 				{
 					auto iAliasLtype = specifiedArgNameToAliasLtype.find(argName);
@@ -4201,7 +4205,7 @@ static int ${wrapperFunctionName}(lua_State* L)
 	// |                                                                      -+         |
 	// | auto obj = new ::ClassA(a, b, c);                                     | Block-7 |
 	// |                                                                      -+         |
-	// | Sticklib::push_classobject(L, true, obj, "lm__X__A__");               | Block-8 |
+	// | Sticklib::push_classobject(L, obj, true, "lm__X__A__");               | Block-8 |
 	// |                                                                      -+         |
 	// | std::string _argout2_1;                                               |         |
 	// | Sticklib::wstring_to_astring(_argout2_1, b);                          | Block-9 |
@@ -4224,10 +4228,15 @@ static int ${wrapperFunctionName}(lua_State* L)
 //		// C++ type name is "Manglib::classobject"
 //		const auto luaCTypeName = LuaTypeToCTypeName(LuaType("classobject"));
 //----- 21.05.24 Fukushiro M. 変更後 ()-----
-// テスト。
-		auto classLuaType = UtilString::Format("classobject(%s)", currentClassRec.GetFullpathCname().c_str());
+//----- 21.05.25 Fukushiro M. 変更前 ()-----
+//		auto classLuaType = UtilString::Format("class-object(%s)", currentClassRec.GetFullpathCname().c_str());
+//		// Func name is "Sticklib::check_lvalue"
+//		const auto luaValueGetFuncName = LuaTypeToGetFuncName(classLuaType);
+//----- 21.05.25 Fukushiro M. 変更後 ()-----
 		// Func name is "Sticklib::check_lvalue"
-		const auto luaValueGetFuncName = LuaTypeToGetFuncName(classLuaType);
+		const auto luaValueGetFuncName = LuaTypeToGetFuncName(CtypeToLuaType(currentClassRec.GetFullpathCname() + "*"));
+//----- 21.05.25 Fukushiro M. 変更終 ()-----
+
 //----- 21.05.24 Fukushiro M. 変更終 ()-----
 
 		// Outputs like the following.
@@ -4456,14 +4465,16 @@ static int ${wrapperFunctionName}(lua_State* L)
 //----- 21.05.24 Fukushiro M. 変更前 ()-----
 //		const auto pushFunc = LuaTypeToSetFuncName(LuaType("classobject"));
 //----- 21.05.24 Fukushiro M. 変更後 ()-----
-		const auto pushFunc = LuaTypeToSetFuncName(LuaType(UtilString::Format("classobject(%s)", currentClassRec.GetFullpathCname().c_str())));
+// 21.05.25 Fukushiro M. 1行変更 ()
+//		const auto pushFunc = LuaTypeToSetFuncName(LuaType(UtilString::Format("class-object(%s)", currentClassRec.GetFullpathCname().c_str())));
+		const auto pushFunc = LuaTypeToSetFuncName(CtypeToLuaType(currentClassRec.GetFullpathCname() + "*"));
 //----- 21.05.24 Fukushiro M. 変更終 ()-----
 		// Output above Block-8.
 		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
-		${pushFunc}(L, true, obj, "${currentClassRec.GetUniqueClassName()}");
+		${pushFunc}(L, obj, true);
 
-)", pushFunc, currentClassRec.GetUniqueClassName());
+)", pushFunc);
 	}
 
 	//----- Describes the source codes for giving back the arguments to lua -----
@@ -4552,75 +4563,73 @@ static int ${wrapperFunctionName}(lua_State* L)
 			argMinorNumber++;
 		}
 
-		if (funcRec.ArgNameToLuaType(argName) == LuaType("classobject"))
-		{	//----- if class object -----
-			// Output above Block-10.
-			std::string uniqueName = funcRec.argNameToCtype.at(argName);
-			UtilString::TrimRight(uniqueName, '&', '*');
-			uniqueName = ClassRec::FullpathNameToUniqueName(uniqueName);
-			const auto pushFunc = LuaTypeToSetFuncName(funcRec.ArgNameToLuaType(argName));
-//----- 21.05.19 Fukushiro M. 変更前 ()-----
+//----- 21.05.25 Fukushiro M. 削除始 ()-----
+//		if (funcRec.ArgNameToLuaType(argName) == LuaType("classobject"))
+//		{	//----- if class object -----
+//			// Output above Block-10.
+//			std::string uniqueName = funcRec.argNameToCtype.at(argName);
+//			UtilString::TrimRight(uniqueName, '&', '*');
+//			uniqueName = ClassRec::FullpathNameToUniqueName(uniqueName);
+//			const auto pushFunc = LuaTypeToSetFuncName(funcRec.ArgNameToLuaType(argName));
+////----- 21.05.19 Fukushiro M. 変更前 ()-----
+////			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+////		// ${SRCMARKER}
+////		${pushFunc}(L, false, ${tmpArgName}, "${uniqueName}");
+////
+////)", pushFunc, tmpArgName, uniqueName);
+////----- 21.05.19 Fukushiro M. 変更後 ()-----
+//			const std::string autoDel = (funcRec.autoDelArgNames.find(argName) != funcRec.autoDelArgNames.end()) ? "true" : "false";
 //			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
 //		// ${SRCMARKER}
-//		${pushFunc}(L, false, ${tmpArgName}, "${uniqueName}");
+//		${pushFunc}(L, ${autoDel}, ${tmpArgName}, "${uniqueName}");
 //
-//)", pushFunc, tmpArgName, uniqueName);
-//----- 21.05.19 Fukushiro M. 変更後 ()-----
-			const std::string autoDel = (funcRec.autoDelArgNames.find(argName) != funcRec.autoDelArgNames.end()) ? "true" : "false";
-			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+//)", pushFunc, autoDel, tmpArgName, uniqueName);
+////----- 21.05.19 Fukushiro M. 変更終 ()-----
+//		}
+//		else
+//		{	//----- if not class object -----
+//----- 21.05.25 Fukushiro M. 削除終 ()-----
+
+//----- 21.05.25 Fukushiro M. 変更前 ()-----
+////----- 21.05.24 Fukushiro M. 追加始 ()-----
+//		auto argLuaType = funcRec.ArgNameToLuaType(argName);
+//		auto classobjLuaType =
+//			(argLuaType.CompareHead(LuaType("class-object(")) == 0) ? LuaType("class-object(") :
+//			(argLuaType.CompareHead(LuaType("array<class-object>(")) == 0) ? LuaType("array<class-object>(") :
+//			LuaType::NIL;
+//		if (classobjLuaType != LuaType::NIL)
+//		{	//----- if class object or class object array -----
+//			// e.g. argLuaType="class-object(ObjSet)", classobjLuaType="class-object("
+//			auto fullpathClassName = argLuaType.ToString().substr(classobjLuaType.ToString().length(), argLuaType.ToString().length() - classobjLuaType.ToString().length() - 1);
+//			auto uniqueName = ClassRec::FullpathNameToUniqueName(fullpathClassName);
+//			const auto pushFunc = LuaTypeToSetFuncName(argLuaType);
+//			const std::string autoDel = (funcRec.autoDelArgNames.find(argName) != funcRec.autoDelArgNames.end()) ? "true" : "false";
+//			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+//		// ${SRCMARKER}
+//		${pushFunc}(L, ${tmpArgName}, ${autoDel}, "${uniqueName}");
+//
+//)", pushFunc, tmpArgName, autoDel, uniqueName);
+//		}
+//		else
+//		{
+////----- 21.05.24 Fukushiro M. 追加終 ()-----
+//				// Output above Block-10.
+//				const auto pushFunc = LuaTypeToSetFuncName(funcRec.ArgNameToLuaType(argName));
+//				OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+//		// ${SRCMARKER}
+//		${pushFunc}(L, ${tmpArgName});
+//
+//)", pushFunc, tmpArgName);
+//		}
+//----- 21.05.25 Fukushiro M. 変更後 ()-----
+		const auto pushFunc = LuaTypeToSetFuncName(CtypeToLuaType(UtilString::Replace(conversionPath.back(), "&", "")));
+		const std::string autoDel = (funcRec.autoDelArgNames.find(argName) != funcRec.autoDelArgNames.end()) ? "true" : "false";
+		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
-		${pushFunc}(L, ${autoDel}, ${tmpArgName}, "${uniqueName}");
+		${pushFunc}(L, ${tmpArgName}, ${autoDel});
 
-)", pushFunc, autoDel, tmpArgName, uniqueName);
-//----- 21.05.19 Fukushiro M. 変更終 ()-----
-		}
-		else
-		{	//----- if not class object -----
-
-//----- 21.05.24 Fukushiro M. 追加始 ()-----
-// テスト。
-			auto argLuaType = funcRec.ArgNameToLuaType(argName);
-			auto classobjLuaType = LuaType("classobject(");
-			auto classobjaryLuaType = LuaType("array<classobject>(");
-			if (argLuaType.CompareHead(classobjLuaType) == 0)
-			{	//----- if class object array -----
-				// e.g. argLuaType="classobject(ObjSet)", classobjLuaType="classobject("
-				auto fullpathClassName = argLuaType.ToString().substr(classobjLuaType.ToString().length(), argLuaType.ToString().length() - classobjLuaType.ToString().length() - 1);
-				auto uniqueName = ClassRec::FullpathNameToUniqueName(fullpathClassName);
-				const auto pushFunc = LuaTypeToSetFuncName(argLuaType);
-				const std::string autoDel = (funcRec.autoDelArgNames.find(argName) != funcRec.autoDelArgNames.end()) ? "true" : "false";
-				OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-		// ${SRCMARKER}
-		${pushFunc}(L, ${autoDel}, ${tmpArgName}, "${uniqueName}");
-
-)", pushFunc, autoDel, tmpArgName, uniqueName);
-			}
-			else
-			if (argLuaType.CompareHead(classobjaryLuaType) == 0)
-			{	//----- if class object array -----
-				auto fullpathClassName = argLuaType.ToString().substr(classobjaryLuaType.ToString().length(), argLuaType.ToString().length() - classobjaryLuaType.ToString().length() - 1);
-				auto uniqueName = ClassRec::FullpathNameToUniqueName(fullpathClassName);
-				const auto pushFunc = LuaTypeToSetFuncName(argLuaType);
-				const std::string autoDel = (funcRec.autoDelArgNames.find(argName) != funcRec.autoDelArgNames.end()) ? "true" : "false";
-				OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-		// ${SRCMARKER}
-		${pushFunc}(L, ${autoDel}, ${tmpArgName}, "${uniqueName}");
-
-)", pushFunc, autoDel, tmpArgName, uniqueName);
-			}
-			else
-			{
-//----- 21.05.24 Fukushiro M. 追加終 ()-----
-				// Output above Block-10.
-				const auto pushFunc = LuaTypeToSetFuncName(funcRec.ArgNameToLuaType(argName));
-				OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-		// ${SRCMARKER}
-		${pushFunc}(L, ${tmpArgName});
-
-)", pushFunc, tmpArgName);
-// 21.05.24 Fukushiro M. 1行追加 ()
-			}
-		}
+)", pushFunc, tmpArgName, autoDel);
+//----- 21.05.25 Fukushiro M. 変更終 ()-----
 	}
 	OUTPUT_EXPORTFUNC_STREAM << u8"	}\n";
 
@@ -5266,8 +5275,10 @@ static void RegisterStickconvTag(const UtilXml::Tag & tag, bool isImporting)
 	if (type1to2.empty() && type2to1.empty())
 		ThrowLeException(LeError::WRONG_DEFINED_TAG, "At least one of type1to2 or type2to1 must be filled in.");
 
-	if (isImporting && (type1 == "Sticklib::classobject" || type2 == "Sticklib::classobject"))
-		ThrowLeException(LeError::WRONG_DEFINED_TAG, "It is prohibited to describe Sticklib::classobject converter.");
+//----- 21.05.25 Fukushiro M. 削除始 ()-----
+//	if (isImporting && (type1 == "Sticklib::classobject" || type2 == "Sticklib::classobject"))
+//		ThrowLeException(LeError::WRONG_DEFINED_TAG, "It is prohibited to describe Sticklib::classobject converter.");
+//----- 21.05.25 Fukushiro M. 削除終 ()-----
 
 	NormalizeVarType(type1, Dummy<std::string>(), type1, ClassRec());
 	NormalizeVarType(type2, Dummy<std::string>(), type2, ClassRec());
@@ -5799,103 +5810,102 @@ static void OutputStructPushFuncContent(const ClassRec & classRec)
 			tmpVarName = nextTmpVarName;
 		}
 
-//----- 21.05.24 Fukushiro M. 追加始 ()-----
-// テスト。
-		// "::TestClass0*". Do not remove '*'. 
-		auto fullpathCtypeAst = UtilString::Replace(variableRec.cToLuaConversionPath.back(), "&", "");
-		auto varLuaType = CtypeToLuaType(fullpathCtypeAst);
-		if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("classobject(")) == 0)
-		{	//----- if class object is defined as static variable -----
-			auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
-			const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
-			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-		// ${SRCMARKER}
-		//
-		// Sticklib::set_classobject_to_table(L, "var1", false, obj, "${uniqueClassName}");
-		// See the comment described at 'Sticklib::set_classobject_to_table'.
-		//
-		//        stack  
-		//     +----------+      +---------+---------+
-		//   -1|  TABLE   |----->| Key     | Value   |
-		//     |----------|      +---------+---------+
-		//     :          :      | "var1"  |  obj    |
-		//                       +---------+---------+
-		//
-		Sticklib::set_classobject_to_table<${fullpathCtype}>(L, "${variableRec.variableLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
-	}
+//----- 21.05.25 Fukushiro M. 削除始 ()-----
+////----- 21.05.24 Fukushiro M. 追加始 ()-----
+//// テスト。
+//// ここも下の処理にまとめられるのでは。
+//
+//		// "::TestClass0*". Do not remove '*'. 
+//		auto fullpathCtypeAst = UtilString::Replace(variableRec.cToLuaConversionPath.back(), "&", "");
+//		auto varLuaType = CtypeToLuaType(fullpathCtypeAst);
+//		if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("class-object(")) == 0)
+//		{	//----- if class object is defined as static variable -----
+//			auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
+//			const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
+//			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+//		// ${SRCMARKER}
+//		//
+//		// Sticklib::set_classobject_to_table(L, "var1", false, obj, "${uniqueClassName}");
+//		// See the comment described at 'Sticklib::set_classobject_to_table'.
+//		//
+//		//        stack  
+//		//     +----------+      +---------+---------+
+//		//   -1|  TABLE   |----->| Key     | Value   |
+//		//     |----------|      +---------+---------+
+//		//     :          :      | "var1"  |  obj    |
+//		//                       +---------+---------+
+//		//
+//		Sticklib::set_classobject_to_table<${fullpathCtype}>(L, "${variableRec.variableLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
+//	}
+//
+//)", fullpathCtype, variableRec.variableLuaname, tmpVarName, uniqueClassName);
+//		}
+//		else if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("array<class-object>(")) == 0)
+//		{	//----- if array of class object is defined as static variable -----
+//			auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
+//			const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
+//			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+//		// ${SRCMARKER}
+//		//
+//		// Sticklib::set_classobjectarray_to_table(L, "var1", false, obj, "${uniqueClassName}");
+//		// See the comment described at 'Sticklib::set_classobjectarray_to_table'.
+//		//
+//		//        stack  
+//		//     +----------+      +---------+---------+
+//		//   -1|  TABLE   |----->| Key     | Value   |
+//		//     |----------|      +---------+---------+      +-----+--------+
+//		//     :          :      | "var1"  | TABLE   |----->| Key | Value  |
+//		//                       +---------+---------+      +-----+--------+
+//		//                                                  | 1   | value1 |
+//		//                                                  +-----+--------+
+//		//                                                  | 2   | value2 |
+//		//                                                  +-----+--------+
+//		//                                                  :              :
+//		//
+//		Sticklib::set_classobjectarray_to_table<${fullpathCtype}>(L, "${variableRec.variableLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
+//	}
+//
+//)", fullpathCtype, variableRec.variableLuaname, tmpVarName, uniqueClassName);
+//		}
+//		else
+////----- 21.05.24 Fukushiro M. 追加終 ()-----
+//----- 21.05.25 Fukushiro M. 削除終 ()-----
+//----- 21.05.25 Fukushiro M. 削除始 ()-----
+//		if (variableRec.cToLuaConversionPath.back() == "Sticklib::classobject")
+//		{	//----- if class object is defined as static variable -----
+//			// Get the class type of the class object.
+//			auto preClassType = variableRec.cToLuaConversionPath[variableRec.cToLuaConversionPath.size() - 3];
+//			preClassType = UtilString::Replace(preClassType, "*", "", "&", "");
+//			// Get the unique name (like "lm__TestClass0__") of the class.
+//			auto preClassId = ClassRec::Get(0).FindClass(preClassType);
+//			const std::string uniqueClassName = ClassRec::Get(preClassId).GetUniqueClassName();
+//
+//			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+//		// ${SRCMARKER}
+//		//
+//		// Sticklib::set_classobject_to_table(L, "var1", false, obj, "${uniqueClassName}");
+//		// See the comment described at 'Sticklib::set_classobject_to_table'.
+//		//
+//		//        stack  
+//		//     +----------+      +---------+---------+
+//		//   -1|  TABLE   |----->| Key     | Value   |
+//		//     |----------|      +---------+---------+
+//		//     :          :      | "var1"  |  obj    |
+//		//                       +---------+---------+
+//		//
+//		Sticklib::set_classobject_to_table(L, "${variableRec.variableLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
+//	}
+//
+//)", variableRec.variableLuaname, tmpVarName, uniqueClassName);
+//		}
+//		else
+//----- 21.05.25 Fukushiro M. 削除終 ()-----
+// 21.05.25 Fukushiro M. 1行削除 ()
+//		{
+		auto varLastCtype = UtilString::Replace(variableRec.cToLuaConversionPath.back(), "&", "");
+		auto pushLuaValueFunc = LuaTypeToSetFuncName(CtypeToLuaType(varLastCtype));
 
-)", fullpathCtype, variableRec.variableLuaname, tmpVarName, uniqueClassName);
-		}
-		else if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("array<classobject>(")) == 0)
-		{	//----- if array of class object is defined as static variable -----
-			auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
-			const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
-
-			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-		// ${SRCMARKER}
-		//
-		// Sticklib::set_classobjectarray_to_table(L, "var1", false, obj, "${uniqueClassName}");
-		// See the comment described at 'Sticklib::set_classobjectarray_to_table'.
-		//
-		//        stack  
-		//     +----------+      +---------+---------+
-		//   -1|  TABLE   |----->| Key     | Value   |
-		//     |----------|      +---------+---------+      +-----+--------+
-		//     :          :      | "var1"  | TABLE   |----->| Key | Value  |
-		//                       +---------+---------+      +-----+--------+
-		//                                                  | 1   | value1 |
-		//                                                  +-----+--------+
-		//                                                  | 2   | value2 |
-		//                                                  +-----+--------+
-		//                                                  :              :
-		//
-		Sticklib::set_classobjectarray_to_table<${fullpathCtype}>(L, "${variableRec.variableLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
-	}
-
-)", fullpathCtype, variableRec.variableLuaname, tmpVarName, uniqueClassName);
-		}
-		else
-
-		// テスト。
-		// if (variableRec.cToLuaConversionPath.back() == "Sticklib::classobject")ブロックは削除すべき。
-
-//----- 21.05.24 Fukushiro M. 追加終 ()-----
-
-
-		if (variableRec.cToLuaConversionPath.back() == "Sticklib::classobject")
-		{	//----- if class object is defined as static variable -----
-			// Get the class type of the class object.
-			auto preClassType = variableRec.cToLuaConversionPath[variableRec.cToLuaConversionPath.size() - 3];
-			preClassType = UtilString::Replace(preClassType, "*", "", "&", "");
-			// Get the unique name (like "lm__TestClass0__") of the class.
-			auto preClassId = ClassRec::Get(0).FindClass(preClassType);
-			const std::string uniqueClassName = ClassRec::Get(preClassId).GetUniqueClassName();
-
-			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-		// ${SRCMARKER}
-		//
-		// Sticklib::set_classobject_to_table(L, "var1", false, obj, "${uniqueClassName}");
-		// See the comment described at 'Sticklib::set_classobject_to_table'.
-		//
-		//        stack  
-		//     +----------+      +---------+---------+
-		//   -1|  TABLE   |----->| Key     | Value   |
-		//     |----------|      +---------+---------+
-		//     :          :      | "var1"  |  obj    |
-		//                       +---------+---------+
-		//
-		Sticklib::set_classobject_to_table(L, "${variableRec.variableLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
-	}
-
-)", variableRec.variableLuaname, tmpVarName, uniqueClassName);
-		}
-		else
-		{
-			auto varCtype = variableRec.cToLuaConversionPath.back();
-			varCtype = UtilString::Replace(varCtype, "&", "");
-			auto pushLuaValueFunc = LuaTypeToSetFuncName(CtypeToLuaType(varCtype));
-
-			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
 
 		// ${SRCMARKER}
 		//
@@ -5909,7 +5919,7 @@ static void OutputStructPushFuncContent(const ClassRec & classRec)
 		//     |----------|      +---------+---------+
 		//     :          :
 		//
-		${pushLuaValueFunc}(L, ${tmpVarName});
+		${pushLuaValueFunc}(L, ${tmpVarName}, false);
 
 		// lua_setfield(L, -2, "var1");
 		//
@@ -5924,7 +5934,9 @@ static void OutputStructPushFuncContent(const ClassRec & classRec)
 	}
 
 )", pushLuaValueFunc, variableRec.variableLuaname, tmpVarName);
-		}
+
+// 21.05.25 Fukushiro M. 1行削除 ()
+//		}
 	}
 } // static void OutputStructPushFuncContent(const ClassRec & classRec).
 
@@ -5939,7 +5951,7 @@ static void OutputStructPushFunc(const ClassRec & classRec)
 /// Pushes ${fullpathClassName} value on Lua stack.
 /// </summary>
 template<>
-void Sticklib::push_lvalue<${fullpathClassName}>(lua_State * L, ${fullpathClassName} const & value)
+void Sticklib::push_lvalue<${fullpathClassName}>(lua_State * L, ${fullpathClassName} const & value, bool own)
 {
 	//        stack
 	//     :          :
@@ -5998,7 +6010,7 @@ static int ${classRec.GetWrapperDestructorName()}(lua_State* L)
 		if (lua_gettop(L) != 1)
 			throw std::invalid_argument("Count of arguments is not correct.");
 		// Get the class object.
-		auto __wrapper = (StickInstanceWrapper*)Sticklib::check_classobject(L, 1, "${classRec.GetUniqueClassName()}");
+		auto __wrapper = (StickInstanceWrapper*)Sticklib::test_classobject(L, 1, "${classRec.GetUniqueClassName()}");
 		if (__wrapper->own && __wrapper->ptr != nullptr)
 		{
 			delete (${fullpathClassName}*)__wrapper->ptr;
@@ -6057,136 +6069,187 @@ static void RegisterEnumConverter(const EnumRec & enumRec)
 //----- 20.01.19 Fukushiro M. 変更終 ()-----
 }
 
+//----- 21.05.25 Fukushiro M. 削除始 ()-----
+////// <summary>
+///// Registers the class converter.
+///// This is equivalent of reading "<stickdef type="c-lua" luatype="userdata" ctype="::X::A*" luatoc="Sticklib::linteger_to_intT<__int64>" ctolua="Sticklib::intT_to_linteger<__int64>" />".
+///// </summary>
+///// <param name="classRec">The class record.</param>
+//static void RegisterClassConverter(const ClassRec & classRec)
+//{
+//	// Think about the following case.
+//	// ----------------
+//	// class A {};
+//	// void Func(A& a);
+//	// ----------------
+//	// The above program should convert to the following.
+//	// ----------------
+//	// Manglib::classobject p;
+//	// p = lua_popobject(L);
+//	// A* a;
+//	// classobject_to_typeptr<A>(a, p);
+//	// Func(*a);
+//	// ----------------
+//	// So, register void* <--> A* converter in this function, and register A* --> A procedure in the function GetLuaToCppConverter.
+//
+//	const std::string className = classRec.GetFullpathCname();
+//	const std::string object_to_classp = std::string("Sticklib::classobject_to_typeptr<") + className + ">";
+//	const std::string classp_to_object = std::string("Sticklib::typeptr_to_classobject<") + className + ">";
+////----- 20.01.19 Fukushiro M. 変更前 ()-----
+////	CTYPE_1TO2_CONVERTER[std::make_pair("Sticklib::classobject", className + "*")] = object_to_classp;
+////	CTYPE_1TO2_CONVERTER[std::make_pair(className + "*", "Sticklib::classobject")] = classp_to_object;
+////	CTYPE_2TO1_CONVERTER[std::make_pair("Sticklib::classobject", className + "*")] = classp_to_object;
+////	CTYPE_2TO1_CONVERTER[std::make_pair(className + "*", "Sticklib::classobject")] = object_to_classp;
+////----- 20.01.19 Fukushiro M. 変更後 ()-----
+//	UtilXml::Tag tag;
+//	tag.name = "stickconv";
+//	tag.attributes["type1"] = "Sticklib::classobject";
+//	tag.attributes["type2"] = className + "*";
+//	tag.attributes["type1to2"] = object_to_classp;
+//	tag.attributes["type2to1"] = classp_to_object;
+////	tag.type = UtilXml::Tag::ONESHOT;
+//	RegisterStickconvTag(tag, false);
+////----- 20.01.19 Fukushiro M. 変更終 ()-----
+//}
+//----- 21.05.25 Fukushiro M. 削除終 ()-----
+
 //// <summary>
-/// Registers the class converter.
-/// This is equivalent of reading "<stickdef type="c-lua" luatype="userdata" ctype="::X::A*" luatoc="Sticklib::linteger_to_intT<__int64>" ctolua="Sticklib::intT_to_linteger<__int64>" />".
-/// </summary>
-/// <param name="classRec">The class record.</param>
-static void RegisterClassConverter(const ClassRec & classRec)
-{
-// テスト。この関数は削除。
-
-	// Think about the following case.
-	// ----------------
-	// class A {};
-	// void Func(A& a);
-	// ----------------
-	// The above program should convert to the following.
-	// ----------------
-	// Manglib::classobject p;
-	// p = lua_popobject(L);
-	// A* a;
-	// classobject_to_typeptr<A>(a, p);
-	// Func(*a);
-	// ----------------
-	// So, register void* <--> A* converter in this function, and register A* --> A procedure in the function GetLuaToCppConverter.
-
-	const std::string className = classRec.GetFullpathCname();
-	const std::string object_to_classp = std::string("Sticklib::classobject_to_typeptr<") + className + ">";
-	const std::string classp_to_object = std::string("Sticklib::typeptr_to_classobject<") + className + ">";
-//----- 20.01.19 Fukushiro M. 変更前 ()-----
-//	CTYPE_1TO2_CONVERTER[std::make_pair("Sticklib::classobject", className + "*")] = object_to_classp;
-//	CTYPE_1TO2_CONVERTER[std::make_pair(className + "*", "Sticklib::classobject")] = classp_to_object;
-//	CTYPE_2TO1_CONVERTER[std::make_pair("Sticklib::classobject", className + "*")] = classp_to_object;
-//	CTYPE_2TO1_CONVERTER[std::make_pair(className + "*", "Sticklib::classobject")] = object_to_classp;
-//----- 20.01.19 Fukushiro M. 変更後 ()-----
-	UtilXml::Tag tag;
-	tag.name = "stickconv";
-	tag.attributes["type1"] = "Sticklib::classobject";
-	tag.attributes["type2"] = className + "*";
-	tag.attributes["type1to2"] = object_to_classp;
-	tag.attributes["type2to1"] = classp_to_object;
-//	tag.type = UtilXml::Tag::ONESHOT;
-	RegisterStickconvTag(tag, false);
-//----- 20.01.19 Fukushiro M. 変更終 ()-----
-}
-
-//// <summary>
-/// Registers a lua-type of the struct.
+/// Registers a lua-type and type-converter for the struct.
 /// This is equivalent of reading below.
 /// <sticktype name="__xxxx___" ctype="::MyStruct" getfunc="Sticklib::check_lvalue" setfunc="Sticklib::push_lvalue" />
 /// <sticktype name="array<__xxxx___>" ctype="std::vector<::MyStruct>" getfunc="Sticklib::check_array<::MyStruct>" setfunc="Sticklib::push_array<::MyStruct>" />
 /// <sticktype name="hash<number,__xxxx___>" ctype="std::unordered_map<double,::MyStruct>" getfunc="Sticklib::check_hash<double,::MyStruct>" setfunc="Sticklib::push_hash<double,::MyStruct>" />
 ///   :
+/// <stickconv type1="std::vector<MyStruct>" type2="std::unordered_set<MyStruct>" type1to2="Sticklib::vector_to_uset<MyStruct,MyStruct>" type2to1="Sticklib::uset_to_vector<MyStruct,MyStruct>" />
+///   :
 /// </summary>
 /// <param name="classRec">The class record.</param>
 static void RegisterStructType(const ClassRec & classRec)
 {
-	UtilXml::Tag tag;
-	tag.name = "sticktype";
-
-// 20.01.27 Fukushiro M. 1行変更 ()
-//	const auto uniqClassName = classRec.GetUniqueClassName();
 	const auto fullLuaName = classRec.GetFullpathLuaname();
 	const auto fullCname = classRec.GetFullpathCname();
-//	tag.type = UtilXml::Tag::ONESHOT;
 
-	tag.attributes["name"] = fullLuaName;
-	tag.attributes["ctype"] = fullCname;
-	tag.attributes["getfunc"] = "Sticklib::check_lvalue";
-	tag.attributes["setfunc"] = "Sticklib::push_lvalue";
-	RegisterSticktypeTag(tag);
+	UtilXml::Tag typeTag;
+	typeTag.name = "sticktype";
 
-	tag.attributes["name"] = UtilString::Format("array<%s>", fullLuaName.c_str());
-	tag.attributes["ctype"] = UtilString::Format("std::vector<%s>", fullCname.c_str());
-	tag.attributes["getfunc"] = UtilString::Format("Sticklib::check_array<%s>", fullCname.c_str());
-	tag.attributes["setfunc"] = UtilString::Format("Sticklib::push_array<%s>", fullCname.c_str());
-	RegisterSticktypeTag(tag);
+	typeTag.attributes["name"] = fullLuaName;
+	typeTag.attributes["ctype"] = fullCname;
+	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_lvalue<%s>", fullCname.c_str());
+	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_lvalue<%s>", fullCname.c_str());
+	RegisterSticktypeTag(typeTag);
 
-	tag.attributes["name"] = UtilString::Format("hash<number,%s>", fullLuaName.c_str());
-	tag.attributes["ctype"] = UtilString::Format("std::unordered_map<double,%s>", fullCname.c_str());
-	tag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<double,%s>", fullCname.c_str());
-	tag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<double,%s>", fullCname.c_str());
-	RegisterSticktypeTag(tag);
+	typeTag.attributes["name"] = UtilString::Format("array<%s>", fullLuaName.c_str());
+	typeTag.attributes["ctype"] = UtilString::Format("std::vector<%s>", fullCname.c_str());
+	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_array<%s>", fullCname.c_str());
+	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_array<%s>", fullCname.c_str());
+	RegisterSticktypeTag(typeTag);
 
-	tag.attributes["name"] = UtilString::Format("hash<integer,%s>", fullLuaName.c_str());
-	tag.attributes["ctype"] = UtilString::Format("std::unordered_map<__int64,%s>", fullCname.c_str());
-	tag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<__int64,%s>", fullCname.c_str());
-	tag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<__int64,%s>", fullCname.c_str());
-	RegisterSticktypeTag(tag);
+	typeTag.attributes["name"] = UtilString::Format("hash<number,%s>", fullLuaName.c_str());
+	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<double,%s>", fullCname.c_str());
+	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<double,%s>", fullCname.c_str());
+	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<double,%s>", fullCname.c_str());
+	RegisterSticktypeTag(typeTag);
 
-	tag.attributes["name"] = UtilString::Format("hash<boolean,%s>", fullLuaName.c_str());
-	tag.attributes["ctype"] = UtilString::Format("std::unordered_map<bool,%s>", fullCname.c_str());
-	tag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<bool,%s>", fullCname.c_str());
-	tag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<bool,%s>", fullCname.c_str());
-	RegisterSticktypeTag(tag);
+	typeTag.attributes["name"] = UtilString::Format("hash<integer,%s>", fullLuaName.c_str());
+	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<__int64,%s>", fullCname.c_str());
+	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<__int64,%s>", fullCname.c_str());
+	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<__int64,%s>", fullCname.c_str());
+	RegisterSticktypeTag(typeTag);
 
-	tag.attributes["name"] = UtilString::Format("hash<string,%s>", fullLuaName.c_str());
-	tag.attributes["ctype"] = UtilString::Format("std::unordered_map<std::string,%s>", fullCname.c_str());
-	tag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<std::string,%s>", fullCname.c_str());
-	tag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<std::string,%s>", fullCname.c_str());
-	RegisterSticktypeTag(tag);
+	typeTag.attributes["name"] = UtilString::Format("hash<boolean,%s>", fullLuaName.c_str());
+	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<bool,%s>", fullCname.c_str());
+	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<bool,%s>", fullCname.c_str());
+	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<bool,%s>", fullCname.c_str());
+	RegisterSticktypeTag(typeTag);
+
+	typeTag.attributes["name"] = UtilString::Format("hash<string,%s>", fullLuaName.c_str());
+	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<std::string,%s>", fullCname.c_str());
+	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<std::string,%s>", fullCname.c_str());
+	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<std::string,%s>", fullCname.c_str());
+	RegisterSticktypeTag(typeTag);
+
+//----- 21.05.25 Fukushiro M. 追加始 ()-----
+	UtilXml::Tag convTag;
+	convTag.name = "stickconv";
+
+	convTag.attributes["type1"] = UtilString::Format("std::vector<%s>", fullCname.c_str());
+	convTag.attributes["type2"] = UtilString::Format("std::unordered_set<%s>", fullCname.c_str());
+	convTag.attributes["type1to2"] = UtilString::Format("Sticklib::vector_to_uset<%s,%s>", fullCname.c_str(), fullCname.c_str());
+	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::uset_to_vector<%s,%s>", fullCname.c_str(), fullCname.c_str());
+	RegisterStickconvTag(convTag, false);
+
+	convTag.attributes["type1"] = UtilString::Format("std::vector<%s>", fullCname.c_str());
+	convTag.attributes["type2"] = UtilString::Format("std::set<%s>", fullCname.c_str());
+	convTag.attributes["type1to2"] = UtilString::Format("Sticklib::vector_to_set<%s,%s>", fullCname.c_str(), fullCname.c_str());
+	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::set_to_vector<%s,%s>", fullCname.c_str(), fullCname.c_str());
+	RegisterStickconvTag(convTag, false);
+
+//----- 21.05.25 Fukushiro M. 追加終 ()-----
 }
 
 
 //----- 21.05.23 Fukushiro M. 追加始 ()-----
-// テスト。
+//// <summary>
+/// Registers a lua-type of a class.
+/// This is equivalent of reading below.
+/// <sticktype name="class-object(::MyClass)" ctype="::MyClass*" getfunc="Sticklib::check_classobject<::MyClass*>" setfunc="Sticklib::push_classobject<::MyClass*>" />
+/// <sticktype name="array<class-object>(::MyClass)" ctype="std::vector<::MyClass*>" getfunc="Sticklib::check_classobjectarray<::MyClass*>" setfunc="Sticklib::push_classobjectarray<::MyClass*>" />
+/// </summary>
+/// <param name="classRec">The class record.</param>
 static void RegisterClassType(const ClassRec & classRec)
 {
-	UtilXml::Tag tag;
-	tag.name = "sticktype";
+	UtilXml::Tag typeTag;
+	typeTag.name = "sticktype";
 
 	const auto fullLuaName = classRec.GetFullpathLuaname();
 	const auto fullCname = classRec.GetFullpathCname();
 
-	tag.attributes["name"] = UtilString::Format("classobject(%s)", fullCname.c_str());
-	tag.attributes["ctype"] = fullCname + "*";
-	tag.attributes["getfunc"] = LuaTypeToGetFuncName(LuaType("classobject")) + "<" + fullCname + ">";
-	tag.attributes["setfunc"] = LuaTypeToSetFuncName(LuaType("classobject")) + "<" + fullCname + ">";
-	RegisterSticktypeTag(tag);
+//----- 21.05.25 Fukushiro M. 追加始 ()-----
+// テスト。
+	typeTag.attributes["name"] = fullLuaName;
+	typeTag.attributes["ctype"] = fullCname + "*";
+	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_lvalue<%s*>", fullCname.c_str());
+	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_lvalue<%s*>", fullCname.c_str());
+	RegisterSticktypeTag(typeTag);
 
-	tag.attributes["name"] = UtilString::Format("array<classobject>(%s)", fullCname.c_str());
-	tag.attributes["ctype"] = UtilString::Format("std::vector<%s*>", fullCname.c_str());
-	tag.attributes["getfunc"] = LuaTypeToGetFuncName(LuaType("array<classobject>")) + "<" + fullCname + ">";
-	tag.attributes["setfunc"] = LuaTypeToSetFuncName(LuaType("array<classobject>")) + "<" + fullCname + ">";
-	RegisterSticktypeTag(tag);  
+	typeTag.attributes["name"] = UtilString::Format("array<%s>", fullLuaName.c_str());
+	typeTag.attributes["ctype"] = UtilString::Format("std::vector<%s*>", fullCname.c_str());
+	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_array<%s*>", fullCname.c_str());
+	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_array<%s*>", fullCname.c_str());
+	RegisterSticktypeTag(typeTag);
+//----- 21.05.25 Fukushiro M. 追加終 ()-----
+
+
+//----- 21.05.25 Fukushiro M. 削除始 ()-----
+//	typeTag.attributes["name"] = UtilString::Format("class-object(%s)", fullCname.c_str());
+//	typeTag.attributes["ctype"] = fullCname + "*";
+//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_classobject<%s*>", fullCname.c_str());
+//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_classobject<%s*>", fullCname.c_str());
+//	RegisterSticktypeTag(typeTag);
+//
+//	typeTag.attributes["name"] = UtilString::Format("array<class-object>(%s)", fullCname.c_str());
+//	typeTag.attributes["ctype"] = UtilString::Format("std::vector<%s*>", fullCname.c_str());
+//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_classobjectarray<%s*>", fullCname.c_str());
+//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_classobjectarray<%s*>", fullCname.c_str());
+//	RegisterSticktypeTag(typeTag);  
+//----- 21.05.25 Fukushiro M. 削除終 ()-----
+
+	UtilXml::Tag convTag;
+	convTag.name = "stickconv";
+
+	convTag.attributes["type1"] = UtilString::Format("std::vector<%s*>", fullCname.c_str());
+	convTag.attributes["type2"] = UtilString::Format("std::unordered_set<%s*>", fullCname.c_str());
+	convTag.attributes["type1to2"] = UtilString::Format("Sticklib::vector_to_uset<%s*,%s*>", fullCname.c_str(), fullCname.c_str());
+	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::uset_to_vector<%s*,%s*>", fullCname.c_str(), fullCname.c_str());
+	RegisterStickconvTag(convTag, false);
+
+	convTag.attributes["type1"] = UtilString::Format("std::vector<%s*>", fullCname.c_str());
+	convTag.attributes["type2"] = UtilString::Format("std::set<%s*>", fullCname.c_str());
+	convTag.attributes["type1to2"] = UtilString::Format("Sticklib::vector_to_set<%s*,%s*>", fullCname.c_str(), fullCname.c_str());
+	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::set_to_vector<%s*,%s*>", fullCname.c_str(), fullCname.c_str());
+	RegisterStickconvTag(convTag, false);
 }
 //----- 21.05.23 Fukushiro M. 追加終 ()-----
-
-
-
-
-
 
 //----- 20.03.07  削除始 ()-----
 ///// <summary>
@@ -6673,7 +6736,7 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 								// Register class converter.
 								if (memberClassRec.classType == ClassRec::Type::CLASS || memberClassRec.classType == ClassRec::Type::INCONSTRUCTIBLE)
 								{
-// テスト。
+// 21.05.25 Fukushiro M. 1行変更 ()
 //									RegisterClassConverter(memberClassRec);
 									RegisterClassType(memberClassRec);
 								}
@@ -7145,7 +7208,7 @@ static void CreateDefaultConstructors(ClassRec & classRec)
 				GetCppToLuaConverter(
 					CppToLuaConversionType::FUNC_RETURN,
 					funcCtype + "*",
-// テスト。
+// 21.05.25 Fukushiro M. 1行変更 ()
 //					LuaType("classobject"),
 					LuaType::NIL,
 					successPath
@@ -7229,8 +7292,13 @@ static void OutputPolymorphicFunctions(const ClassRec & classRec)
 
 static void OutputClassPushArgFunc(const ClassRec & classRec)
 {
-	const auto pushFunc = LuaTypeToSetFuncName(LuaType("classobject"));
+	const auto fullLuaName = classRec.GetFullpathLuaname();
+	const auto pushFunc = LuaTypeToSetFuncName(LuaType(fullLuaName));
 	OUTPUT_H_FILE_STREAM << FORMTEXT(u8R"(
+// ${SRCMARKER}
+template<>
+void ${pushFunc}(lua_State * L, ${classRec.GetFullpathCname()} * const & value, bool own);
+
 /// <summary>
 /// Push the class object into Lua stack.
 /// ${SRCMARKER}
@@ -7241,7 +7309,7 @@ static void OutputClassPushArgFunc(const ClassRec & classRec)
 template<typename ... Args>
 int stick_pusharg(lua_State* L, void* data, ${classRec.GetFullpathCname()}&& head, Args&& ... args)
 {
-	${pushFunc}(L, false, &head, "${classRec.GetUniqueClassName()}");
+	${pushFunc}(L, &head, false);
 	return stick_pusharg(L, data, std::move(args)...) + 1;
 }
 
@@ -7255,23 +7323,23 @@ int stick_pusharg(lua_State* L, void* data, ${classRec.GetFullpathCname()}&& hea
 template<typename ... Args>
 int stick_pusharg(lua_State* L, void* data, ${classRec.GetFullpathCname()}*&& head, Args&& ... args)
 {
-	${pushFunc}(L, false, head, "${classRec.GetUniqueClassName()}");
+	${pushFunc}(L, head, false);
 	return stick_pusharg(L, data, std::move(args)...) + 1;
 }
 
 
-)", pushFunc, classRec.GetFullpathCname(), classRec.GetUniqueClassName());
+)", pushFunc, classRec.GetFullpathCname());
 } // static void OutputClassPushArgFunc(const ClassRec & classRec).
 
 
 static void OutputStructPushArgFunc(const ClassRec & classRec)
 {
 	const auto fullLuaName = classRec.GetFullpathLuaname();
-
 	const auto pushFunc = LuaTypeToSetFuncName(LuaType(fullLuaName));
 	OUTPUT_H_FILE_STREAM << FORMTEXT(u8R"(
+// ${SRCMARKER}
 template<>
-void ${pushFunc}<${classRec.GetFullpathCname()}>(lua_State * L, ${classRec.GetFullpathCname()} const & value);
+void ${pushFunc}(lua_State * L, ${classRec.GetFullpathCname()} const & value, bool own);
 
 /// <summary>
 /// Push the struct data into Lua stack.
@@ -7283,7 +7351,7 @@ void ${pushFunc}<${classRec.GetFullpathCname()}>(lua_State * L, ${classRec.GetFu
 template<typename ... Args>
 int stick_pusharg(lua_State* L, void* data, ${classRec.GetFullpathCname()}&& head, Args&& ... args)
 {
-	${pushFunc}(L, head);
+	${pushFunc}(L, head, false);
 	return stick_pusharg(L, data, std::move(args)...) + 1;
 }
 
@@ -7297,7 +7365,7 @@ int stick_pusharg(lua_State* L, void* data, ${classRec.GetFullpathCname()}&& hea
 template<typename ... Args>
 int stick_pusharg(lua_State* L, void* data, const ${classRec.GetFullpathCname()}&& head, Args&& ... args)
 {
-	${pushFunc}(L, head);
+	${pushFunc}(L, head, false);
 	return stick_pusharg(L, data, std::move(args)...) + 1;
 }
 
@@ -7321,7 +7389,7 @@ static void OutputEnumPushArgFunc(const EnumRec & enumRec)
 template<typename ... Args>
 int stick_pusharg(lua_State* L, void* data, ${enumRec.GetFullpathCname()}&& head, Args&& ... args)
 {
-	${pushFunc}(L, (__int64)head);
+	${pushFunc}(L, (__int64)head, false);
 	return stick_pusharg(L, data, std::move(args)...) + 1;
 }
 
@@ -7335,7 +7403,7 @@ int stick_pusharg(lua_State* L, void* data, ${enumRec.GetFullpathCname()}&& head
 template<typename ... Args>
 int stick_pusharg(lua_State* L, void* data, const ${enumRec.GetFullpathCname()}&& head, Args&& ... args)
 {
-	${pushFunc}(L, (__int64)head);
+	${pushFunc}(L, (__int64)head, false);
 	return stick_pusharg(L, data, std::move(args)...) + 1;
 }
 
@@ -7476,7 +7544,7 @@ static void OutputStickInitCpp(const ClassRec & classRec)
 				{
 					OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 	// ${SRCMARKER}
-	Sticklib::set_lvalue_to_table(L, "${lname_cname.first}", (lua_Integer)${enumRec.GetFullpathElementCprefix()}${lname_cname.second});
+	Sticklib::set_lvalue_to_table<__int64>(L, "${lname_cname.first}", (__int64)${enumRec.GetFullpathElementCprefix()}${lname_cname.second}, false);
 
 )", lname_cname.first, lname_cname.second, enumRec.GetFullpathElementCprefix());
 				}
@@ -7569,60 +7637,65 @@ static void OutputStickInitCpp(const ClassRec & classRec)
 				tmpVarName = nextTmpVarName;
 				argMinorNumber++;
 			}
-//----- 21.05.24 Fukushiro M. 追加始 ()-----
-// テスト。
+//----- 21.05.25 Fukushiro M. 削除始 ()-----
+////----- 21.05.24 Fukushiro M. 追加始 ()-----
+//// テスト。ここも下にまとめられるのでは。
+//
+//			// "::TestClass0*". Do not remove '*'. 
+//			auto fullpathCtypeAst = UtilString::Replace(conversionPath.back(), "&", "");
+//			auto varLuaType = CtypeToLuaType(fullpathCtypeAst);
+//			if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("class-object(")) == 0)
+//			{	//----- if class object is defined as static constant -----
+//				auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
+//				const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
+//				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+//		// ${SRCMARKER}
+//		Sticklib::set_classobject_to_table<${fullpathCtype}>(L, "${constantRec.constantLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
+//
+//)", fullpathCtype, constantRec.constantLuaname, tmpVarName, uniqueClassName);
+//			}
+//			else if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("array<class-object>(")) == 0)
+//			{	//----- if class object is defined as static constant -----
+//				auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
+//				const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
+//				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+//		// ${SRCMARKER}
+//		Sticklib::set_classobjectarray_to_table<${fullpathCtype}>(L, "${constantRec.constantLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
+//
+//)", fullpathCtype, constantRec.constantLuaname, tmpVarName, uniqueClassName);
+//			}
+//			else
+////----- 21.05.24 Fukushiro M. 追加終 ()-----
+////----- 21.05.25 Fukushiro M. 削除始 ()-----
+////			if (conversionPath.back() == "Sticklib::classobject")
+////			{	//----- if class object is defined as static constant -----
+////				// Get the class type of the class object.
+////				auto preClassType = conversionPath[conversionPath.size() - 3];
+////				preClassType = UtilString::Replace(preClassType, "*", "", "&", "");
+////				// Get the unique name (like "lm__TestClass0__") of the class.
+////				auto preClassId = ClassRec::Get(0).FindClass(preClassType);
+////				const std::string uniqueClassName = ClassRec::Get(preClassId).GetUniqueClassName();
+////
+////				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+////		// ${SRCMARKER}
+////		Sticklib::set_classobject_to_table(L, "${constantRec.constantLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
+////
+////)", constantRec.constantLuaname, tmpVarName, uniqueClassName);
+////			}
+////			else
+////----- 21.05.25 Fukushiro M. 削除終 ()-----
+//			{
+//----- 21.05.25 Fukushiro M. 削除終 ()-----
 			// "::TestClass0*". Do not remove '*'. 
 			auto fullpathCtypeAst = UtilString::Replace(conversionPath.back(), "&", "");
-			auto varLuaType = CtypeToLuaType(fullpathCtypeAst);
-			if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("classobject(")) == 0)
-			{	//----- if class object is defined as static constant -----
-				auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
-				const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
-				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+			OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
-		Sticklib::set_classobject_to_table<${fullpathCtype}>(L, "${constantRec.constantLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
+		Sticklib::set_lvalue_to_table<${fullpathCtypeAst}>(L, "${constantRec.constantLuaname}", ${tmpVarName}, false);
 
-)", fullpathCtype, constantRec.constantLuaname, tmpVarName, uniqueClassName);
-			}
-			else if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("array<classobject>(")) == 0)
-			{	//----- if class object is defined as static constant -----
-				auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
-				const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
-				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
-		// ${SRCMARKER}
-		Sticklib::set_classobjectarray_to_table<${fullpathCtype}>(L, "${constantRec.constantLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
+)", fullpathCtypeAst, constantRec.constantLuaname, tmpVarName);
 
-)", fullpathCtype, constantRec.constantLuaname, tmpVarName, uniqueClassName);
-			}
-			else
-
-// テスト。以下のif (conversionPath.back() == "Sticklib::classobject")ブロックは削除すべき。
-//----- 21.05.24 Fukushiro M. 追加終 ()-----
-
-
-			if (conversionPath.back() == "Sticklib::classobject")
-			{	//----- if class object is defined as static constant -----
-				// Get the class type of the class object.
-				auto preClassType = conversionPath[conversionPath.size() - 3];
-				preClassType = UtilString::Replace(preClassType, "*", "", "&", "");
-				// Get the unique name (like "lm__TestClass0__") of the class.
-				auto preClassId = ClassRec::Get(0).FindClass(preClassType);
-				const std::string uniqueClassName = ClassRec::Get(preClassId).GetUniqueClassName();
-
-				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
-		// ${SRCMARKER}
-		Sticklib::set_classobject_to_table(L, "${constantRec.constantLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
-
-)", constantRec.constantLuaname, tmpVarName, uniqueClassName);
-			}
-			else
-			{
-				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
-		// ${SRCMARKER}
-		Sticklib::set_lvalue_to_table(L, "${constantRec.constantLuaname}", ${tmpVarName});
-
-)", constantRec.constantLuaname, tmpVarName);
-			}
+// 21.05.25 Fukushiro M. 1行削除 ()
+//			}
 		}
 		OUTPUT_INITFUNC_STREAM << u8"	}\n";
 	}
@@ -7757,7 +7830,7 @@ static void OutputModuleFuncHtml(StringBuffer & buffer, const FuncRec & funcRec)
 	if (outLuaArgList.empty())
 	{
 		if (funcRec.type == FuncRec::Type::CONSTRUCTOR)
-			outLuaArgList = "classobject return_value = ";
+			outLuaArgList = "class-object return_value = ";
 	}
 	else
 	{
@@ -7939,6 +8012,8 @@ static void OutputStructLuaElementHtml(StringBuffer & buffer, const ClassRec & c
 		std::string luaValueText;
 		static const std::regex ARRAY_DEF(R"(^array<(\w+)>$)");
 		static const std::regex HASH_DEF(R"(^hash<(\w+),(\w+)>$)");
+		static const std::regex CLASSOBJECT_DEF(R"(^class-object\((\w+)\)$)");
+		static const std::regex CLASSOBJECTARRAY_DEF(R"(^array<class-object>\((\w+)\)$)");
 		std::smatch results;
 		if (
 			luaTypeName == "boolean" ||
@@ -7951,14 +8026,21 @@ static void OutputStructLuaElementHtml(StringBuffer & buffer, const ClassRec & c
 			// e.g. [boolean value]
 			luaValueText = std::string("[") + luaTypeName + " value]";
 		}
-		else if (luaTypeName == "classobject")
+		else if (std::regex_search(luaTypeName, results, CLASSOBJECT_DEF))
 		{
 			// e.g. [ClassA.ClassB value]
 			// Get the class type of the class object.
-			auto preClassType = variableRec.cToLuaConversionPath[variableRec.cToLuaConversionPath.size() - 3];
-			preClassType = UtilString::Replace(preClassType, "*", "", "&", "");
-			auto preClassId = ClassRec::Get(0).FindClass(preClassType);
-			luaValueText = std::string("[") + ClassRec::Get(preClassId).GetFullpathLuaname() + " classobject]";
+			auto preClassId = ClassRec::Get(0).FindClass(results[1].str());
+			auto luaName = ClassRec::Get(preClassId).GetFullpathLuaname() + " class-object";
+			luaValueText = std::string("[") + luaName + "]";
+		}
+		else if (std::regex_search(luaTypeName, results, CLASSOBJECTARRAY_DEF))
+		{
+			// e.g. [ClassA.ClassB value]
+			// Get the class type of the class object.
+			auto preClassId = ClassRec::Get(0).FindClass(results[1].str());
+			auto luaName = ClassRec::Get(preClassId).GetFullpathLuaname() + " class-object";
+			luaValueText = std::string("{ [") + luaName + "], [" + luaName + "], ... }";
 		}
 		else if (std::regex_search(luaTypeName, results, ARRAY_DEF))
 		{
@@ -7990,7 +8072,7 @@ ${spaceCode}${variableRec.variableLuaname} = ${luaValueText},
 			//    }
 
 			// Assume it is struct.
-// テスト。
+// 21.05.25 Fukushiro M. 1行変更 ()
 //			auto subClassId = ClassRec::Get(0).FindClass(UtilString::Replace(variableRec.cToLuaConversionPath.back(), "&", ""));
 			auto subClassId = ClassRec::Get(0).FindClass(UtilString::Replace(UtilString::Replace(variableRec.cToLuaConversionPath.back(), "*", "", "&", "")));
 			const auto & subClassRec = ClassRec::Get(subClassId);
@@ -8408,6 +8490,7 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 
 		OUTPUT_H_FILE_STREAM << FORMTEXT(u8R"(
 
+// ${SRCMARKER}
 struct lua_State;
 extern void luastick_init(lua_State* L);
 

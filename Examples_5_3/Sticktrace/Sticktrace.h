@@ -1085,7 +1085,7 @@ private:
 			//  -2| tableX  |----->| Key     | Value   |
 			//    |---------|      +---------+---------+
 			//    :         :      :         :         :
-			Sticklib::push_lvalue(m_lua_state, anyName);
+			Sticklib::push_lvalue<Sticklib::AnyValue>(m_lua_state, anyName, false);
 
 			//       stack
 			//    +---------+
@@ -1096,7 +1096,7 @@ private:
 			//  -3| tableX  |----->| Key     | Value   |
 			//    |---------|      +---------+---------+
 			//    :         :      :         :         :
-			Sticklib::push_lvalue(m_lua_state, anyValue);
+			Sticklib::push_lvalue<Sticklib::AnyValue>(m_lua_state, anyValue, false);
 
 			//       stack
 			//    +---------+      +---------+---------+
@@ -1457,7 +1457,7 @@ private:
 				//  -1| anyValue|
 				//    |---------|
 				//    :         :
-				Sticklib::push_lvalue(m_lua_state, anyValue);
+				Sticklib::push_lvalue<Sticklib::AnyValue>(m_lua_state, anyValue, false);
 
 				// Assign the value at the top of the stack to the variable and pop the top of the stack.
 				//
@@ -1980,7 +1980,7 @@ private:
 					if (lua_gettop(L) != 1)
 						throw std::invalid_argument("Count of arguments is not correct.");
 					std::string message;
-					Sticklib::check_lvalue(message, L, 1);
+					Sticklib::check_lvalue<std::string>(message, L, 1);
 					ClassObj()->OutputDebug(message.c_str());
 				}
 				catch (std::exception & e)
