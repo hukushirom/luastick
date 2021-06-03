@@ -16,6 +16,11 @@ std::string TestSpace::GetA()
 	return "ABC";
 }
 
+bool TestSpace::IsNull(void * p)
+{
+	return (p == nullptr);
+}
+
 
 // CStickClassExampleApp
 

@@ -68,6 +68,13 @@ extern void MyArrayFunc2(
 	std::vector<std::wstring> & v1
 );
 
+/// <stick export="true" />
+/// <summary>
+/// Get map.
+/// </summary>
+/// <param io="in" name="L">lua_State</param>
+extern void RawFunc(lua_State * L);
+
 /// <stick export="true"/>
 constexpr int HIJ = 10;
 

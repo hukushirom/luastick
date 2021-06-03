@@ -44,6 +44,10 @@ Test1 = function()
 	ShowMessage(c:Get() .. "\r\n")
 	X.B.DeleteA(a)
 	X.B.DeleteA(c)
+
+	local rf1, rf2 = RawFunc("hello");
+	STICKTRACE.OutputDebugMessage(rf2)
+
 	return 5, "abc"
 end
 
@@ -167,10 +171,12 @@ Test7 = function()
 end
 
 Test8 = function()
+	local objA = X.A.New(202);
 	local t = os.time()
 	local a = 0
 	while true do
 		a = a + 1
+		objA:Get()
 		if a == 100000000 then
 			break
 		end
@@ -216,6 +222,17 @@ void MyArrayFunc2(std::vector<std::wstring> & v1)
 	{
 		v = v + L"-hello";
 	}
+}
+
+void RawFunc(lua_State * L)
+{
+	// Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(4361)
+	std::string param1;
+	Sticklib::check_lvalue<std::string>(param1, L, 1);
+	param1 += "-OK";
+	Sticklib::push_lvalue<std::string>(L, param1, false);
+	param1 += "-OK";
+	Sticklib::push_lvalue<std::string>(L, param1, false);
 }
 
 CStickTestDlg* ToStickTestDlg(void* data)

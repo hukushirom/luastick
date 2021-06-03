@@ -27,6 +27,14 @@ Func1 = function()
 	local tc2 = TestClass2.New(1);
 	tc1:Get();
 	tc2:Get2(tc1);
+
+	local p = TestClass0.CreateNull0();
+	local b = TestSpace.IsNull(STICK.ObjectToUserdata(p));
+	App():Output("Result:" .. tostring(b));
+
+	local c = STICK.IsNullObject(p);
+	App():Output("Result:" .. tostring(c));
+
 	App():Output("Func1 OK");
 end
 

@@ -33,7 +33,6 @@ inline void UmapToMap(std::map<int, int> & u, const std::unordered_map<__int64, 
 		u[(int)i.first] = (int)i.second;
 }
 
-
 /// <stick export="true" />
 /// <summary>
 /// Test Space.
@@ -46,6 +45,14 @@ namespace TestSpace
 	/// </summary>
 	/// <returns>ABC</returns>
 	std::string GetA();
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Test p is null or not.
+	/// </summary>
+	/// <param io="in" name="p">Pointer.</param>
+	/// <returns>true:NULL/false:Not NULL</returns>
+	bool IsNull(void * p);
 }
 
 
@@ -192,6 +199,16 @@ public:
 	static TC0 * Create0()
 	{
 		return new TestClass0();
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Create null object.
+	/// </summary>
+	/// <returns autodel="true">TestClass0 object</returns>
+	static TC0 * CreateNull0()
+	{
+		return nullptr;
 	}
 
 	/// <stick export="true" />
