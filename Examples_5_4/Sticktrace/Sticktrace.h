@@ -192,6 +192,9 @@ namespace SticktraceDef
 		SUSPEND,		// Suspend.
 		SUSPENDING,		// Suspending.
 		PROCEED_NEXT,	// Proceed to next line.
+//----- 21.05.18 Fukushiro M. 追加始 ()-----
+		LUAERROR,		// Error occurred while loading or executing.
+//----- 21.05.18 Fukushiro M. 追加終 ()-----
 	};
 
 	using ScriptHookFunc = void (*)(
@@ -202,19 +205,44 @@ namespace SticktraceDef
 		Sticktrace* sticktrace
 		);
 
-	struct DebuggerCallbackParam
-	{
-		char const * strParam1;
-		char const * strParam2;
-	};
-
 	/// <summary>
 	/// Commands issued from the debugger.
 	/// </summary>
 	enum class DebuggerCommand : int
 	{
-		NONE = 0,		// None.
-		SAVE_SCRIPT,	// Save the script.
+		NONE = 0,			// None.
+		SAVE_SCRIPT,		// Save the script.
+//----- 21.05.18 Fukushiro M. 追加始 ()-----
+		ON_ERROR_OUTPUT,	// Output error message.
+		ON_DEBUG_OUTPUT,	// Output debug message.
+//----- 21.05.18 Fukushiro M. 追加終 ()-----
+	};
+
+	struct DebuggerCallbackParam
+	{
+		DebuggerCallbackParam()
+			: command(DebuggerCommand::NONE)
+			, strParam1(nullptr)
+			, strParam2(nullptr)
+		{}
+
+		/// <summary>
+		/// ja; コマンド。コールバックのタイプを指定する。
+		/// en; Command. It specifies the type of callback.
+		/// </summary>
+		DebuggerCommand command;
+
+		/// <summary>
+		/// ja; パラメーター
+		/// en; Parameter
+		/// </summary>
+		char const * strParam1;
+
+		/// <summary>
+		/// ja; パラメーター
+		/// en; Parameter
+		/// </summary>
+		char const * strParam2;
 	};
 
 	/// <summary>
@@ -225,7 +253,8 @@ namespace SticktraceDef
 	/// </summary>
 	using DebuggerCallbackFunc = bool (*)(
 		unsigned int dialogId,
-		SticktraceDef::DebuggerCommand command,
+// 21.05.19 Fukushiro M. 1行削除 ()
+//		SticktraceDef::DebuggerCommand command,
 		DebuggerCallbackParam* param,
 		void* userData
 		);
@@ -1056,7 +1085,7 @@ private:
 			//  -2| tableX  |----->| Key     | Value   |
 			//    |---------|      +---------+---------+
 			//    :         :      :         :         :
-			Sticklib::push_lvalue(m_lua_state, anyName);
+			Sticklib::push_lvalue<Sticklib::AnyValue>(m_lua_state, anyName, false);
 
 			//       stack
 			//    +---------+
@@ -1067,7 +1096,7 @@ private:
 			//  -3| tableX  |----->| Key     | Value   |
 			//    |---------|      +---------+---------+
 			//    :         :      :         :         :
-			Sticklib::push_lvalue(m_lua_state, anyValue);
+			Sticklib::push_lvalue<Sticklib::AnyValue>(m_lua_state, anyValue, false);
 
 			//       stack
 			//    +---------+      +---------+---------+
@@ -1428,7 +1457,7 @@ private:
 				//  -1| anyValue|
 				//    |---------|
 				//    :         :
-				Sticklib::push_lvalue(m_lua_state, anyValue);
+				Sticklib::push_lvalue<Sticklib::AnyValue>(m_lua_state, anyValue, false);
 
 				// Assign the value at the top of the stack to the variable and pop the top of the stack.
 				//
@@ -1951,7 +1980,7 @@ private:
 					if (lua_gettop(L) != 1)
 						throw std::invalid_argument("Count of arguments is not correct.");
 					std::string message;
-					Sticklib::check_lvalue(message, L, 1);
+					Sticklib::check_lvalue<std::string>(message, L, 1);
 					ClassObj()->OutputDebug(message.c_str());
 				}
 				catch (std::exception & e)
@@ -2413,6 +2442,11 @@ private:
 		m_sticktraceWindow->OnStart(execType);
 		m_suspendMode = SticktraceDef::Mode::RUN;
 		m_scriptHookCount = 0;
+
+//----- 21.05.18 Fukushiro M. 追加始 (For AdvanceSoft ＆標準化予定)-----
+		if (m_scriptHookFunc != nullptr)
+			m_scriptHookFunc(L, nullptr, m_scriptHookData, m_suspendMode, this);
+//----- 21.05.18 Fukushiro M. 追加終 (For AdvanceSoft ＆標準化予定)-----
 	}
 
 	void OnStopExec(lua_State* L, SticktraceDef::ExecType execType)
@@ -2423,9 +2457,24 @@ private:
 		::lua_sethook(L, nullptr, 0, 0);
 
 		m_suspendMode = SticktraceDef::Mode::STOP;
+
+//----- 21.05.18 Fukushiro M. 追加始 (For AdvanceSoft ＆標準化予定)-----
+		if (m_scriptHookFunc != nullptr)
+			m_scriptHookFunc(L, nullptr, m_scriptHookData, m_suspendMode, this);
+//----- 21.05.18 Fukushiro M. 追加終 (For AdvanceSoft ＆標準化予定)-----
+
 		m_sticktraceWindow->OnStop(execType);
 		// m_sticktraceWindow->Jump(nullptr, -1);
 	}
+
+//----- 21.05.18 Fukushiro M. 追加始 ()-----
+	void OnError(lua_State* L, const char* message)
+	{
+		if (m_scriptHookFunc != nullptr)
+			m_scriptHookFunc(L, nullptr, m_scriptHookData, SticktraceDef::Mode::LUAERROR, this);
+		OutputError(message);
+	}
+//----- 21.05.18 Fukushiro M. 追加終 ()-----
 
 #if _DEBUG
 	void PrintTable(lua_State* L)
@@ -2649,6 +2698,10 @@ private:
 				if (m_suspendMode == SticktraceDef::Mode::SUSPEND ||
 					m_sticktraceWindow->IsBreakpoint(ar->source, ar->currentline - 1))
 				{
+//----- 21.05.18 Fukushiro M. 追加始 ()-----
+					if (m_scriptHookFunc != nullptr)
+						m_scriptHookFunc(L, nullptr, m_scriptHookData, SticktraceDef::Mode::SUSPEND, this);
+//----- 21.05.18 Fukushiro M. 追加終 ()-----
 					m_suspendMode = SticktraceDef::Mode::SUSPENDING;
 					StickString paramA;
 					command = m_sticktraceWindow->WaitCommandIsSet(paramA, 0);
@@ -2932,7 +2985,9 @@ private:
 			((Sticktrace*)userData)->OnStopExec(L, SticktraceDef::ExecType::ON_CALL);
 			break;
 		case Stickrun::CallbackType::ON_ERROR:
-			((Sticktrace*)userData)->OutputError((const char*)data);
+// 21.05.18 Fukushiro M. 1行変更 ()
+//			((Sticktrace*)userData)->OutputError((const char*)data);
+			((Sticktrace*)userData)->OnError(L, (const char*)data);
 			break;
 		default:
 			break;

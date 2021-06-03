@@ -123,6 +123,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="xxhash.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Stick.cpp" />
@@ -147,6 +148,8 @@
 ..\..\LuaStick\$(Configuration)\LuaStick.exe -out Stick stdafx.h  ..\..\LuaStick\files\Sticklib.h  StickTestDlg.h  2&gt;error.log</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Stick.cpp;Stick.h</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\LuaStick\$(Configuration)\LuaStick.exe;..\..\LuaStick\files\Sticklib.h;StickTestDlg.h</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating Stick.h, Stick.cpp and Stick.html</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating Stick.h, Stick.cpp and Stick.html</Message>
     </CustomBuild>
     <CustomBuild Include="dummy2">
       <FileType>Document</FileType>
@@ -160,6 +163,8 @@ copy ..\Sticktrace\$(Configuration)\Sticktrace.pdb $(TargetDir)</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\Sticktrace\$(Configuration)\Sticktrace.dll;..\Sticktrace\$(Configuration)\Sticktrace.pdb</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(TargetDir)Sticktrace.dll;$(TargetDir)Sticktrace.pdb</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\Sticktrace\$(Configuration)\Sticktrace.dll;..\Sticktrace\$(Configuration)\Sticktrace.pdb</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Copying Sticktrace</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Copying Sticktrace</Message>
     </CustomBuild>
     <None Include="res\StickTest.rc2" />
   </ItemGroup>

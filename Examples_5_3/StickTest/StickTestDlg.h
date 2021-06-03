@@ -68,6 +68,13 @@ extern void MyArrayFunc2(
 	std::vector<std::wstring> & v1
 );
 
+/// <stick export="true" />
+/// <summary>
+/// Get map.
+/// </summary>
+/// <param io="in" name="L">lua_State</param>
+extern void RawFunc(lua_State * L);
+
 /// <stick export="true"/>
 constexpr int HIJ = 10;
 
@@ -172,7 +179,7 @@ public:
 		/// <summary>
 		/// Add1s the specified a.
 		/// </summary>
-		/// <param name="a" io="out" ltype="class-object(::X::A)">a.</param>
+		/// <param name="a" io="out" ltype="X.A">a.</param>
 		int Add1(A * & a)
 		{
 			std::string xxx = XXX;
@@ -196,7 +203,7 @@ public:
 		/// Creates a.
 		/// </summary>
 		/// <param name="a" io="in">a.</param>
-		/// <returns ltype="class-object(::X::A)"></returns>
+		/// <returns ltype="X.A"></returns>
 		static A* CreateA(int a)
 		{
 			return new A(a);
@@ -533,5 +540,5 @@ public:
 /// To the stick test dialog.
 /// </summary>
 /// <param name="data" io="in">The data.</param>
-/// <returns ltype="class-object(::CStickTestDlg)"></returns>
+/// <returns ltype="CStickTestDlg"></returns>
 extern CStickTestDlg* ToStickTestDlg(void* data);

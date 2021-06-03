@@ -887,6 +887,8 @@ struct FuncRec
 	int parentId;
 	Type type;
 	std::string funcCname;
+// 21.06.02 Fukushiro M. 1行追加 ()
+	bool isRawFunc;
 	std::string funcLuaname;	// luaname of function name. if luaname is not specified, primary is set.
 	std::string summary;
 
@@ -3799,6 +3801,7 @@ static bool ParseFuncDef(
 /// </summary>
 /// <param name="funcTypeReturn">Type of the c++ function. e.g. STATIC, METHOD, CONSTRUCTOR</param>
 /// <param name="funcNameReturn">The function name return.</param>
+/// <param name="isRawFuncReturn">true:This function has a lua_State* parameter only.false:Ordinary function.</param>
 /// <param name="argNamesReturn">The argument names return.</param>
 /// <param name="argNameToCtypeReturn">The argument name to Type return.</param>
 /// <param name="argNameToRawCtypeReturn">The argument name to Raw Type return.</param>
@@ -3814,6 +3817,8 @@ static bool ParseFuncDef(
 static bool CheckFunction(
 	FuncRec::Type & funcTypeReturn,
 	std::string & funcNameReturn,
+// 21.06.01 Fukushiro M. 1行追加 ()
+	bool & isRawFuncReturn,
 	std::vector<std::string> & argNamesReturn,
 	std::unordered_map<std::string, std::string> & argNameToCtypeReturn,
 	std::unordered_map<std::string, std::string> & argNameToRawCtypeReturn,
@@ -3934,10 +3939,21 @@ static bool CheckFunction(
 				argNameToCtype[argName_Ctype.first] = i->second;
 		}
 
+// 21.06.01 Fukushiro M. 1行追加 ()
+		bool isRawFunc = false;
+
 		for (const auto & argName_ctype : argNameToCtype)
 		{
 			const auto & argName = argName_ctype.first;
 			auto varCtype = argName_ctype.second;
+//----- 21.06.02 Fukushiro M. 追加始 ()-----
+			if (varCtype == "lua_State*")
+			{
+				isRawFunc = true;
+				break;
+			}
+//----- 21.06.02 Fukushiro M. 追加終 ()-----
+
 			std::vector<std::string> successPath;
 			if (inArgNames.find(argName) != inArgNames.end())
 			{
@@ -3968,7 +3984,6 @@ static bool CheckFunction(
 //				else if (funcType == FuncRec::Type::CONSTRUCTOR && argName == "__lstickvar_ret")
 //				{	//----- If the function is constructor and argName is its return value, specifies destination Lua-type -----
 //
-//// テスト。そもそもこのブロックは不要では。
 ////					luaType = LuaType("classobject");
 //					luaType = LuaType::NIL;
 //				}
@@ -3990,11 +4005,28 @@ static bool CheckFunction(
 			}
 		}
 
+//----- 21.06.02 Fukushiro M. 追加始 ()-----
+		if (isRawFunc)
+		{
+			if (argNameToCtype.size() != 1)
+				ThrowLeException(LeError::NOT_SUPPORTED, "lua_State* parameter must be single.");
+			if (funcType != FuncRec::Type::STATIC && funcType != FuncRec::Type::METHOD)
+				ThrowLeException(LeError::NOT_SUPPORTED, "You cannot use lua_State* parameter for constructor.");
+			argNames.clear();
+			argNameToCtype.clear();
+			argNameToRawCtype.clear();
+			inArgNames.clear();
+			outArgNames.clear();
+		}
+//----- 21.06.02 Fukushiro M. 追加終 ()-----
+
 		if (funcType == FuncRec::Type::CONSTRUCTOR)
 			funcCname = "New";
 
 		funcTypeReturn = funcType;
 		funcNameReturn = funcCname;
+// 21.06.01 Fukushiro M. 1行追加 ()
+		isRawFuncReturn = isRawFunc;
 		argNamesReturn = argNames;
 		argNameToCtypeReturn = argNameToCtype;
 		argNameToRawCtypeReturn = argNameToRawCtype;
@@ -4106,6 +4138,27 @@ static void OutputFuncWrapper(
 
 )");
 
+//----- 21.06.02 Fukushiro M. 変更前 ()-----
+//	// Outputs like the following.
+//	// ------------------------------------------------------
+//	// static int lm__X__B__Add1__1(lua_State* L)
+//	// {
+//	//     try
+//	//     {
+//	//         if (lua_gettop(L) != 2)
+//	//             throw std::invalid_argument("Count of arguments is not correct.");
+//	OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+//static int ${wrapperFunctionName}(lua_State* L)
+//{
+//	// ${SRCMARKER}
+//	try
+//	{
+//		// Check the count of arguments.
+//		if (lua_gettop(L) != ${luaArgCount})
+//			throw std::invalid_argument("Count of arguments is not correct.");
+//
+//)", wrapperFunctionName, luaArgCount);
+//----- 21.06.02 Fukushiro M. 変更後 ()-----
 	// Outputs like the following.
 	// ------------------------------------------------------
 	// static int lm__X__B__Add1__1(lua_State* L)
@@ -4120,11 +4173,20 @@ static int ${wrapperFunctionName}(lua_State* L)
 	// ${SRCMARKER}
 	try
 	{
+
+)", wrapperFunctionName);
+
+	if (!funcRec.isRawFunc)
+	{
+		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+		// ${SRCMARKER}
 		// Check the count of arguments.
 		if (lua_gettop(L) != ${luaArgCount})
 			throw std::invalid_argument("Count of arguments is not correct.");
 
-)", wrapperFunctionName, luaArgCount);
+)", luaArgCount);
+	}
+//----- 21.06.02 Fukushiro M. 変更終 ()-----
 
 	// e.g. Member function.
 	// +------------------------------------------------------------------------------------+
@@ -4378,6 +4440,17 @@ static int ${wrapperFunctionName}(lua_State* L)
 		}
 	}
 
+//----- 21.06.02 Fukushiro M. 追加始 ()-----
+	if (funcRec.isRawFunc)
+	{
+		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+		// ${SRCMARKER}
+		const auto _index_top = lua_gettop(L);
+
+)");
+	}
+//----- 21.06.02 Fukushiro M. 追加終 ()-----
+
 	if (funcRec.type == FuncRec::Type::METHOD)
 	{	//----- if regular class -----
 		auto i = funcRec.outArgNameToCppToLuaConversionPath.find("__lstickvar_ret");
@@ -4447,16 +4520,27 @@ static int ${wrapperFunctionName}(lua_State* L)
 )", currentClassRec.GetFullpathCname());
 	}
 
-	// Output above Block-6, Block-7. Output function's arguments.
-	for (const auto & argName : argNames)
-	{	//----- loop every argument -----
-		const auto & rawCtype = funcRec.argNameToRawCtype.at(argName);
-		if (argName != argNames.front())
-			OUTPUT_EXPORTFUNC_STREAM << ", ";
-		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+//----- 21.06.02 Fukushiro M. 追加始 ()-----
+	if (funcRec.isRawFunc)
+	{
+		OUTPUT_EXPORTFUNC_STREAM << "L";
+	}
+	else
+	{
+//----- 21.06.02 Fukushiro M. 追加終 ()-----
+		// Output above Block-6, Block-7. Output function's arguments.
+		for (const auto & argName : argNames)
+		{	//----- loop every argument -----
+			const auto & rawCtype = funcRec.argNameToRawCtype.at(argName);
+			if (argName != argNames.front())
+				OUTPUT_EXPORTFUNC_STREAM << ", ";
+			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
 (${rawCtype})${argName}
 )", rawCtype, argName);
+		}
+// 21.06.02 Fukushiro M. 1行追加 ()
 	}
+
 	OUTPUT_EXPORTFUNC_STREAM << u8");\n";
 
 
@@ -4547,6 +4631,7 @@ static int ${wrapperFunctionName}(lua_State* L)
 			if (convFunc == "*" || convFunc == "&")
 			{
 				OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+		// ${SRCMARKER}
 		${varCtype} ${nextTmpArgName} = ${convFunc}${tmpArgName};
 
 )", varCtype, nextTmpArgName, convFunc, tmpArgName);
@@ -4554,6 +4639,7 @@ static int ${wrapperFunctionName}(lua_State* L)
 			else
 			{
 				OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+		// ${SRCMARKER}
 		${varCtype} ${nextTmpArgName};
 		${convFunc}(${nextTmpArgName}, ${tmpArgName});
 
@@ -4631,6 +4717,18 @@ static int ${wrapperFunctionName}(lua_State* L)
 )", pushFunc, tmpArgName, autoDel);
 //----- 21.05.25 Fukushiro M. 変更終 ()-----
 	}
+
+//----- 21.06.02 Fukushiro M. 追加始 ()-----
+	if (funcRec.isRawFunc)
+	{
+		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+		// ${SRCMARKER}
+		return (int)(lua_gettop(L) - _index_top);
+
+)");
+	}
+//----- 21.06.02 Fukushiro M. 追加終 ()-----
+
 	OUTPUT_EXPORTFUNC_STREAM << u8"	}\n";
 
 	for (const auto & exception : funcRec.exceptions)
@@ -4652,6 +4750,7 @@ static int ${wrapperFunctionName}(lua_State* L)
 			//		catch (MyException* e)
 			//		{
 			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+	// ${SRCMARKER}
 	catch (${exception} e)
 	{
 
@@ -4697,6 +4796,7 @@ static int ${wrapperFunctionName}(lua_State* L)
 	//			luaL_error(L, "C function error:funcname:");
 	//		}
 	OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+	// ${SRCMARKER}
 	catch (std::exception & e)
 	{
 		// ${SRCMARKER}
@@ -5717,7 +5817,45 @@ static void OutputStructGetFuncContent(const ClassRec & classRec)
 	}
 } // static void OutputStructGetFuncContent(const ClassRec & classRec).
 
-static void OutputStructGetFunc(const ClassRec & classRec)
+static void OutputClassGetFuncToCpp(const ClassRec & classRec)
+{
+	// fullpath class name. ex. "::ClassA::ClassB::ClassC".
+	const std::string fullpathClassName = classRec.GetFullpathCname();
+
+	OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+// ${SRCMARKER}
+/// <summary>
+/// Gets ${fullpathClassName} value from Lua stack.
+/// </summary>
+template<>
+void Sticklib::check_lvalue<${fullpathClassName}*>(${fullpathClassName} * & value, lua_State * L, int arg)
+{
+	//        stack
+	//     :          :
+	//     |----------|            +------------------+
+	//  arg| userdata |----------->| allocated memory |
+	//     |----------|            +------------------+
+	//     :          :
+	//                             |------------------|
+	//                           sizeof(StickInstanceWrapper)
+	//
+	// Premise for following.
+	//
+
+	// lua_touserdata is valid for userdata and lightuserdata both.
+	auto wrapper = (StickInstanceWrapper *)lua_touserdata(L, arg);
+	if (!wrapper)
+		throw std::invalid_argument("The argument is not userdata nor lightuserdata");
+	if (wrapper->hash != XXH64(&wrapper->ptr, sizeof(wrapper->ptr), WRAPPER_SEED))
+		throw std::invalid_argument("Invalid class object");
+	value = (${fullpathClassName} *)wrapper->ptr;
+}
+
+
+)", fullpathClassName);
+} // static void OutputClassGetFuncToCpp(const ClassRec & classRec).
+
+static void OutputStructGetFuncToCpp(const ClassRec & classRec)
 {
 	// fullpath class name. ex. "::ClassA::ClassB::StructC".
 	const std::string fullpathClassName = classRec.GetFullpathCname();
@@ -5756,15 +5894,18 @@ void Sticklib::check_lvalue<${fullpathClassName}>(${fullpathClassName} & value, 
 
 
 )");
-} // static void OutputStructGetFunc(const ClassRec & classRec).
+} // static void OutputStructGetFuncToCpp(const ClassRec & classRec).
 
-static void OutputStructGetFuncs(const ClassRec & classRec)
+static void OutputClassGetFuncsToCpp(const ClassRec & classRec)
 {
-	if (classRec.classType == ClassRec::Type::STRUCT)
-		OutputStructGetFunc(classRec);
+	if (classRec.classType == ClassRec::Type::CLASS || classRec.classType == ClassRec::Type::INCONSTRUCTIBLE)
+		OutputClassGetFuncToCpp(classRec);
+	else if (classRec.classType == ClassRec::Type::STRUCT)
+		OutputStructGetFuncToCpp(classRec);
+
 	for (const auto & classId : classRec.memberClassIdArray)
-		OutputStructGetFuncs(ClassRec::Get(classId));
-} // static void OutputStructGetFuncs(const ClassRec & classRec).
+		OutputClassGetFuncsToCpp(ClassRec::Get(classId));
+} // static void OutputClassGetFuncsToCpp(const ClassRec & classRec).
 
 static void OutputStructPushFuncContent(const ClassRec & classRec)
 {
@@ -5812,9 +5953,6 @@ static void OutputStructPushFuncContent(const ClassRec & classRec)
 
 //----- 21.05.25 Fukushiro M. 削除始 ()-----
 ////----- 21.05.24 Fukushiro M. 追加始 ()-----
-//// テスト。
-//// ここも下の処理にまとめられるのでは。
-//
 //		// "::TestClass0*". Do not remove '*'. 
 //		auto fullpathCtypeAst = UtilString::Replace(variableRec.cToLuaConversionPath.back(), "&", "");
 //		auto varLuaType = CtypeToLuaType(fullpathCtypeAst);
@@ -5940,7 +6078,87 @@ static void OutputStructPushFuncContent(const ClassRec & classRec)
 	}
 } // static void OutputStructPushFuncContent(const ClassRec & classRec).
 
-static void OutputStructPushFunc(const ClassRec & classRec)
+static void OutputClassPushFuncToCpp(const ClassRec & classRec)
+{
+	// fullpath class name. ex. "::ClassA::ClassB::ClassC".
+	const std::string fullpathClassName = classRec.GetFullpathCname();
+	const std::string uniqueClassName = classRec.GetUniqueClassName();
+
+
+	OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
+// ${SRCMARKER}
+/// <summary>
+/// Pushes ${fullpathClassName} value on Lua stack.
+/// </summary>
+template<>
+void Sticklib::push_lvalue<${fullpathClassName}*>(lua_State * L, ${fullpathClassName} * const & value, bool own)
+{
+	//                   Premise.
+	//       stack
+	//    +---------+
+	//  -1|   v1    |
+	//    |---------|
+	//    :         :
+	//
+
+	//       stack
+	//    |---------|            +------------------+
+	//  -1|userdata |----------->| allocated memory |
+	//    |---------|            +------------------+
+	//  -2|   v1    |
+	//    |---------|            |------------------|
+	//    :         :          sizeof(StickInstanceWrapper)
+	//
+	auto wrapper = (StickInstanceWrapper *)lua_newuserdata(L, sizeof(StickInstanceWrapper));
+	wrapper->hash = XXH64(&value, sizeof(value), WRAPPER_SEED);
+	wrapper->own = own;
+	wrapper->ptr = value;
+
+	//       stack
+	//    |---------|
+	//  -1|metatable|--------------------------+   +----------------------------------------+
+	//    |---------|                          |   |                       registry         |
+	//  -2|userdata |---+                      V   V                    +-------+-------+   |
+	//    |---------|   |              +----------+--------+            | Key   | Value |   |
+	//    |   v1    |   |              |   Key    | Value  |            |-------|-------|   |
+	//    |---------|   |              |----------|--------|            |regName| table |---+
+	//    :         :   |              |  "__gc"  |c++func1<---+        +---A---+-------+
+	//                  |              +----------|--------+   |        :   |   :       :
+	//                  |              | "xxxxx"  |c++func2|   |            |
+	//                  |              +----------|--------+   |       metatable_name
+	//                  |              :          :        :   |
+	//                  |                                      |
+	//                  |    +------------------+              |
+	//                  +--->| allocated memory |        c++ Destructor
+	//                       +------------------+
+	//
+	luaL_getmetatable(L, "${uniqueClassName}");
+
+	//                             metatable
+	//       stack              +--------------+   +----------------------------------------+
+	//    |---------|           |              |   |                       registry         |
+	//  -1|userdata |---+       |              V   V                    +-------+-------+   |
+	//    |---------|   |       |      +----------+--------+            | Key   | Value |   |
+	//    |   v1    |   |       |      |   Key    | Value  |            |-------|-------|   |
+	//    |---------|   |       |      |----------|--------|            |regName| table |---+
+	//    :         :   |       |      |  "__gc"  |c++func1<---+        +---A---+-------+
+	//                  |       |      +----------|--------+   |        :   |   :       :
+	//                  |       |      | "xxxxx"  |c++func2|   |            |
+	//                  |       |      +----------|--------+   |       metatable_name
+	//                  |       |      :          :        :   |
+	//                  |       |                              |
+	//                  |    +------------------+              |
+	//                  +--->| allocated memory |        c++ Destructor
+	//                       +------------------+
+	//
+	::lua_setmetatable(L, -2);
+}
+
+
+)", fullpathClassName, uniqueClassName);
+} // static void OutputClassPushFuncToCpp(const ClassRec & classRec).
+
+static void OutputStructPushFuncToCpp(const ClassRec & classRec)
 {
 	// fullpath class name. ex. "::ClassA::ClassB::StructC".
 	const std::string fullpathClassName = classRec.GetFullpathCname();
@@ -5980,15 +6198,17 @@ void Sticklib::push_lvalue<${fullpathClassName}>(lua_State * L, ${fullpathClassN
 
 
 )");
-} // static void OutputStructPushFunc(const ClassRec & classRec).
+} // static void OutputStructPushFuncToCpp(const ClassRec & classRec).
 
-static void OutputStructPushFuncs(const ClassRec & classRec)
+static void OutputClassPushFuncsToCpp(const ClassRec & classRec)
 {
-	if (classRec.classType == ClassRec::Type::STRUCT)
-		OutputStructPushFunc(classRec);
+	if (classRec.classType == ClassRec::Type::CLASS || classRec.classType == ClassRec::Type::INCONSTRUCTIBLE)
+		OutputClassPushFuncToCpp(classRec);
+	else if (classRec.classType == ClassRec::Type::STRUCT)
+		OutputStructPushFuncToCpp(classRec);
 	for (const auto & classId : classRec.memberClassIdArray)
-		OutputStructPushFuncs(ClassRec::Get(classId));
-} // static void OutputStructPushFuncs(const ClassRec & classRec).
+		OutputClassPushFuncsToCpp(ClassRec::Get(classId));
+} // static void OutputClassPushFuncsToCpp(const ClassRec & classRec).
 
 static void OutputDestructor(const ClassRec & classRec)
 {
@@ -6010,11 +6230,15 @@ static int ${classRec.GetWrapperDestructorName()}(lua_State* L)
 		if (lua_gettop(L) != 1)
 			throw std::invalid_argument("Count of arguments is not correct.");
 		// Get the class object.
-		auto __wrapper = (StickInstanceWrapper*)Sticklib::test_classobject(L, 1, "${classRec.GetUniqueClassName()}");
-		if (__wrapper->own && __wrapper->ptr != nullptr)
+		auto wrapper = (StickInstanceWrapper*)Sticklib::test_classobject(L, 1, "${classRec.GetUniqueClassName()}");
+		if (!wrapper)
+			throw std::invalid_argument("The argument is not userdata nor lightuserdata");
+		if (wrapper->hash != XXH64(&wrapper->ptr, sizeof(wrapper->ptr), WRAPPER_SEED))
+			throw std::invalid_argument("Invalid class object");
+		if (wrapper->own && wrapper->ptr != nullptr)
 		{
-			delete (${fullpathClassName}*)__wrapper->ptr;
-			__wrapper->ptr = nullptr;
+			delete (${fullpathClassName}*)wrapper->ptr;
+			wrapper->ptr = nullptr;
 		}
 	}
 	catch (std::exception & e)
@@ -6050,8 +6274,13 @@ static void RegisterEnumConverter(const EnumRec & enumRec)
 	// e.g.
 	// enum A { ... } -> enumName="A"
 	const std::string enumName = enumRec.GetFullpathCname();
-	const std::string i64_to_enum = std::string("Sticklib::int64_to_enumT<") + enumName + ">";
-	const std::string enum_to_i64 = std::string("Sticklib::enumT_to_int64<") + enumName + ">";
+//----- 21.05.27 Fukushiro M. 変更前 ()-----
+//	const std::string i64_to_enum = std::string("Sticklib::int64_to_enumT<") + enumName + ">";
+//	const std::string enum_to_i64 = std::string("Sticklib::enumT_to_int64<") + enumName + ">";
+//----- 21.05.27 Fukushiro M. 変更後 ()-----
+	const std::string i64_to_enum = std::string("Sticklib::T_to_U<") + enumName + ", __int64>";
+	const std::string enum_to_i64 = std::string("Sticklib::T_to_U<__int64, ") + enumName + ">";
+//----- 21.05.27 Fukushiro M. 変更終 ()-----
 //----- 20.01.19 Fukushiro M. 変更前 ()-----
 //	CTYPE_1TO2_CONVERTER[std::make_pair("__int64", enumName)] = i64_to_enum;
 //	CTYPE_1TO2_CONVERTER[std::make_pair(enumName, "__int64")] = enum_to_i64;
@@ -6113,21 +6342,100 @@ static void RegisterEnumConverter(const EnumRec & enumRec)
 //}
 //----- 21.05.25 Fukushiro M. 削除終 ()-----
 
+//----- 21.05.26 Fukushiro M. 削除始 ()-----
+////// <summary>
+///// Registers a lua-type and type-converter for the struct.
+///// This is equivalent of reading below.
+///// <sticktype name="__xxxx___" ctype="::MyStruct" getfunc="Sticklib::check_lvalue" setfunc="Sticklib::push_lvalue" />
+///// <sticktype name="array<__xxxx___>" ctype="std::vector<::MyStruct>" getfunc="Sticklib::check_array<::MyStruct>" setfunc="Sticklib::push_array<::MyStruct>" />
+///// <sticktype name="hash<number,__xxxx___>" ctype="std::unordered_map<double,::MyStruct>" getfunc="Sticklib::check_hash<double,::MyStruct>" setfunc="Sticklib::push_hash<double,::MyStruct>" />
+/////   :
+///// <stickconv type1="std::vector<MyStruct>" type2="std::unordered_set<MyStruct>" type1to2="Sticklib::vector_to_uset<MyStruct,MyStruct>" type2to1="Sticklib::uset_to_vector<MyStruct,MyStruct>" />
+/////   :
+///// </summary>
+///// <param name="classRec">The class record.</param>
+//static void RegisterStructType(const ClassRec & classRec)
+//{
+//	const auto fullLuaName = classRec.GetFullpathLuaname();
+//	const auto fullCname = classRec.GetFullpathCname();
+//
+//	UtilXml::Tag typeTag;
+//	typeTag.name = "sticktype";
+//
+//	typeTag.attributes["name"] = fullLuaName;
+//	typeTag.attributes["ctype"] = fullCname;
+//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_lvalue<%s>", fullCname.c_str());
+//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_lvalue<%s>", fullCname.c_str());
+//	RegisterSticktypeTag(typeTag);
+//
+//	typeTag.attributes["name"] = UtilString::Format("array<%s>", fullLuaName.c_str());
+//	typeTag.attributes["ctype"] = UtilString::Format("std::vector<%s>", fullCname.c_str());
+//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_array<%s>", fullCname.c_str());
+//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_array<%s>", fullCname.c_str());
+//	RegisterSticktypeTag(typeTag);
+//
+//	typeTag.attributes["name"] = UtilString::Format("hash<number,%s>", fullLuaName.c_str());
+//	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<double,%s>", fullCname.c_str());
+//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<double,%s>", fullCname.c_str());
+//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<double,%s>", fullCname.c_str());
+//	RegisterSticktypeTag(typeTag);
+//
+//	typeTag.attributes["name"] = UtilString::Format("hash<integer,%s>", fullLuaName.c_str());
+//	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<__int64,%s>", fullCname.c_str());
+//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<__int64,%s>", fullCname.c_str());
+//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<__int64,%s>", fullCname.c_str());
+//	RegisterSticktypeTag(typeTag);
+//
+//	typeTag.attributes["name"] = UtilString::Format("hash<boolean,%s>", fullLuaName.c_str());
+//	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<bool,%s>", fullCname.c_str());
+//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<bool,%s>", fullCname.c_str());
+//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<bool,%s>", fullCname.c_str());
+//	RegisterSticktypeTag(typeTag);
+//
+//	typeTag.attributes["name"] = UtilString::Format("hash<string,%s>", fullLuaName.c_str());
+//	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<std::string,%s>", fullCname.c_str());
+//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<std::string,%s>", fullCname.c_str());
+//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<std::string,%s>", fullCname.c_str());
+//	RegisterSticktypeTag(typeTag);
+//
+////----- 21.05.25 Fukushiro M. 追加始 ()-----
+//	UtilXml::Tag convTag;
+//	convTag.name = "stickconv";
+//
+//	convTag.attributes["type1"] = UtilString::Format("std::vector<%s>", fullCname.c_str());
+//	convTag.attributes["type2"] = UtilString::Format("std::unordered_set<%s>", fullCname.c_str());
+//	convTag.attributes["type1to2"] = UtilString::Format("Sticklib::vector_to_uset<%s,%s>", fullCname.c_str(), fullCname.c_str());
+//	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::uset_to_vector<%s,%s>", fullCname.c_str(), fullCname.c_str());
+//	RegisterStickconvTag(convTag, false);
+//
+//	convTag.attributes["type1"] = UtilString::Format("std::vector<%s>", fullCname.c_str());
+//	convTag.attributes["type2"] = UtilString::Format("std::set<%s>", fullCname.c_str());
+//	convTag.attributes["type1to2"] = UtilString::Format("Sticklib::vector_to_set<%s,%s>", fullCname.c_str(), fullCname.c_str());
+//	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::set_to_vector<%s,%s>", fullCname.c_str(), fullCname.c_str());
+//	RegisterStickconvTag(convTag, false);
+//
+////----- 21.05.25 Fukushiro M. 追加終 ()-----
+//}
+//----- 21.05.26 Fukushiro M. 削除終 ()-----
+
+
+//----- 21.05.23 Fukushiro M. 追加始 ()-----
 //// <summary>
-/// Registers a lua-type and type-converter for the struct.
+/// Registers a lua-type of a class and struct.
 /// This is equivalent of reading below.
-/// <sticktype name="__xxxx___" ctype="::MyStruct" getfunc="Sticklib::check_lvalue" setfunc="Sticklib::push_lvalue" />
-/// <sticktype name="array<__xxxx___>" ctype="std::vector<::MyStruct>" getfunc="Sticklib::check_array<::MyStruct>" setfunc="Sticklib::push_array<::MyStruct>" />
-/// <sticktype name="hash<number,__xxxx___>" ctype="std::unordered_map<double,::MyStruct>" getfunc="Sticklib::check_hash<double,::MyStruct>" setfunc="Sticklib::push_hash<double,::MyStruct>" />
-///   :
-/// <stickconv type1="std::vector<MyStruct>" type2="std::unordered_set<MyStruct>" type1to2="Sticklib::vector_to_uset<MyStruct,MyStruct>" type2to1="Sticklib::uset_to_vector<MyStruct,MyStruct>" />
-///   :
+/// <sticktype name="Super.MyClass" ctype="::Super::MyClass*" getfunc="Sticklib::check_lvalue<::Super::MyClass*>" setfunc="Sticklib::push_lvalue<::Super::MyClass*>" />
+/// <sticktype name="array<Super.MyClass>" ctype="std::vector<::Super::MyClass*>" getfunc="Sticklib::check_array<::Super::MyClass*>" setfunc="Sticklib::push_array<::Super::MyClass*>" />
+///      :
+/// <stickconv type1="std::vector<::Super::MyClass*>" type2="std::unordered_set<::Super::MyClass*>" type1to2="Sticklib::vector_to_uset<::Super::MyClass*,::Super::MyClass*>" type2to1="Sticklib::uset_to_vector<::Super::MyClass*,::Super::MyClass*>" />
+///      :
 /// </summary>
 /// <param name="classRec">The class record.</param>
-static void RegisterStructType(const ClassRec & classRec)
+static void RegisterClassType(const ClassRec & classRec)
 {
 	const auto fullLuaName = classRec.GetFullpathLuaname();
-	const auto fullCname = classRec.GetFullpathCname();
+	const auto fullCname = (classRec.classType == ClassRec::Type::CLASS || classRec.classType == ClassRec::Type::INCONSTRUCTIBLE) ?
+		classRec.GetFullpathCname() + "*" :		// class.
+		classRec.GetFullpathCname();			// struct.
 
 	UtilXml::Tag typeTag;
 	typeTag.name = "sticktype";
@@ -6168,7 +6476,6 @@ static void RegisterStructType(const ClassRec & classRec)
 	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<std::string,%s>", fullCname.c_str());
 	RegisterSticktypeTag(typeTag);
 
-//----- 21.05.25 Fukushiro M. 追加始 ()-----
 	UtilXml::Tag convTag;
 	convTag.name = "stickconv";
 
@@ -6182,71 +6489,6 @@ static void RegisterStructType(const ClassRec & classRec)
 	convTag.attributes["type2"] = UtilString::Format("std::set<%s>", fullCname.c_str());
 	convTag.attributes["type1to2"] = UtilString::Format("Sticklib::vector_to_set<%s,%s>", fullCname.c_str(), fullCname.c_str());
 	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::set_to_vector<%s,%s>", fullCname.c_str(), fullCname.c_str());
-	RegisterStickconvTag(convTag, false);
-
-//----- 21.05.25 Fukushiro M. 追加終 ()-----
-}
-
-
-//----- 21.05.23 Fukushiro M. 追加始 ()-----
-//// <summary>
-/// Registers a lua-type of a class.
-/// This is equivalent of reading below.
-/// <sticktype name="class-object(::MyClass)" ctype="::MyClass*" getfunc="Sticklib::check_classobject<::MyClass*>" setfunc="Sticklib::push_classobject<::MyClass*>" />
-/// <sticktype name="array<class-object>(::MyClass)" ctype="std::vector<::MyClass*>" getfunc="Sticklib::check_classobjectarray<::MyClass*>" setfunc="Sticklib::push_classobjectarray<::MyClass*>" />
-/// </summary>
-/// <param name="classRec">The class record.</param>
-static void RegisterClassType(const ClassRec & classRec)
-{
-	UtilXml::Tag typeTag;
-	typeTag.name = "sticktype";
-
-	const auto fullLuaName = classRec.GetFullpathLuaname();
-	const auto fullCname = classRec.GetFullpathCname();
-
-//----- 21.05.25 Fukushiro M. 追加始 ()-----
-// テスト。
-	typeTag.attributes["name"] = fullLuaName;
-	typeTag.attributes["ctype"] = fullCname + "*";
-	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_lvalue<%s*>", fullCname.c_str());
-	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_lvalue<%s*>", fullCname.c_str());
-	RegisterSticktypeTag(typeTag);
-
-	typeTag.attributes["name"] = UtilString::Format("array<%s>", fullLuaName.c_str());
-	typeTag.attributes["ctype"] = UtilString::Format("std::vector<%s*>", fullCname.c_str());
-	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_array<%s*>", fullCname.c_str());
-	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_array<%s*>", fullCname.c_str());
-	RegisterSticktypeTag(typeTag);
-//----- 21.05.25 Fukushiro M. 追加終 ()-----
-
-
-//----- 21.05.25 Fukushiro M. 削除始 ()-----
-//	typeTag.attributes["name"] = UtilString::Format("class-object(%s)", fullCname.c_str());
-//	typeTag.attributes["ctype"] = fullCname + "*";
-//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_classobject<%s*>", fullCname.c_str());
-//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_classobject<%s*>", fullCname.c_str());
-//	RegisterSticktypeTag(typeTag);
-//
-//	typeTag.attributes["name"] = UtilString::Format("array<class-object>(%s)", fullCname.c_str());
-//	typeTag.attributes["ctype"] = UtilString::Format("std::vector<%s*>", fullCname.c_str());
-//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_classobjectarray<%s*>", fullCname.c_str());
-//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_classobjectarray<%s*>", fullCname.c_str());
-//	RegisterSticktypeTag(typeTag);  
-//----- 21.05.25 Fukushiro M. 削除終 ()-----
-
-	UtilXml::Tag convTag;
-	convTag.name = "stickconv";
-
-	convTag.attributes["type1"] = UtilString::Format("std::vector<%s*>", fullCname.c_str());
-	convTag.attributes["type2"] = UtilString::Format("std::unordered_set<%s*>", fullCname.c_str());
-	convTag.attributes["type1to2"] = UtilString::Format("Sticklib::vector_to_uset<%s*,%s*>", fullCname.c_str(), fullCname.c_str());
-	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::uset_to_vector<%s*,%s*>", fullCname.c_str(), fullCname.c_str());
-	RegisterStickconvTag(convTag, false);
-
-	convTag.attributes["type1"] = UtilString::Format("std::vector<%s*>", fullCname.c_str());
-	convTag.attributes["type2"] = UtilString::Format("std::set<%s*>", fullCname.c_str());
-	convTag.attributes["type1to2"] = UtilString::Format("Sticklib::vector_to_set<%s*,%s*>", fullCname.c_str(), fullCname.c_str());
-	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::set_to_vector<%s*,%s*>", fullCname.c_str(), fullCname.c_str());
 	RegisterStickconvTag(convTag, false);
 }
 //----- 21.05.23 Fukushiro M. 追加終 ()-----
@@ -6733,16 +6975,14 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 								// already used class lname.
 								classRec.memberClassLuanameSet.insert(memberClassRec.classLuaname);
 
-								// Register class converter.
-								if (memberClassRec.classType == ClassRec::Type::CLASS || memberClassRec.classType == ClassRec::Type::INCONSTRUCTIBLE)
+								// Register class type and ToLua-getter, ToLua-setter.
+								switch (memberClassRec.classType)
 								{
-// 21.05.25 Fukushiro M. 1行変更 ()
-//									RegisterClassConverter(memberClassRec);
+								case ClassRec::Type::CLASS:
+								case ClassRec::Type::INCONSTRUCTIBLE:
+								case ClassRec::Type::STRUCT:
 									RegisterClassType(memberClassRec);
-								}
-								else if (memberClassRec.classType == ClassRec::Type::STRUCT)
-								{
-									RegisterStructType(memberClassRec);
+									break;
 								}
 
 								// Parses source until next encounter with '}'.
@@ -6973,6 +7213,8 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 						// [extern TTT FFF (PPP)]のTTT,FFF,PPPを抽出
 						FuncRec::Type funcType;
 						std::string funcCname;
+// 21.06.02 Fukushiro M. 1行追加 ()
+						bool isRawFunc;
 						std::vector<std::string> argNames;
 						std::unordered_map<std::string, std::string> argNameToCtype;
 						std::unordered_map<std::string, std::string> argNameToRawCtype;
@@ -6985,6 +7227,8 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							CheckFunction(
 								funcType,
 								funcCname,
+// 21.06.02 Fukushiro M. 1行追加 ()
+								isRawFunc,
 								argNames,
 								argNameToCtype,
 								argNameToRawCtype,
@@ -7024,6 +7268,8 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							auto & funcRec = FuncRec::New(funcGroupRec.id);
 							funcRec.type = funcType;
 							funcRec.funcCname = funcCname;
+// 21.06.02 Fukushiro M. 1行追加 ()
+							funcRec.isRawFunc = isRawFunc;
 							funcRec.funcLuaname = funcLuaname;
 							funcRec.argNames = argNames;
 							funcRec.argNameToCtype = argNameToCtype;
@@ -7194,6 +7440,8 @@ static void CreateDefaultConstructors(ClassRec & classRec)
 			auto & funcRec = FuncRec::New(funcGroupRec.id);
 			funcRec.type = FuncRec::Type::CONSTRUCTOR;
 			funcRec.funcCname = classRec.classCname;
+// 21.06.02 Fukushiro M. 1行追加 ()
+			funcRec.isRawFunc = false;
 			funcRec.funcLuaname = "New";
 			funcRec.summary = "Default constructor.";
 			std::string funcCtype;
@@ -7290,16 +7538,20 @@ static void OutputPolymorphicFunctions(const ClassRec & classRec)
 		OutputPolymorphicFunctions(ClassRec::Get(classId));
 }
 
-static void OutputClassPushArgFunc(const ClassRec & classRec)
+static void OutputClassPushArgFuncToHeader(const ClassRec & classRec)
 {
 	const auto fullLuaName = classRec.GetFullpathLuaname();
+	const auto checkFunc = LuaTypeToGetFuncName(LuaType(fullLuaName));
 	const auto pushFunc = LuaTypeToSetFuncName(LuaType(fullLuaName));
 	OUTPUT_H_FILE_STREAM << FORMTEXT(u8R"(
 // ${SRCMARKER}
 template<>
+void ${checkFunc}(${classRec.GetFullpathCname()} * & value, lua_State * L, int arg);
+
+template<>
 void ${pushFunc}(lua_State * L, ${classRec.GetFullpathCname()} * const & value, bool own);
 
-/// <summary>
+/// /// <summary>
 /// Push the class object into Lua stack.
 /// ${SRCMARKER}
 /// </summary>
@@ -7328,20 +7580,24 @@ int stick_pusharg(lua_State* L, void* data, ${classRec.GetFullpathCname()}*&& he
 }
 
 
-)", pushFunc, classRec.GetFullpathCname());
-} // static void OutputClassPushArgFunc(const ClassRec & classRec).
+)", checkFunc, pushFunc, classRec.GetFullpathCname());
+} // static void OutputClassPushArgFuncToHeader(const ClassRec & classRec).
 
 
-static void OutputStructPushArgFunc(const ClassRec & classRec)
+static void OutputStructPushArgFuncToHeader(const ClassRec & classRec)
 {
 	const auto fullLuaName = classRec.GetFullpathLuaname();
+	const auto checkFunc = LuaTypeToGetFuncName(LuaType(fullLuaName));
 	const auto pushFunc = LuaTypeToSetFuncName(LuaType(fullLuaName));
 	OUTPUT_H_FILE_STREAM << FORMTEXT(u8R"(
 // ${SRCMARKER}
 template<>
+void ${checkFunc}(${classRec.GetFullpathCname()} & value, lua_State * L, int arg);
+
+template<>
 void ${pushFunc}(lua_State * L, ${classRec.GetFullpathCname()} const & value, bool own);
 
-/// <summary>
+/// /// <summary>
 /// Push the struct data into Lua stack.
 /// ${SRCMARKER}
 /// </summary>
@@ -7370,8 +7626,8 @@ int stick_pusharg(lua_State* L, void* data, const ${classRec.GetFullpathCname()}
 }
 
 
-)", pushFunc, classRec.GetFullpathCname());
-} // static void OutputStructPushArgFunc(const ClassRec & classRec).
+)", checkFunc, pushFunc, classRec.GetFullpathCname());
+} // static void OutputStructPushArgFuncToHeader(const ClassRec & classRec).
 
 static void OutputEnumPushArgFunc(const EnumRec & enumRec)
 {
@@ -7412,12 +7668,12 @@ int stick_pusharg(lua_State* L, void* data, const ${enumRec.GetFullpathCname()}&
 	}
 } // OutputEnumPushArgFunc.
 
-static void OutputClassPushArgFuncs(const ClassRec & classRec)
+static void OutputClassPushArgFuncsToHeader(const ClassRec & classRec)
 {
 	if (classRec.classType == ClassRec::Type::CLASS || classRec.classType == ClassRec::Type::INCONSTRUCTIBLE)
-		OutputClassPushArgFunc(classRec);
+		OutputClassPushArgFuncToHeader(classRec);
 	else if (classRec.classType == ClassRec::Type::STRUCT)
-		OutputStructPushArgFunc(classRec);
+		OutputStructPushArgFuncToHeader(classRec);
 	for (const auto & luanameToEnumId : { classRec.luanameToRegularEnumId, classRec.luanameToClassEnumId })
 	{
 		for (const auto & luanameEnumId : luanameToEnumId)
@@ -7428,8 +7684,8 @@ static void OutputClassPushArgFuncs(const ClassRec & classRec)
 	}
 
 	for (const auto & classId : classRec.memberClassIdArray)
-		OutputClassPushArgFuncs(ClassRec::Get(classId));
-} // static void OutputClassPushArgFuncs(const ClassRec & classRec).
+		OutputClassPushArgFuncsToHeader(ClassRec::Get(classId));
+} // static void OutputClassPushArgFuncsToHeader(const ClassRec & classRec).
 
 /// <summary>
 /// Outputs the class registration source code for luastick_init.
@@ -7639,8 +7895,6 @@ static void OutputStickInitCpp(const ClassRec & classRec)
 			}
 //----- 21.05.25 Fukushiro M. 削除始 ()-----
 ////----- 21.05.24 Fukushiro M. 追加始 ()-----
-//// テスト。ここも下にまとめられるのでは。
-//
 //			// "::TestClass0*". Do not remove '*'. 
 //			auto fullpathCtypeAst = UtilString::Replace(conversionPath.back(), "&", "");
 //			auto varLuaType = CtypeToLuaType(fullpathCtypeAst);
@@ -8387,6 +8641,7 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 	constexpr wchar_t STICKLIB[]{ L"Sticklib.h" };
 	constexpr size_t STICKLIB_LEN = _countof(STICKLIB) - 1;
 	constexpr wchar_t STICKRUN[]{ L"Stickrun.h" };
+	constexpr wchar_t XXHASH[]{ L"xxhash.h" };
 
 	std::string dummy;
 	try
@@ -8403,19 +8658,30 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 			ThrowLeException(LeError::FILE_NOT_SPECIFIED);	// ファイルが指定されていません。
 
 		std::wstring stickrunPath;
+		std::wstring xxhashPath;
 		for (const auto & headFile : sourceFiles)
 		{
-			std::wstring r(headFile);
-			if (::_wcsicmp(UtilString::Right(r, STICKLIB_LEN).c_str(), STICKLIB) == 0)
+//----- 21.06.03 Fukushiro M. 変更前 ()-----
+//			std::wstring r(headFile);
+//			if (::_wcsicmp(UtilString::Right(r, STICKLIB_LEN).c_str(), STICKLIB) == 0)
+//			{
+//				stickrunPath = headFile;
+//				stickrunPath.erase(stickrunPath.length() - STICKLIB_LEN);
+//				stickrunPath += STICKRUN;
+//				break;
+//			}
+//----- 21.06.03 Fukushiro M. 変更後 ()-----
+			if (::_wcsicmp(UtilString::Right(headFile, STICKLIB_LEN).c_str(), STICKLIB) == 0)
 			{
-				stickrunPath = headFile;
-				stickrunPath.erase(stickrunPath.length() - STICKLIB_LEN);
-				stickrunPath += STICKRUN;
+				auto tmpPath = headFile.substr(0, headFile.length() - STICKLIB_LEN);
+				stickrunPath = tmpPath + STICKRUN;
+				xxhashPath = tmpPath + XXHASH;
 				break;
 			}
+//----- 21.06.03 Fukushiro M. 変更終 ()-----
 		}
 		if (stickrunPath.empty())
-			ThrowLeException(LeError::FILE_NOT_SPECIFIED, STICKRUN);	// ファイルが指定されていません。
+			ThrowLeException(LeError::FILE_NOT_SPECIFIED, STICKLIB);	// ファイルが指定されていません。
 
 		// Output file path. It does not include extension. e.g. "C:\folder1\fileA"
 		const auto outFilePath = optionToValue.find(OPTION_OUT)->second;
@@ -8466,9 +8732,18 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 		OUTPUT_CPP_FILE_STREAM << FORMTEXT(u8R"(
 // ${SRCMARKER}
 #include "${Astrwstr::wstr_to_astr(dummy, outFileName)}.h"
+#include <random>
+
+#define XXH_STATIC_LINKING_ONLY   /* access advanced declarations */
+#define XXH_IMPLEMENTATION   /* access definitions */
+
+#include "${xxhashPath}"
+
+// Validation id for StickInstanceWrapper.
+static unsigned __int64 WRAPPER_SEED = 0;
 
 
-)", Astrwstr::wstr_to_astr(dummy, outFileName));
+)", Astrwstr::wstr_to_astr(dummy, outFileName), xxhashPath);
 
 		OUTPUT_H_FILE_STREAM << FORMTEXT(u8R"(
 // ${SRCMARKER}
@@ -8561,9 +8836,9 @@ extern void luastick_init(lua_State* L);
 
 		CreateDefaultConstructors(classRec);
 
-		OutputStructGetFuncs(classRec);
+		OutputClassGetFuncsToCpp(classRec);
 
-		OutputStructPushFuncs(classRec);
+		OutputClassPushFuncsToCpp(classRec);
 
 		OutputDestructors(classRec);
 
@@ -8571,7 +8846,7 @@ extern void luastick_init(lua_State* L);
 
 		OutputPolymorphicFunctions(classRec);
 
-		OutputClassPushArgFuncs(classRec);
+		OutputClassPushArgFuncsToHeader(classRec);
 
 
 		OUTPUT_H_FILE_STREAM << FORMTEXT(u8R"(
@@ -8583,11 +8858,89 @@ extern void luastick_init(lua_State* L);
 		OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 // ${SRCMARKER}
 /// <summary>
+/// STICK::ObjectToUserdata(obj)
+/// </summary>
+static int lm__STICK__ObjectToUserdata__1(lua_State* L)
+{
+	try
+	{
+		// Check the count of arguments.
+		if (lua_gettop(L) != 1)
+			throw std::invalid_argument("Count of arguments is not correct.");
+		auto wrapper = (StickInstanceWrapper *)lua_touserdata(L, 1);
+		if (!wrapper)
+			throw std::invalid_argument("The argument is not userdata nor lightuserdata");
+		if (wrapper->hash != XXH64(&wrapper->ptr, sizeof(wrapper->ptr), WRAPPER_SEED))
+			throw std::invalid_argument("Invalid class object");
+		Sticklib::push_lvalue<void *>(L, wrapper->ptr, false);
+	}
+	catch (std::exception & e)
+	{
+		luaL_error(L, (std::string("C function error:STICK::ObjectToUserdata:") + e.what()).c_str());
+	}
+	catch (...)
+	{
+		luaL_error(L, "C function error:STICK::ObjectToUserdata");
+	}
+	return 1;
+}
+
+// ${SRCMARKER}
+/// <summary>
+/// STICK::IsNullObject(obj)
+/// </summary>
+static int lm__STICK__IsNullObject__1(lua_State* L)
+{
+	try
+	{
+		// Check the count of arguments.
+		if (lua_gettop(L) != 1)
+			throw std::invalid_argument("Count of arguments is not correct.");
+		auto wrapper = (StickInstanceWrapper *)lua_touserdata(L, 1);
+		if (!wrapper)
+			throw std::invalid_argument("The argument is not userdata nor lightuserdata");
+		if (wrapper->hash != XXH64(&wrapper->ptr, sizeof(wrapper->ptr), WRAPPER_SEED))
+			throw std::invalid_argument("Invalid class object");
+		bool isNull = (wrapper->ptr == nullptr);
+		Sticklib::push_lvalue<bool>(L, isNull, false);
+	}
+	catch (std::exception & e)
+	{
+		luaL_error(L, (std::string("C function error:STICK::IsNullObject:") + e.what()).c_str());
+	}
+	catch (...)
+	{
+		luaL_error(L, "C function error:STICK::IsNullObject");
+	}
+	return 1;
+}
+
+/// <summary>
 /// LuaStick initializing function.
 /// luastick_init must be called to register the classes and its member functions.
 /// </summary>
 void luastick_init(lua_State* L)
 {
+	std::random_device seed_gen;
+	std::mt19937 engine(seed_gen());
+	// Validation id for StickInstanceWrapper.
+	WRAPPER_SEED = ((unsigned __int64)engine() << 32) | (unsigned __int64)engine();
+
+	// Register the default namespace '::STICK' and its static member functions.
+	Sticklib::push_table(L, "");
+	Sticklib::push_table(L, "STICK");
+	{
+		static struct luaL_Reg lm__STICK__Static[] =
+		{
+			{ "ObjectToUserdata", lm__STICK__ObjectToUserdata__1 },
+			{ "IsNullObject", lm__STICK__IsNullObject__1 },
+			{ nullptr, nullptr },
+		};
+		Sticklib::set_functions(L, lm__STICK__Static);
+	}
+	Sticklib::pop(L);
+	Sticklib::pop(L);
+
 
 )");
 

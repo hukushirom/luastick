@@ -12,6 +12,7 @@
 #define IDC_BTN_FUNC_3                  1005
 #define IDC_EDIT1                       1006
 #define IDC_EDT_OUTPUT                  1006
+#define IDC_BTN_FUNC_4                  1007
 
 // Next default values for new objects
 // 

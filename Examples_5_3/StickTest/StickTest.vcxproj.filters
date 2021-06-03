@@ -39,6 +39,9 @@
     <ClInclude Include="..\..\LuaStick\files\Stickrun.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="xxhash.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="StickTest.cpp">

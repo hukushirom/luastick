@@ -48,6 +48,20 @@ Func3 = function()
 	TestClass2.TESTCLASS0:GetX();
 	App():Output("Func3 OK");
 end
+
+Func4 = function()
+	local tc0_0 = TestClass0.New();
+	tc0_0:SetTitle("test1.");
+	local tc0_1 = TestClass0.New();
+	tc0_1:SetTitle("test2.");
+	local tc0_2 = TestClass0.New();
+	tc0_2:SetTitle("test3.");
+
+	local tc1 = TestClass1.New();
+	tc1:SetClass0Array({tc0_0, tc0_1, tc0_2});
+	local tc0ary = tc1:GetClass0Array();
+	App():Output(tc0ary[1]:GetTitle() .. tc0ary[2]:GetTitle() .. tc0ary[3]:GetTitle());
+end
 )";
 
 CStickClassExampleDlg::CStickClassExampleDlg(CWnd* pParent /*=nullptr*/)
@@ -78,6 +92,7 @@ BEGIN_MESSAGE_MAP(CStickClassExampleDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_FUNC_1, &CStickClassExampleDlg::OnBnClickedBtnFunc1)
 	ON_BN_CLICKED(IDC_BTN_FUNC_2, &CStickClassExampleDlg::OnBnClickedBtnFunc2)
 	ON_BN_CLICKED(IDC_BTN_FUNC_3, &CStickClassExampleDlg::OnBnClickedBtnFunc3)
+	ON_BN_CLICKED(IDC_BTN_FUNC_4, &CStickClassExampleDlg::OnBnClickedBtnFunc4)
 END_MESSAGE_MAP()
 
 
@@ -147,7 +162,7 @@ void CStickClassExampleDlg::OnBnClickedBtnLoad1()
 	else
 	{
 		std::wstring wstr_error;
-		Sticklib::astring_to_wstring(wstr_error, error_message);
+		Sticklib::T_to_U<std::wstring, std::string>(wstr_error, error_message);
 		Output(wstr_error.c_str());
 	}
 }
@@ -163,7 +178,7 @@ void CStickClassExampleDlg::OnBnClickedBtnLoad2()
 	else
 	{
 		std::wstring wstr_error;
-		Sticklib::astring_to_wstring(wstr_error, error_message);
+		Sticklib::T_to_U<std::wstring, std::string>(wstr_error, error_message);
 		Output(wstr_error.c_str());
 	}
 }
@@ -185,7 +200,7 @@ void CStickClassExampleDlg::OnBnClickedBtnFunc1()
 	if (!m_stickrun.CallFunction(&error_message, "SNDBX.Func1"))
 	{
 		std::wstring wstr_error;
-		Sticklib::astring_to_wstring(wstr_error, error_message);
+		Sticklib::T_to_U<std::wstring, std::string>(wstr_error, error_message);
 		Output(wstr_error.c_str());
 	}
 }
@@ -198,7 +213,7 @@ void CStickClassExampleDlg::OnBnClickedBtnFunc2()
 	if (!m_stickrun.CallFunction(&error_message, "SNDBX.Func2"))
 	{
 		std::wstring wstr_error;
-		Sticklib::astring_to_wstring(wstr_error, error_message);
+		Sticklib::T_to_U<std::wstring, std::string>(wstr_error, error_message);
 		Output(wstr_error.c_str());
 	}
 }
@@ -211,7 +226,20 @@ void CStickClassExampleDlg::OnBnClickedBtnFunc3()
 	if (!m_stickrun.CallFunction(&error_message, "SNDBX.Func3"))
 	{
 		std::wstring wstr_error;
-		Sticklib::astring_to_wstring(wstr_error, error_message);
+		Sticklib::T_to_U<std::wstring, std::string>(wstr_error, error_message);
+		Output(wstr_error.c_str());
+	}
+}
+
+
+void CStickClassExampleDlg::OnBnClickedBtnFunc4()
+{
+	// Call Lua function 'Func4'
+	std::string error_message;
+	if (!m_stickrun.CallFunction(&error_message, "SNDBX.Func4"))
+	{
+		std::wstring wstr_error;
+		Sticklib::T_to_U<std::wstring, std::string>(wstr_error, error_message);
 		Output(wstr_error.c_str());
 	}
 }

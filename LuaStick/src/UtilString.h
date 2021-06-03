@@ -291,19 +291,31 @@ public:
 		return str;
 	}
 
-	static std::string & Right(std::string& str, size_t length)
+//----- 21.06.03 Fukushiro M. 変更前 ()-----
+//	static std::string & Right(std::string& str, size_t length)
+//	{
+//		if (length < str.length())
+//			str.erase(0, str.length() - length);
+//		return str;
+//	}
+//	
+//	static std::wstring & Right(std::wstring& str, size_t length)
+//	{
+//		if (length < str.length())
+//			str.erase(0, str.length() - length);
+//		return str;
+//	}
+//----- 21.06.03 Fukushiro M. 変更後 ()-----
+	static std::string Right(const std::string& str, size_t length)
 	{
-		if (length < str.length())
-			str.erase(0, str.length() - length);
-		return str;
+		return (length < str.length()) ? str.substr(str.length() - length) : str;
 	}
 	
-	static std::wstring & Right(std::wstring& str, size_t length)
+	static std::wstring Right(const std::wstring& str, size_t length)
 	{
-		if (length < str.length())
-			str.erase(0, str.length() - length);
-		return str;
+		return (length < str.length()) ? str.substr(str.length() - length) : str;
 	}
+//----- 21.06.03 Fukushiro M. 変更終 ()-----
 	
 	static std::string & SimpleReplace(std::string & str, const std::string & oldStr, const std::string & newStr)
 	{

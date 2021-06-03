@@ -50,6 +50,7 @@ constexpr const char* STICKERR_INCORRECT_ARG_TYPE_MSG = "Incorrect argument type
 /// </summary>
 struct StickInstanceWrapper
 {
+	unsigned __int64 hash;	// Hash value to validate this object.
 	bool own;		// true:own class object/false:not own.
 	void * ptr;		// class object.
 };
@@ -71,67 +72,105 @@ struct StickInstanceWrapper
 /// <sticktype name="array<boolean>" ctype="std::vector<bool>" getfunc="Sticklib::check_array<bool>" setfunc="Sticklib::push_array<bool>" />
 /// <sticktype name="array<string>" ctype="std::vector<std::string>" getfunc="Sticklib::check_array<std::string>" setfunc="Sticklib::push_array<std::string>" />
 /// <sticktype name="array<lightuserdata>" ctype="std::vector<void*>" getfunc="Sticklib::check_array<void*>" setfunc="Sticklib::push_array<void*>" />
-/// <sticktype name="hash<number,number>" ctype="std::unordered_map<double,double>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<double,double>" />
-/// <sticktype name="hash<number,integer>" ctype="std::unordered_map<double,__int64>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<double,__int64>" />
-/// <sticktype name="hash<number,boolean>" ctype="std::unordered_map<double,bool>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<double,bool>" />
-/// <sticktype name="hash<number,string>" ctype="std::unordered_map<double,std::string>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<double,std>" />
-/// <sticktype name="hash<integer,number>" ctype="std::unordered_map<__int64,double>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<__int64,double>" />
-/// <sticktype name="hash<integer,integer>" ctype="std::unordered_map<__int64,__int64>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<__int64,__int64>" />
-/// <sticktype name="hash<integer,boolean>" ctype="std::unordered_map<__int64,bool>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<__int64,bool>" />
-/// <sticktype name="hash<integer,string>" ctype="std::unordered_map<__int64,std::string>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<__int64,std>" />
-/// <sticktype name="hash<boolean,number>" ctype="std::unordered_map<bool,double>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<bool,double>" />
-/// <sticktype name="hash<boolean,integer>" ctype="std::unordered_map<bool,__int64>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<bool,__int64>" />
-/// <sticktype name="hash<boolean,boolean>" ctype="std::unordered_map<bool,bool>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<bool,bool>" />
-/// <sticktype name="hash<boolean,string>" ctype="std::unordered_map<bool,std::string>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<bool,std::string>" />
-/// <sticktype name="hash<string,number>" ctype="std::unordered_map<std::string,double>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<std::string,double>" />
-/// <sticktype name="hash<string,integer>" ctype="std::unordered_map<std::string,__int64>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<std::string,__int64>" />
-/// <sticktype name="hash<string,boolean>" ctype="std::unordered_map<std::string,bool>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<std::string,bool>" />
-/// <sticktype name="hash<string,string>" ctype="std::unordered_map<std::string,std::string>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<std::string,std::string>" />
-/// <sticktype name="hash<string,any>" ctype="std::unordered_map<std::string,Sticklib::AnyValue>" getfunc="Sticklib::check_hash" setfunc="Sticklib::push_hash<std::string,Sticklib::AnyValue>" />
+/// <sticktype name="hash<integer,boolean>" ctype="std::unordered_map<__int64,bool>" getfunc="Sticklib::check_hash<__int64,bool>" setfunc="Sticklib::push_hash<__int64,bool>" />
+/// <sticktype name="hash<integer,integer>" ctype="std::unordered_map<__int64,__int64>" getfunc="Sticklib::check_hash<__int64,__int64>" setfunc="Sticklib::push_hash<__int64,__int64>" />
+/// <sticktype name="hash<integer,number>" ctype="std::unordered_map<__int64,double>" getfunc="Sticklib::check_hash<__int64,double>" setfunc="Sticklib::push_hash<__int64,double>" />
+/// <sticktype name="hash<integer,string>" ctype="std::unordered_map<__int64,std::string>" getfunc="Sticklib::check_hash<__int64,std::string>" setfunc="Sticklib::push_hash<__int64,std::string>" />
+/// <sticktype name="hash<number,boolean>" ctype="std::unordered_map<double,bool>" getfunc="Sticklib::check_hash<double,bool>" setfunc="Sticklib::push_hash<double,bool>" />
+/// <sticktype name="hash<number,integer>" ctype="std::unordered_map<double,__int64>" getfunc="Sticklib::check_hash<double,__int64>" setfunc="Sticklib::push_hash<double,__int64>" />
+/// <sticktype name="hash<number,number>" ctype="std::unordered_map<double,double>" getfunc="Sticklib::check_hash<double,double>" setfunc="Sticklib::push_hash<double,double>" />
+/// <sticktype name="hash<number,string>" ctype="std::unordered_map<double,std::string>" getfunc="Sticklib::check_hash<double,std::string>" setfunc="Sticklib::push_hash<double,std::string>" />
+/// <sticktype name="hash<string,boolean>" ctype="std::unordered_map<std::string,bool>" getfunc="Sticklib::check_hash<std::string,bool>" setfunc="Sticklib::push_hash<std::string,bool>" />
+/// <sticktype name="hash<string,integer>" ctype="std::unordered_map<std::string,__int64>" getfunc="Sticklib::check_hash<std::string,__int64>" setfunc="Sticklib::push_hash<std::string,__int64>" />
+/// <sticktype name="hash<string,number>" ctype="std::unordered_map<std::string,double>" getfunc="Sticklib::check_hash<std::string,double>" setfunc="Sticklib::push_hash<std::string,double>" />
+/// <sticktype name="hash<string,string>" ctype="std::unordered_map<std::string,std::string>" getfunc="Sticklib::check_hash<std::string,std::string>" setfunc="Sticklib::push_hash<std::string,std::string>" />
+/// <sticktype name="hash<string,any>" ctype="std::unordered_map<std::string,Sticklib::AnyValue>" getfunc="Sticklib::check_hash<std::string,Sticklib::AnyValue>" setfunc="Sticklib::push_hash<std::string,Sticklib::AnyValue>" />
 
 // Converter definition.
 
-/// <stickconv type1="std::vector<__int64>" type2="std::vector<__int16>" type1to2="Sticklib::vector_to_vector<__int16,__int64>" type2to1="Sticklib::vector_to_vector<__int64,__int16>" />
-/// <stickconv type1="std::vector<__int64>" type2="std::vector<__int32>" type1to2="Sticklib::vector_to_vector<__int32,__int64>" type2to1="Sticklib::vector_to_vector<__int64,__int32>" />
-/// <stickconv type1="std::vector<__int64>" type2="std::vector<int>" type1to2="Sticklib::vector_to_vector<int,__int64>" type2to1="Sticklib::vector_to_vector<__int64,int>" />
-/// <stickconv type1="std::vector<__int64>" type2="std::vector<long>" type1to2="Sticklib::vector_to_vector<long,__int64>" type2to1="Sticklib::vector_to_vector<__int64,long>" />
-/// <stickconv type1="std::vector<__int64>" type2="std::vector<short>" type1to2="Sticklib::vector_to_vector<short,__int64>" type2to1="Sticklib::vector_to_vector<__int64,short>" />
-/// <stickconv type1="std::vector<__int64>" type2="std::vector<size_t>" type1to2="Sticklib::vector_to_vector<size_t,__int64>" type2to1="Sticklib::vector_to_vector<__int64,size_t>" />
-/// <stickconv type1="std::vector<double>" type2="std::vector<float>" type1to2="Sticklib::vector_to_vector<float,double>" type2to1="Sticklib::vector_to_vector<double,float>" />
-/// <stickconv type1="std::vector<std::string>" type2="std::vector<std::wstring>" type1to2="Sticklib::vector_to_vector<std::wstring,std::string>" type2to1="Sticklib::vector_to_vector<std::string,std::wstring>" />
-/// <stickconv type1="std::vector<double>" type2="std::unordered_set<double>" type1to2="Sticklib::vector_to_uset<double,double>" type2to1="Sticklib::uset_to_vector<double,double>" />
-/// <stickconv type1="std::vector<__int64>" type2="std::unordered_set<__int64>" type1to2="Sticklib::vector_to_uset<__int64,__int64>" type2to1="Sticklib::uset_to_vector<__int64,__int64>" />
-/// <stickconv type1="std::vector<bool>" type2="std::unordered_set<bool>" type1to2="Sticklib::vector_to_uset<bool,bool>" type2to1="Sticklib::uset_to_vector<bool,bool>" />
-/// <stickconv type1="std::vector<std::string>" type2="std::unordered_set<std::string>" type1to2="Sticklib::vector_to_uset<std::string,std::string>" type2to1="Sticklib::uset_to_vector<std::string,std::string>" />
-/// <stickconv type1="std::vector<void*>" type2="std::unordered_set<void*>" type1to2="Sticklib::vector_to_uset<void*,void*>" type2to1="Sticklib::uset_to_vector<void*,void*>" />
-/// <stickconv type1="std::vector<double>" type2="std::set<double>" type1to2="Sticklib::vector_to_set<double,double>" type2to1="Sticklib::set_to_vector<double,double>" />
-/// <stickconv type1="std::vector<__int64>" type2="std::set<__int64>" type1to2="Sticklib::vector_to_set<__int64,__int64>" type2to1="Sticklib::set_to_vector<__int64,__int64>" />
-/// <stickconv type1="std::vector<bool>" type2="std::set<bool>" type1to2="Sticklib::vector_to_set<bool,bool>" type2to1="Sticklib::set_to_vector<bool,bool>" />
-/// <stickconv type1="std::vector<std::string>" type2="std::set<std::string>" type1to2="Sticklib::vector_to_set<std::string,std::string>" type2to1="Sticklib::set_to_vector<std::string,std::string>" />
-/// <stickconv type1="std::vector<void*>" type2="std::set<void*>" type1to2="Sticklib::vector_to_set<void*,void*>" type2to1="Sticklib::set_to_vector<void*,void*>" />
-/// <stickconv type1="std::string" type2="std::wstring" type1to2="Sticklib::astring_to_wstring" type2to1="Sticklib::wstring_to_astring" />
-/// <stickconv type1="std::string" type2="char*" type1to2="Sticklib::astring_to_atext" type2to1="Sticklib::atext_to_astring" />
-/// <stickconv type1="__int64" type2="__int32" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="__int64" type2="__int16" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="__int64" type2="__int8" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="__int64" type2="unsigned __int64" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="__int64" type2="unsigned __int32" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="__int64" type2="unsigned __int16" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="__int64" type2="unsigned __int8" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="__int64" type2="int" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="__int64" type2="long" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="__int64" type2="short" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="__int64" type2="size_t" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="double" type2="float" type1to2="Sticklib::T_to_U" type2to1="Sticklib::T_to_U" />
-/// <stickconv type1="bool" type2="BOOL" type1to2="Sticklib::bool_to_BOOL" type2to1="Sticklib::BOOL_to_bool" />
-/// <stickconv type1="std::wstring" type2="wchar_t*" type1to2="Sticklib::wstring_to_wtext" type2to1="Sticklib::wtext_to_wstring" />
-//----- 20.02.19  削除始 ()-----
-///// <stickconv type1="Sticklib::lightuserdata" type2="void*" type1to2="-" type2to1="-" />
-///// <stickconv type1="std::vector<Sticklib::lightuserdata>" type2="std::vector<void*>" type1to2="-" type2to1="-" />
-//----- 20.02.19  削除終 ()-----
+/// <stickconv type1="__int8" type2="__int64" type1to2="Sticklib::T_to_U<__int64,__int8>" type2to1="Sticklib::T_to_U<__int8,__int64>" />
+/// <stickconv type1="__int16" type2="__int64" type1to2="Sticklib::T_to_U<__int64,__int16>" type2to1="Sticklib::T_to_U<__int16,__int64>" />
+/// <stickconv type1="__int32" type2="__int64" type1to2="Sticklib::T_to_U<__int64,__int32>" type2to1="Sticklib::T_to_U<__int32,__int64>" />
+/// <stickconv type1="int" type2="__int64" type1to2="Sticklib::T_to_U<__int64,int>" type2to1="Sticklib::T_to_U<int,__int64>" />
+/// <stickconv type1="long" type2="__int64" type1to2="Sticklib::T_to_U<__int64,long>" type2to1="Sticklib::T_to_U<long,__int64>" />
+/// <stickconv type1="short" type2="__int64" type1to2="Sticklib::T_to_U<__int64,short>" type2to1="Sticklib::T_to_U<short,__int64>" />
+/// <stickconv type1="unsigned __int8" type2="__int64" type1to2="Sticklib::T_to_U<__int64,unsigned __int8>" type2to1="Sticklib::T_to_U<unsigned __int8,__int64>" />
+/// <stickconv type1="unsigned __int16" type2="__int64" type1to2="Sticklib::T_to_U<__int64,unsigned __int16>" type2to1="Sticklib::T_to_U<unsigned __int16,__int64>" />
+/// <stickconv type1="unsigned __int32" type2="__int64" type1to2="Sticklib::T_to_U<__int64,unsigned __int32>" type2to1="Sticklib::T_to_U<unsigned __int32,__int64>" />
+/// <stickconv type1="unsigned __int64" type2="__int64" type1to2="Sticklib::T_to_U<__int64,unsigned __int64>" type2to1="Sticklib::T_to_U<unsigned __int64,__int64>" />
+/// <stickconv type1="unsigned int" type2="__int64" type1to2="Sticklib::T_to_U<__int64,unsigned int>" type2to1="Sticklib::T_to_U<unsigned int,__int64>" />
+/// <stickconv type1="unsigned long" type2="__int64" type1to2="Sticklib::T_to_U<__int64,unsigned long>" type2to1="Sticklib::T_to_U<unsigned long,__int64>" />
+/// <stickconv type1="unsigned short" type2="__int64" type1to2="Sticklib::T_to_U<__int64,unsigned short>" type2to1="Sticklib::T_to_U<unsigned short,__int64>" />
+/// <stickconv type1="size_t" type2="__int64" type1to2="Sticklib::T_to_U<__int64,size_t>" type2to1="Sticklib::T_to_U<size_t,__int64>" />
+/// <stickconv type1="float" type2="double" type1to2="Sticklib::T_to_U<double,float>" type2to1="Sticklib::T_to_U<float,double>" />
+/// <stickconv type1="BOOL" type2="bool" type1to2="Sticklib::T_to_U<bool, BOOL>" type2to1="Sticklib::T_to_U<BOOL, bool>" />
+/// <stickconv type1="std::wstring" type2="std::string" type1to2="Sticklib::Sticklib::T_to_U<std::string, std::wstring>" type2to1="Sticklib::T_to_U<std::wstring, std::string>" />
+/// <stickconv type1="char*" type2="std::string" type1to2="Sticklib::T_to_U<std::string, char *>" type2to1="Sticklib::T_to_U<char *, std::string>" />
 
-// 20.01.13 Fukushiro M. 1行削除 ()
-///// <stickconv type1="Sticklib::classobject" type2="void*" type1to2="-" type2to1="-" />
+/// <stickconv type1="wchar_t*" type2="std::wstring" type1to2="Sticklib::T_to_U<std::wstring,wchar_t*>" type2to1="Sticklib::T_to_U<wchar_t*,std::wstring>" />
+
+/// <stickconv type1="std::vector<__int8>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,__int8>" type2to1="Sticklib::vectorT_to_vectorU<__int8,__int64>" />
+/// <stickconv type1="std::vector<__int16>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,__int16>" type2to1="Sticklib::vectorT_to_vectorU<__int16,__int64>" />
+/// <stickconv type1="std::vector<__int32>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,__int32>" type2to1="Sticklib::vectorT_to_vectorU<__int32,__int64>" />
+/// <stickconv type1="std::vector<int>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,int>" type2to1="Sticklib::vectorT_to_vectorU<int,__int64>" />
+/// <stickconv type1="std::vector<long>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,long>" type2to1="Sticklib::vectorT_to_vectorU<long,__int64>" />
+/// <stickconv type1="std::vector<short>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,short>" type2to1="Sticklib::vectorT_to_vectorU<short,__int64>" />
+/// <stickconv type1="std::vector<unsigned __int8>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,unsigned __int8>" type2to1="Sticklib::vectorT_to_vectorU<unsigned __int8,__int64>" />
+/// <stickconv type1="std::vector<unsigned __int16>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,unsigned __int16>" type2to1="Sticklib::vectorT_to_vectorU<unsigned __int16,__int64>" />
+/// <stickconv type1="std::vector<unsigned __int32>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,unsigned __int32>" type2to1="Sticklib::vectorT_to_vectorU<unsigned __int32,__int64>" />
+/// <stickconv type1="std::vector<unsigned __int64>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,unsigned __int64>" type2to1="Sticklib::vectorT_to_vectorU<unsigned __int64,__int64>" />
+/// <stickconv type1="std::vector<unsigned int>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,unsigned int>" type2to1="Sticklib::vectorT_to_vectorU<unsigned int,__int64>" />
+/// <stickconv type1="std::vector<unsigned long>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,unsigned long>" type2to1="Sticklib::vectorT_to_vectorU<unsigned long,__int64>" />
+/// <stickconv type1="std::vector<unsigned short>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,unsigned short>" type2to1="Sticklib::vectorT_to_vectorU<unsigned short,__int64>" />
+/// <stickconv type1="std::vector<size_t>" type2="std::vector<__int64>" type1to2="Sticklib::vectorT_to_vectorU<__int64,size_t>" type2to1="Sticklib::vectorT_to_vectorU<size_t,__int64>" />
+/// <stickconv type1="std::vector<float>" type2="std::vector<double>" type1to2="Sticklib::vectorT_to_vectorU<double,float>" type2to1="Sticklib::vectorT_to_vectorU<float,double>" />
+/// <stickconv type1="std::vector<BOOL>" type2="std::vector<bool>" type1to2="Sticklib::vectorT_to_vectorU<bool,BOOL>" type2to1="Sticklib::vectorT_to_vectorU<BOOL,bool>" />
+/// <stickconv type1="std::vector<std::wstring>" type2="std::vector<std::string>" type1to2="Sticklib::vectorT_to_vectorU<std::string,std::wstring>" type2to1="Sticklib::vectorT_to_vectorU<std::wstring,std::string>" />
+
+/// <stickconv type1="std::unordered_set<__int64>" type2="std::vector<__int64>" type1to2="Sticklib::uset_to_vector<__int64>" type2to1="Sticklib::vector_to_uset<__int64>" />
+/// <stickconv type1="std::unordered_set<double>" type2="std::vector<double>" type1to2="Sticklib::uset_to_vector<double>" type2to1="Sticklib::vector_to_uset<double>" />
+/// <stickconv type1="std::unordered_set<std::string>" type2="std::vector<std::string>" type1to2="Sticklib::uset_to_vector<std::string>" type2to1="Sticklib::vector_to_uset<std::string>" />
+/// <stickconv type1="std::unordered_set<void*>" type2="std::vector<void*>" type1to2="Sticklib::uset_to_vector<void*>" type2to1="Sticklib::vector_to_uset<void*>" />
+
+/// <stickconv type1="std::unordered_set<__int8>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, __int8>" type2to1="Sticklib::vectorT_to_usetU<__int8, __int64>" />
+/// <stickconv type1="std::unordered_set<__int16>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, __int16>" type2to1="Sticklib::vectorT_to_usetU<__int16, __int64>" />
+/// <stickconv type1="std::unordered_set<__int32>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, __int32>" type2to1="Sticklib::vectorT_to_usetU<__int32, __int64>" />
+/// <stickconv type1="std::unordered_set<int>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, int>" type2to1="Sticklib::vectorT_to_usetU<int, __int64>" />
+/// <stickconv type1="std::unordered_set<long>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, long>" type2to1="Sticklib::vectorT_to_usetU<long, __int64>" />
+/// <stickconv type1="std::unordered_set<short>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, short>" type2to1="Sticklib::vectorT_to_usetU<short, __int64>" />
+/// <stickconv type1="std::unordered_set<unsigned __int8>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, unsigned __int8>" type2to1="Sticklib::vectorT_to_usetU<unsigned __int8, __int64>" />
+/// <stickconv type1="std::unordered_set<unsigned __int16>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, unsigned __int16>" type2to1="Sticklib::vectorT_to_usetU<unsigned __int16, __int64>" />
+/// <stickconv type1="std::unordered_set<unsigned __int32>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, unsigned __int32>" type2to1="Sticklib::vectorT_to_usetU<unsigned __int32, __int64>" />
+/// <stickconv type1="std::unordered_set<unsigned __int64>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, unsigned __int64>" type2to1="Sticklib::vectorT_to_usetU<unsigned __int64, __int64>" />
+/// <stickconv type1="std::unordered_set<unsigned int>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, unsigned int>" type2to1="Sticklib::vectorT_to_usetU<unsigned int, __int64>" />
+/// <stickconv type1="std::unordered_set<unsigned long>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, unsigned long>" type2to1="Sticklib::vectorT_to_usetU<unsigned long, __int64>" />
+/// <stickconv type1="std::unordered_set<unsigned short>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, unsigned short>" type2to1="Sticklib::vectorT_to_usetU<unsigned short, __int64>" />
+/// <stickconv type1="std::unordered_set<size_t>" type2="std::vector<__int64>" type1to2="Sticklib::usetT_to_vectorU<__int64, size_t>" type2to1="Sticklib::vectorT_to_usetU<size_t, __int64>" />
+/// <stickconv type1="std::unordered_set<float>" type2="std::vector<double>" type1to2="Sticklib::usetT_to_vectorU<double, float>" type2to1="Sticklib::vectorT_to_usetU<float, double>" />
+/// <stickconv type1="std::unordered_set<std::wstring>" type2="std::vector<std::string>" type1to2="Sticklib::usetT_to_vectorU<std::string, std::wstring>" type2to1="Sticklib::vectorT_to_usetU<std::wstring, std::string>" />
+
+/// <stickconv type1="std::set<__int64>" type2="std::vector<__int64>" type1to2="Sticklib::set_to_vector<__int64>" type2to1="Sticklib::vector_to_set<__int64>" />
+/// <stickconv type1="std::set<double>" type2="std::vector<double>" type1to2="Sticklib::set_to_vector<double>" type2to1="Sticklib::vector_to_set<double>" />
+/// <stickconv type1="std::set<std::string>" type2="std::vector<std::string>" type1to2="Sticklib::set_to_vector<std::string>" type2to1="Sticklib::vector_to_set<std::string>" />
+/// <stickconv type1="std::set<void*>" type2="std::vector<void*>" type1to2="Sticklib::set_to_vector<void*>" type2to1="Sticklib::vector_to_set<void*>" />
+
+/// <stickconv type1="std::set<__int8>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, __int8>" type2to1="Sticklib::vectorT_to_setU<__int8, __int64>" />
+/// <stickconv type1="std::set<__int16>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, __int16>" type2to1="Sticklib::vectorT_to_setU<__int16, __int64>" />
+/// <stickconv type1="std::set<__int32>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, __int32>" type2to1="Sticklib::vectorT_to_setU<__int32, __int64>" />
+/// <stickconv type1="std::set<int>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, int>" type2to1="Sticklib::vectorT_to_setU<int, __int64>" />
+/// <stickconv type1="std::set<long>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, long>" type2to1="Sticklib::vectorT_to_setU<long, __int64>" />
+/// <stickconv type1="std::set<short>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, short>" type2to1="Sticklib::vectorT_to_setU<short, __int64>" />
+/// <stickconv type1="std::set<unsigned __int8>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, unsigned __int8>" type2to1="Sticklib::vectorT_to_setU<unsigned __int8, __int64>" />
+/// <stickconv type1="std::set<unsigned __int16>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, unsigned __int16>" type2to1="Sticklib::vectorT_to_setU<unsigned __int16, __int64>" />
+/// <stickconv type1="std::set<unsigned __int32>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, unsigned __int32>" type2to1="Sticklib::vectorT_to_setU<unsigned __int32, __int64>" />
+/// <stickconv type1="std::set<unsigned __int64>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, unsigned __int64>" type2to1="Sticklib::vectorT_to_setU<unsigned __int64, __int64>" />
+/// <stickconv type1="std::set<unsigned int>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, unsigned int>" type2to1="Sticklib::vectorT_to_setU<unsigned int, __int64>" />
+/// <stickconv type1="std::set<unsigned long>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, unsigned long>" type2to1="Sticklib::vectorT_to_setU<unsigned long, __int64>" />
+/// <stickconv type1="std::set<unsigned short>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, unsigned short>" type2to1="Sticklib::vectorT_to_setU<unsigned short, __int64>" />
+/// <stickconv type1="std::set<size_t>" type2="std::vector<__int64>" type1to2="Sticklib::setT_to_vectorU<__int64, size_t>" type2to1="Sticklib::vectorT_to_setU<size_t, __int64>" />
+/// <stickconv type1="std::set<float>" type2="std::vector<double>" type1to2="Sticklib::setT_to_vectorU<double, float>" type2to1="Sticklib::vectorT_to_setU<float, double>" />
+/// <stickconv type1="std::set<std::wstring>" type2="std::vector<std::string>" type1to2="Sticklib::setT_to_vectorU<std::string, std::wstring>" type2to1="Sticklib::vectorT_to_setU<std::wstring, std::string>" />
+
 
 //
 //   c++           get from lua             c++               c++
@@ -153,9 +192,8 @@ struct StickInstanceWrapper
 class Sticklib
 {
 public:
-// 20.02.19  1行削除 ()
-//	using lightuserdata = void *;
-	using classobject = void *;
+// 21.05.26 Fukushiro M. 1行削除 ()
+//	using classobject = void *;
 
 	using charConstP = char const *;
 	using charP = char *;
@@ -201,7 +239,7 @@ public:
 		{
 			type = Type::CHARP;
 			std::string astr;
-			wstring_to_astring(astr, value);
+			T_to_U<std::string, std::wstring>(astr, value);
 			charpValue = new char[astr.length() + 1];
 			strcpy_s(charpValue, astr.length() + 1, astr.c_str());
 		}
@@ -318,130 +356,234 @@ public:
 	//------------------------------------------------------------------
 	// Converters. Called from Lua thread and LuaStickInit.
 
-	template<typename DST, typename SRC>
-	static void vector_to_vector(std::vector<DST> & dst, const std::vector<SRC> & src)
-	{
-		dst.clear();
-		for (const auto & v : src)
-			dst.emplace_back((DST)v);
-	}
-
-	template<>
-	static void vector_to_vector<std::wstring, std::string>(std::vector<std::wstring> & dst, const std::vector<std::string> & src)
-	{
-		dst.clear();
-		for (const auto & v : src)
-		{
-			std::wstring wstr;
-			astring_to_wstring(wstr, v);
-			dst.emplace_back(wstr);
-		}
-	}
-
-	template<>
-	static void vector_to_vector<std::string, std::wstring>(std::vector<std::string> & dst, const std::vector<std::wstring> & src)
-	{
-		dst.clear();
-		for (const auto & v : src)
-		{
-			std::string str;
-			wstring_to_astring(str, v);
-			dst.emplace_back(str);
-		}
-	}
-
-	template<typename DST, typename SRC>
-	static void vector_to_uset(std::unordered_set<DST> & dst, const std::vector<SRC> & src)
-	{
-		dst.clear();
-		for (const auto & v : src)
-			dst.insert((DST)v);
-	}
-
-	template<typename DST, typename SRC>
-	static void uset_to_vector(std::vector<DST> & dst, const std::unordered_set<SRC> & src)
-	{
-		dst.clear();
-		for (const auto & v : src)
-			dst.emplace_back((DST)v);
-	}
-
-	template<typename DST, typename SRC>
-	static void vector_to_set(std::set<DST> & dst, const std::vector<SRC> & src)
-	{
-		dst.clear();
-		for (const auto & v : src)
-			dst.insert((DST)v);
-	}
-
-	template<typename DST, typename SRC>
-	static void set_to_vector(std::vector<DST> & dst, const std::set<SRC> & src)
-	{
-		dst.clear();
-		for (const auto & v : src)
-			dst.emplace_back((DST)v);
-	}
-
-	static void astring_to_atext(char * & atx, const std::string & lstr)
-	{
-		atx = (char *)lstr.c_str();
-	}
-
-	static void atext_to_astring(std::string & lstr, const char * atx)
-	{
-		lstr = atx;
-	}
-
-	static void wstring_to_wtext(wchar_t *& wtext, const std::wstring & wstr)
-	{
-		wtext = (wchar_t*)wstr.data();
-	}
-
-	static void wtext_to_wstring(std::wstring & wstr, const wchar_t * wtx)
-	{
-		wstr = wtx;
-	}
-
-	static std::string & wstring_to_astring(std::string & str, const std::wstring & wstr)
-	{
-		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t > converter;
-		str = converter.to_bytes(wstr);
-		return str;
-	}
-
-	static std::wstring & astring_to_wstring(std::wstring & wstr, const std::string & astr)
-	{
-		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t > converter;
-		wstr = converter.from_bytes(astr);
-		return wstr;
-	}
-
-	template<typename T, typename U> static void T_to_U(U & u, T t)
+	template<typename U, typename T>
+	static void T_to_U(U & u, T const & t)
 	{
 		u = (U)t;
 	}
 
-	static void lboolean_to_bool(bool & v, bool b)
+//----- 21.05.26 Fukushiro M. 変更前 ()-----
+//	static std::string & wstring_to_astring(std::string & str, const std::wstring & wstr)
+//	{
+//		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t > converter;
+//		str = converter.to_bytes(wstr);
+//		return str;
+//	}
+//
+//	static std::wstring & astring_to_wstring(std::wstring & wstr, const std::string & astr)
+//	{
+//		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t > converter;
+//		wstr = converter.from_bytes(astr);
+//		return wstr;
+//	}
+//----- 21.05.26 Fukushiro M. 変更後 ()-----
+	template<>
+	static void T_to_U<std::string, std::wstring>(std::string & u, std::wstring const & t)
 	{
-		v = b ? true : false;
+		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t > converter;
+		u = converter.to_bytes(t);
 	}
 
-	static void bool_to_lboolean(bool & b, bool v)
+	template<>
+	static void T_to_U<std::wstring, std::string>(std::wstring & u, std::string const & t)
 	{
-		b = v ? 1 : 0;
+		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t > converter;
+		u = converter.from_bytes(t);
 	}
+//----- 21.05.26 Fukushiro M. 変更終 ()-----
+
+//----- 21.05.26 Fukushiro M. 変更前 ()-----
+//	static void astring_to_atext(char * & atx, const std::string & lstr)
+//	{
+//		atx = (char *)lstr.c_str();
+//	}
+//
+//	static void atext_to_astring(std::string & lstr, char * const & atx)
+//	{
+//		lstr = atx;
+//	}
+//----- 21.05.26 Fukushiro M. 変更後 ()-----
+	template<>
+	static void T_to_U<char *, std::string>(char * & u, std::string const & t)
+	{
+		u = (char *)t.c_str();
+	}
+
+	template<>
+	static void T_to_U<std::string, char *>(std::string & u, char * const & t)
+	{
+		u = t;
+	}
+//----- 21.05.26 Fukushiro M. 変更終 ()-----
+
+//----- 21.05.27 Fukushiro M. 変更前 ()-----
+//	static void wstring_to_wtext(wchar_t *& wtext, const std::wstring & wstr)
+//	{
+//		wtext = (wchar_t*)wstr.data();
+//	}
+//
+//	static void wtext_to_wstring(std::wstring & wstr, wchar_t * const & wtx)
+//	{
+//		wstr = wtx;
+//	}
+//----- 21.05.27 Fukushiro M. 変更後 ()-----
+	template<>
+	static void T_to_U<wchar_t *, std::wstring>(wchar_t * & u, std::wstring const & t)
+	{
+		u = (wchar_t *)t.data();
+	}
+
+	template<>
+	static void T_to_U<std::wstring, wchar_t *>(std::wstring & u, wchar_t * const & t)
+	{
+		u = t;
+	}
+//----- 21.05.27 Fukushiro M. 変更終 ()-----
+
+
+//----- 21.05.27 Fukushiro M. 削除始 ()-----
+//	template<typename T> static void int64_to_enumT(T & v, __int64 i)
+//	{
+//		v = (T)i;
+//	}
+//
+//	template<typename T> static void enumT_to_int64(__int64 & i, T v)
+//	{
+//		i = (__int64)v;
+//	}
+//----- 21.05.27 Fukushiro M. 削除終 ()-----
+
 
 #if defined(WIN32)
-	static void bool_to_BOOL(BOOL & v, bool b)
+//----- 21.05.26 Fukushiro M. 変更前 ()-----
+//	static void bool_to_BOOL(BOOL & v, bool b)
+//	{
+//		v = b ? TRUE : FALSE;
+//	}
+//
+//	static void BOOL_to_bool(bool & b, BOOL v)
+//	{
+//		b = v ? 1 : 0;
+//	}
+//----- 21.05.26 Fukushiro M. 変更後 ()-----
+	template<>
+	static void T_to_U<BOOL, bool>(BOOL & u, bool const & t)
 	{
-		v = b ? TRUE : FALSE;
+		u = t ? TRUE : FALSE;
 	}
 
-	static void BOOL_to_bool(bool & b, BOOL v)
+	template<>
+	static void T_to_U<bool, BOOL>(bool & u, BOOL const & t)
 	{
-		b = v ? 1 : 0;
+		u = t ? true : false;
 	}
+//----- 21.05.26 Fukushiro M. 変更終 ()-----
 #endif
+
+
+	template<typename U, typename T>
+	static void vectorT_to_vectorU(std::vector<U> & vu, const std::vector<T> & vt)
+	{
+		vu.clear();
+		for (const auto & t : vt)
+		{
+			U u;
+			T_to_U<U, T>(u, t);
+			vu.emplace_back(u);
+		}
+	}
+
+	template<typename T>
+	static void vector_to_uset(std::unordered_set<T> & su, const std::vector<T> & vt)
+	{
+		su.clear();
+		su.insert(vt.begin(), vt.end());
+	}
+
+	template<typename T>
+	static void uset_to_vector(std::vector<T> & vu, const std::unordered_set<T> & st)
+	{
+		vu.assign(st.begin(), st.end());
+	}
+
+
+	template<typename U, typename T>
+	static void vectorT_to_usetU(std::unordered_set<U> & su, const std::vector<T> & vt)
+	{
+		su.clear();
+		for (const auto & t : vt)
+		{
+			U u;
+			T_to_U<U, T>(u, t);
+			su.insert(u);
+		}
+	}
+
+	template<typename U, typename T>
+	static void usetT_to_vectorU(std::vector<U> & vu, const std::unordered_set<T> & st)
+	{
+		vu.clear();
+		for (const auto & t : st)
+		{
+			U u;
+			T_to_U<U, T>(u, t);
+			vu.emplace_back(u);
+		}
+	}
+
+	template<typename T>
+	static void vector_to_set(std::set<T> & su, const std::vector<T> & vt)
+	{
+		su.clear();
+		su.insert(vt.begin(), vt.end());
+	}
+
+	template<typename T>
+	static void set_to_vector(std::vector<T> & vu, const std::set<T> & st)
+	{
+		vu.assign(st.begin(), st.end());
+	}
+
+
+	template<typename U, typename T>
+	static void vectorT_to_setU(std::set<U> & su, const std::vector<T> & vt)
+	{
+		su.clear();
+		for (const auto & t : vt)
+		{
+			U u;
+			T_to_U<U, T>(u, t);
+			su.insert(u);
+		}
+	}
+
+	template<typename U, typename T>
+	static void setT_to_vectorU(std::vector<U> & vu, const std::set<T> & st)
+	{
+		vu.clear();
+		for (const auto & t : st)
+		{
+			U u;
+			T_to_U<U, T>(u, t);
+			vu.emplace_back(u);
+		}
+	}
+
+
+
+
+//----- 21.05.26 Fukushiro M. 削除始 ()-----
+//	static void lboolean_to_bool(bool & v, bool b)
+//	{
+//		v = b ? true : false;
+//	}
+//
+//	static void bool_to_lboolean(bool & b, bool v)
+//	{
+//		b = v ? 1 : 0;
+//	}
+//----- 21.05.26 Fukushiro M. 削除終 ()-----
+
 
 //----- 19.12.03 Fukushiro M. 変更前 ()-----
 //	template<typename T> static void linteger_to_enumT(T & v, __int64 i)
@@ -454,38 +596,31 @@ public:
 //		i = (__int64)v;
 //	}
 //----- 19.12.03 Fukushiro M. 変更後 ()-----
-	template<typename T> static void int64_to_enumT(T & v, __int64 i)
-	{
-		v = (T)i;
-	}
-
-	template<typename T> static void enumT_to_int64(__int64 & i, T v)
-	{
-		i = (__int64)v;
-	}
 //----- 19.12.03 Fukushiro M. 変更終 ()-----
 
-	template<typename T> static void ref_to_ptr(T * ptr, T & ref)
-	{
-		ptr = &ref;
-	}
+//----- 21.05.26 Fukushiro M. 削除始 ()-----
+//	template<typename T> static void ref_to_ptr(T * ptr, T & ref)
+//	{
+//		ptr = &ref;
+//	}
+//
+//	template<typename T> static void ptr_to_ref(T & ref, T * ptr)
+//	{
+//		ref = *ptr;
+//	}
+//----- 21.05.26 Fukushiro M. 削除終 ()-----
 
-	template<typename T> static void ptr_to_ref(T & ref, T * ptr)
-	{
-		ref = *ptr;
-	}
-
-	template<typename T> static void classobject_to_typeptr(T *& cobj, Sticklib::classobject ptr)
-	{
-		cobj = (T *)ptr;
-	}
-
-	template<typename T> static void typeptr_to_classobject(Sticklib::classobject & ptr, const T * cobj)
-	{
-		ptr = (void*)cobj;
-	}
-
-
+//----- 21.05.26 Fukushiro M. 削除始 ()-----
+//	template<typename T> static void classobject_to_typeptr(T *& cobj, Sticklib::classobject ptr)
+//	{
+//		cobj = (T *)ptr;
+//	}
+//
+//	template<typename T> static void typeptr_to_classobject(Sticklib::classobject & ptr, const T * cobj)
+//	{
+//		ptr = (void*)cobj;
+//	}
+//----- 21.05.26 Fukushiro M. 削除終 ()-----
 
 public:
 	/// <summary>
@@ -734,12 +869,21 @@ public:
 	}
 
 	template<>
-	static void check_lvalue<void * >(void * & value, lua_State * L, int arg)
+	static void check_lvalue<void *>(void * & value, lua_State * L, int arg)
 	{
 		// lua_touserdata is valid for userdata and lightuserdata both.
-		value = lua_touserdata(L, arg);
-		if (!value)
+		// lua_touserdata returns nullptr if the value in the stack is neither userdata or lightluserdata.
+		// But if the stack value is nullptr lightuserdata, then it returns nullptr too.
+		// So we must test the value using lua_type.
+		switch (lua_type(L, arg))
+		{
+		case LUA_TUSERDATA:
+		case LUA_TLIGHTUSERDATA:
+			value = lua_touserdata(L, arg);
+			break;
+		default:
 			throw std::invalid_argument("The argument is not userdata nor lightuserdata");
+		}
 	}
 
 	template<>
@@ -769,201 +913,209 @@ public:
 			bool v;
 			check_lvalue<bool>(v, L, arg);
 			value = AnyValue(v);
+			break;
 		}
 		case LUA_TSTRING:
 		{
 			std::string v;
 			check_lvalue<std::string>(v, L, arg);
 			value = AnyValue(v.c_str());
+			break;
 		}
 		default:
 			throw std::invalid_argument("The type of argument is not supported");
 		}
 	}
 
-	template<typename T>
-	static void check_classobject(T & value, lua_State * L, int arg)
-	{
-		// lua_touserdata is valid for userdata and lightuserdata both.
-		auto wrapper = (StickInstanceWrapper *)lua_touserdata(L, arg);
-		if (!wrapper)
-			throw std::invalid_argument("The argument is not userdata nor lightuserdata");
-		value = (T)wrapper->ptr;
-	}
+//----- 21.05.26 Fukushiro M. 削除始 ()-----
+//	template<typename T>
+//	static void check_classobject(T & value, lua_State * L, int arg)
+//	{
+//		// lua_touserdata is valid for userdata and lightuserdata both.
+//		auto wrapper = (StickInstanceWrapper *)lua_touserdata(L, arg);
+//		if (!wrapper)
+//			throw std::invalid_argument("The argument is not userdata nor lightuserdata");
+//		value = (T)wrapper->ptr;
+//	}
+//----- 21.05.26 Fukushiro M. 削除終 ()-----
 
-	/// <summary>
-	/// Gets std::vector from the stack.
-	/// This does not change the stack.
-	/// </summary>
-	/// <param name="v">std::vector.</param>
-	/// <param name="L">Lua.</param>
-	/// <param name="ud">The argument.</param>
-	template<typename T>
-	static void check_classobjectarray(std::vector<T> & v, lua_State * L, int ud)
-	{
-		v.clear();
+//----- 21.05.26 Fukushiro M. 削除始 ()-----
+//	/// <summary>
+//	/// Gets std::vector from the stack.
+//	/// This does not change the stack.
+//	/// </summary>
+//	/// <param name="v">std::vector.</param>
+//	/// <param name="L">Lua.</param>
+//	/// <param name="ud">The argument.</param>
+//	template<typename T>
+//	static void check_classobjectarray(std::vector<T> & v, lua_State * L, int ud)
+//	{
+//		v.clear();
+//
+//		//       stack
+//		//    :         :
+//		//    |---------|      +----+---------+
+//		//  ud|  table  |----->| Key|  Value  |
+//		//    |---------|      |----|---------|
+//		//    :         :      |  1 | object1 |
+//		//                     |----|---------|
+//		//                     |  2 | object2 |
+//		//                     |----|---------|
+//		//                     |  3 | object3 |
+//		//                     |----|---------|
+//		//                     :    :         :
+//
+//		for (lua_Integer n = 1;; n++)
+//		{
+//			//       stack
+//			//    +---------+
+//			//  -1| object1 |
+//			//    |---------|
+//			//    :         :
+//			//    |---------|      +----+---------+
+//			//  ud|  table  |----->| Key|  Value  |
+//			//    |---------|      |----|---------|
+//			//    :         :      |  1 | object1 |
+//			//                     |----|---------|
+//			//                     |  2 | object2 |
+//			//                     |----|---------|
+//			//                     :    :         :
+//			//
+//			if (::lua_rawgeti(L, ud, n) == LUA_TNIL) break;
+//
+//			//       stack
+//			//    +---------+
+//			//  -1| object1 |  ----> Sticklib::check_lvalue returns 5
+//			//    |---------|
+//			//    :         :
+//			//    |---------|      +----+---------+
+//			//  ud|  table  |----->| Key|  Value  |
+//			//    |---------|      |----|---------|
+//			//    :         :      |  1 | object1 |
+//			//                     |----|---------|
+//			//                     |  2 | object2 |
+//			//                     |----|---------|
+//			//                     :    :         :
+//			//
+//			T value;
+//			Sticklib::check_classobject<T>(value, L, -1);
+//			v.emplace_back(value);
+//
+//			//       stack
+//			//    :         :
+//			//    |---------|      +----+---------+
+//			//  ud|  table  |----->| Key|  Value  |
+//			//    |---------|      |----|---------|
+//			//    :         :      |  1 | object1 |
+//			//                     |----|---------|
+//			//                     |  2 | object2 |
+//			//                     |----|---------|
+//			//                     :    :         :
+//			//
+//			lua_pop(L, 1);
+//		}
+//		//       stack
+//		//    +---------+
+//		//  -1|LUA_TNIL |
+//		//    |---------|
+//		//    :         :
+//		//    |---------|      +----+---------+
+//		//  ud|  table  |----->| Key|  Value  |
+//		//    |---------|      |----|---------|
+//		//    :         :      |  1 | object1 |
+//		//                     |----|---------|
+//		//                     |  2 | object2 |
+//		//                     |----|---------|
+//		//                     :    :         :
+//		//
+//
+//		//       stack
+//		//    :         :
+//		//    |---------|      +----+---------+
+//		//  ud|  table  |----->| Key|  Value  |
+//		//    |---------|      |----|---------|
+//		//    :         :      |  1 | object1 |
+//		//                     |----|---------|
+//		//                     |  2 | object2 |
+//		//                     |----|---------|
+//		//                     :    :         :
+//		//
+//		lua_pop(L, 1);
+//	}
+//----- 21.05.26 Fukushiro M. 削除終 ()-----
 
-		//       stack
-		//    :         :
-		//    |---------|      +----+---------+
-		//  ud|  table  |----->| Key|  Value  |
-		//    |---------|      |----|---------|
-		//    :         :      |  1 | object1 |
-		//                     |----|---------|
-		//                     |  2 | object2 |
-		//                     |----|---------|
-		//                     |  3 | object3 |
-		//                     |----|---------|
-		//                     :    :         :
 
-		for (lua_Integer n = 1;; n++)
-		{
-			//       stack
-			//    +---------+
-			//  -1| object1 |
-			//    |---------|
-			//    :         :
-			//    |---------|      +----+---------+
-			//  ud|  table  |----->| Key|  Value  |
-			//    |---------|      |----|---------|
-			//    :         :      |  1 | object1 |
-			//                     |----|---------|
-			//                     |  2 | object2 |
-			//                     |----|---------|
-			//                     :    :         :
-			//
-			if (::lua_rawgeti(L, ud, n) == LUA_TNIL) break;
-
-			//       stack
-			//    +---------+
-			//  -1| object1 |  ----> Sticklib::check_lvalue returns 5
-			//    |---------|
-			//    :         :
-			//    |---------|      +----+---------+
-			//  ud|  table  |----->| Key|  Value  |
-			//    |---------|      |----|---------|
-			//    :         :      |  1 | object1 |
-			//                     |----|---------|
-			//                     |  2 | object2 |
-			//                     |----|---------|
-			//                     :    :         :
-			//
-			T value;
-			Sticklib::check_classobject<T>(value, L, -1);
-			v.emplace_back(value);
-
-			//       stack
-			//    :         :
-			//    |---------|      +----+---------+
-			//  ud|  table  |----->| Key|  Value  |
-			//    |---------|      |----|---------|
-			//    :         :      |  1 | object1 |
-			//                     |----|---------|
-			//                     |  2 | object2 |
-			//                     |----|---------|
-			//                     :    :         :
-			//
-			lua_pop(L, 1);
-		}
-		//       stack
-		//    +---------+
-		//  -1|LUA_TNIL |
-		//    |---------|
-		//    :         :
-		//    |---------|      +----+---------+
-		//  ud|  table  |----->| Key|  Value  |
-		//    |---------|      |----|---------|
-		//    :         :      |  1 | object1 |
-		//                     |----|---------|
-		//                     |  2 | object2 |
-		//                     |----|---------|
-		//                     :    :         :
-		//
-
-		//       stack
-		//    :         :
-		//    |---------|      +----+---------+
-		//  ud|  table  |----->| Key|  Value  |
-		//    |---------|      |----|---------|
-		//    :         :      |  1 | object1 |
-		//                     |----|---------|
-		//                     |  2 | object2 |
-		//                     |----|---------|
-		//                     :    :         :
-		//
-		lua_pop(L, 1);
-	}
-
-
-#if 0
-	/// <summary>
-	/// Converts the lua value at the given arg index to the lua_Integer. If the given index value is not integer, an exception will be thrown.
-	/// This does not change the stack.
-	/// </summary>
-	/// <param name="L">The l.</param>
-	/// <param name="arg">The argument.</param>
-	/// <returns></returns>
-	static lua_Integer checkinteger(lua_State *L, int arg)
-	{
-		int isnum;
-		//       stack
-		//    :         :
-		//    |---------|
-		// arg|    5    |  ----> lua_tointegerx returns 5
-		//    |---------|
-		//    :         :
-		lua_Integer d = lua_tointegerx(L, arg, &isnum);
-		if (!isnum)
-			StickThrowRuntimeError(STICKERR_INCORRECT_ARG_TYPE, (const char *)"Not integer");
-		return d;
-	}
-
-	/// <summary>
-	/// Converts the lua value at the given arg index to the lua_Number. If the given index value is not number, an exception will be thrown.
-	/// This does not change the stack.
-	/// </summary>
-	/// <param name="L">The l.</param>
-	/// <param name="arg">The argument.</param>
-	/// <returns></returns>
-	static lua_Number checknumber(lua_State *L, int arg)
-	{
-		int isnum;
-		//       stack
-		//    :         :
-		//    |---------|
-		// arg|  3.14   |  ----> lua_tonumberx returns 3.14
-		//    |---------|
-		//    :         :
-		lua_Number d = lua_tonumberx(L, arg, &isnum);
-		if (!isnum)
-			throw std::invalid_argument("The argument is not number");
-		return d;
-	}
-
-	/// <summary>
-	/// Converts the lua value at the given arg index to the string. If the given index value is not string, an exception will be thrown.
-	/// This does not change the stack.
-	/// </summary>
-	/// <param name="L">The l.</param>
-	/// <param name="arg">The argument.</param>
-	/// <returns></returns>
-	static const char * checkstring(lua_State *L, int arg)
-	{
-		const  char * s = lua_tolstring(L, arg, nullptr);
-		if (!s)
-			throw std::invalid_argument("The argument is not string");
-		return s;
-	}
-
-	static void * checklightuserdata(lua_State *L, int arg)
-	{
-		void * p = lua_touserdata(L, arg);
-		if (!p)
-			throw std::invalid_argument("The argument is not userdata");
-		return p;
-	}
-
-#endif//0
+//----- 21.05.26 Fukushiro M. 削除始 ()-----
+//#if 0
+//	/// <summary>
+//	/// Converts the lua value at the given arg index to the lua_Integer. If the given index value is not integer, an exception will be thrown.
+//	/// This does not change the stack.
+//	/// </summary>
+//	/// <param name="L">The l.</param>
+//	/// <param name="arg">The argument.</param>
+//	/// <returns></returns>
+//	static lua_Integer checkinteger(lua_State *L, int arg)
+//	{
+//		int isnum;
+//		//       stack
+//		//    :         :
+//		//    |---------|
+//		// arg|    5    |  ----> lua_tointegerx returns 5
+//		//    |---------|
+//		//    :         :
+//		lua_Integer d = lua_tointegerx(L, arg, &isnum);
+//		if (!isnum)
+//			StickThrowRuntimeError(STICKERR_INCORRECT_ARG_TYPE, (const char *)"Not integer");
+//		return d;
+//	}
+//
+//	/// <summary>
+//	/// Converts the lua value at the given arg index to the lua_Number. If the given index value is not number, an exception will be thrown.
+//	/// This does not change the stack.
+//	/// </summary>
+//	/// <param name="L">The l.</param>
+//	/// <param name="arg">The argument.</param>
+//	/// <returns></returns>
+//	static lua_Number checknumber(lua_State *L, int arg)
+//	{
+//		int isnum;
+//		//       stack
+//		//    :         :
+//		//    |---------|
+//		// arg|  3.14   |  ----> lua_tonumberx returns 3.14
+//		//    |---------|
+//		//    :         :
+//		lua_Number d = lua_tonumberx(L, arg, &isnum);
+//		if (!isnum)
+//			throw std::invalid_argument("The argument is not number");
+//		return d;
+//	}
+//
+//	/// <summary>
+//	/// Converts the lua value at the given arg index to the string. If the given index value is not string, an exception will be thrown.
+//	/// This does not change the stack.
+//	/// </summary>
+//	/// <param name="L">The l.</param>
+//	/// <param name="arg">The argument.</param>
+//	/// <returns></returns>
+//	static const char * checkstring(lua_State *L, int arg)
+//	{
+//		const  char * s = lua_tolstring(L, arg, nullptr);
+//		if (!s)
+//			throw std::invalid_argument("The argument is not string");
+//		return s;
+//	}
+//
+//	static void * checklightuserdata(lua_State *L, int arg)
+//	{
+//		void * p = lua_touserdata(L, arg);
+//		if (!p)
+//			throw std::invalid_argument("The argument is not userdata");
+//		return p;
+//	}
+//
+//#endif//0
+//----- 21.05.26 Fukushiro M. 削除終 ()-----
 
 	/// <summary>
 	/// Converts the lua value at the given arg index to the class object. If the given index value is not target class Type, an exception will be thrown.
@@ -1196,76 +1348,78 @@ public:
 		}
 	}
 
-	/// <summary>
-	/// Allocate StickInstanceWrapper-class object as a userdata in Lua, which has the pointer of the class object.
-	/// And push it on the lua-stack. Metatable is assigned to the userdata.
-	/// </summary>
-	/// <param name="L">Lua object</param>
-	/// <param name="object">Class object.</param>
-	/// <param name="own">true:Own the class object. The class object will be deleted automatically./false:Do not won the class object.</param>
-	/// <param name="metatable_name">Name of the metatable.</param>
-	template<typename T>
-	static void push_classobject(lua_State * L, T const & object, bool own, const char * metatable_name)
-	{
-		//                   Premise.
-		//       stack
-		//    +---------+
-		//  -1|   v1    |
-		//    |---------|
-		//    :         :
-		//
-
-		//       stack
-		//    |---------|            +------------------+
-		//  -1|userdata |----------->| allocated memory |
-		//    |---------|            +------------------+
-		//  -2|   v1    |
-		//    |---------|            |------------------|
-		//    :         :          sizeof(StickInstanceWrapper)
-		//
-		auto ptr = (StickInstanceWrapper *)lua_newuserdata(L, sizeof(StickInstanceWrapper));
-		ptr->own = own;
-		ptr->ptr = object;
-
-		//       stack
-		//    |---------|
-		//  -1|metatable|--------------------------+   +----------------------------------------+
-		//    |---------|                          |   |                       registry         |
-		//  -2|userdata |---+                      V   V                    +-------+-------+   |
-		//    |---------|   |              +----------+--------+            | Key   | Value |   |
-		//    |   v1    |   |              |   Key    | Value  |            |-------|-------|   |
-		//    |---------|   |              |----------|--------|            |regName| table |---+
-		//    :         :   |              |  "__gc"  |c++func1<---+        +---A---+-------+
-		//                  |              +----------|--------+   |        :   |   :       :
-		//                  |              | "xxxxx"  |c++func2|   |            |
-		//                  |              +----------|--------+   |       metatable_name
-		//                  |              :          :        :   |
-		//                  |                                      |
-		//                  |    +------------------+              |
-		//                  +--->| allocated memory |        c++ Destructor
-		//                       +------------------+
-		//
-		luaL_getmetatable(L, metatable_name);
-
-		//                             metatable
-		//       stack              +--------------+   +----------------------------------------+
-		//    |---------|           |              |   |                       registry         |
-		//  -1|userdata |---+       |              V   V                    +-------+-------+   |
-		//    |---------|   |       |      +----------+--------+            | Key   | Value |   |
-		//    |   v1    |   |       |      |   Key    | Value  |            |-------|-------|   |
-		//    |---------|   |       |      |----------|--------|            |regName| table |---+
-		//    :         :   |       |      |  "__gc"  |c++func1<---+        +---A---+-------+
-		//                  |       |      +----------|--------+   |        :   |   :       :
-		//                  |       |      | "xxxxx"  |c++func2|   |            |
-		//                  |       |      +----------|--------+   |       metatable_name
-		//                  |       |      :          :        :   |
-		//                  |       |                              |
-		//                  |    +------------------+              |
-		//                  +--->| allocated memory |        c++ Destructor
-		//                       +------------------+
-		//
-		::lua_setmetatable(L, -2);
-	}
+//----- 21.05.26 Fukushiro M. 削除始 ()-----
+//	/// <summary>
+//	/// Allocate StickInstanceWrapper-class object as a userdata in Lua, which has the pointer of the class object.
+//	/// And push it on the lua-stack. Metatable is assigned to the userdata.
+//	/// </summary>
+//	/// <param name="L">Lua object</param>
+//	/// <param name="object">Class object.</param>
+//	/// <param name="own">true:Own the class object. The class object will be deleted automatically./false:Do not won the class object.</param>
+//	/// <param name="metatable_name">Name of the metatable.</param>
+//	template<typename T>
+//	static void push_classobject(lua_State * L, T const & object, bool own, const char * metatable_name)
+//	{
+//		//                   Premise.
+//		//       stack
+//		//    +---------+
+//		//  -1|   v1    |
+//		//    |---------|
+//		//    :         :
+//		//
+//
+//		//       stack
+//		//    |---------|            +------------------+
+//		//  -1|userdata |----------->| allocated memory |
+//		//    |---------|            +------------------+
+//		//  -2|   v1    |
+//		//    |---------|            |------------------|
+//		//    :         :          sizeof(StickInstanceWrapper)
+//		//
+//		auto ptr = (StickInstanceWrapper *)lua_newuserdata(L, sizeof(StickInstanceWrapper));
+//		ptr->own = own;
+//		ptr->ptr = object;
+//
+//		//       stack
+//		//    |---------|
+//		//  -1|metatable|--------------------------+   +----------------------------------------+
+//		//    |---------|                          |   |                       registry         |
+//		//  -2|userdata |---+                      V   V                    +-------+-------+   |
+//		//    |---------|   |              +----------+--------+            | Key   | Value |   |
+//		//    |   v1    |   |              |   Key    | Value  |            |-------|-------|   |
+//		//    |---------|   |              |----------|--------|            |regName| table |---+
+//		//    :         :   |              |  "__gc"  |c++func1<---+        +---A---+-------+
+//		//                  |              +----------|--------+   |        :   |   :       :
+//		//                  |              | "xxxxx"  |c++func2|   |            |
+//		//                  |              +----------|--------+   |       metatable_name
+//		//                  |              :          :        :   |
+//		//                  |                                      |
+//		//                  |    +------------------+              |
+//		//                  +--->| allocated memory |        c++ Destructor
+//		//                       +------------------+
+//		//
+//		luaL_getmetatable(L, metatable_name);
+//
+//		//                             metatable
+//		//       stack              +--------------+   +----------------------------------------+
+//		//    |---------|           |              |   |                       registry         |
+//		//  -1|userdata |---+       |              V   V                    +-------+-------+   |
+//		//    |---------|   |       |      +----------+--------+            | Key   | Value |   |
+//		//    |   v1    |   |       |      |   Key    | Value  |            |-------|-------|   |
+//		//    |---------|   |       |      |----------|--------|            |regName| table |---+
+//		//    :         :   |       |      |  "__gc"  |c++func1<---+        +---A---+-------+
+//		//                  |       |      +----------|--------+   |        :   |   :       :
+//		//                  |       |      | "xxxxx"  |c++func2|   |            |
+//		//                  |       |      +----------|--------+   |       metatable_name
+//		//                  |       |      :          :        :   |
+//		//                  |       |                              |
+//		//                  |    +------------------+              |
+//		//                  +--->| allocated memory |        c++ Destructor
+//		//                       +------------------+
+//		//
+//		::lua_setmetatable(L, -2);
+//	}
+//----- 21.05.26 Fukushiro M. 削除終 ()-----
 
 	template<typename T>
 	static void push_array(lua_State * L, const std::vector<T> & v, bool own)
@@ -1321,61 +1475,63 @@ public:
 		}
 	}
 
-//----- 21.05.25 Fukushiro M. 追加始 ()-----
-	template<typename T>
-	static void push_classobjectarray(lua_State * L, const std::vector<T> & v, bool own)
-	{
-		//                   Premise.
-		//       stack
-		//    +---------+
-		//  -1| result1 | <-- return value 1 from c++ function.
-		//    |---------|
-		//  -2|   v2    | <-- argument 2 for c++ function.
-		//    |---------|
-		//  -3|   v1    | <-- argument 1 for c++ function.
-		//    |---------|
-		//    :         :
-
-		//       stack
-		//    +---------+      +--------+--------+
-		//  -1|  table  |----->| Key    | Value  |
-		//    |---------|      +--------+--------+ -+
-		//  -2| result1 |      :                 :  |
-		//    |---------|      :                 :  |
-		//    |   v2    |      :                 :  |v.size() prepared.
-		//    |---------|      :                 :  |
-		//    :         :      :                 :  |
-		//                     +- - - - - - - - -+ -+
-		//
-		lua_createtable(L, v.size(), 0);
-
-		lua_Integer i = 1;
-		for (const auto & object : v)
-		{
-			//       stack
-			//    +---------+
-			//  -1| object  |
-			//    |---------|      +--------+--------+
-			//  -2|  table  |----->| Key    | Value  |
-			//    |---------|      +--------+--------+
-			//  -3| result1 |
-			//    |---------|
-			//    :         :
-			Sticklib::push_classobject<T>(L, object, own);
-
-			//       stack
-			//    +---------+      +--------+--------+
-			//  -1|  table  |----->| Key    | Value  |
-			//    |---------|      |--------+--------|
-			//  -2| result1 |      :        :        :
-			//    |---------|      |--------|--------|
-			//    :         :      |   i    | object |
-			//                     +--------+--------+
-			lua_rawseti(L, -2, i);
-			i++;
-		}
-	}
-//----- 21.05.25 Fukushiro M. 追加終 ()-----
+//----- 21.05.26 Fukushiro M. 削除始 ()-----
+////----- 21.05.25 Fukushiro M. 追加始 ()-----
+//	template<typename T>
+//	static void push_classobjectarray(lua_State * L, const std::vector<T> & v, bool own)
+//	{
+//		//                   Premise.
+//		//       stack
+//		//    +---------+
+//		//  -1| result1 | <-- return value 1 from c++ function.
+//		//    |---------|
+//		//  -2|   v2    | <-- argument 2 for c++ function.
+//		//    |---------|
+//		//  -3|   v1    | <-- argument 1 for c++ function.
+//		//    |---------|
+//		//    :         :
+//
+//		//       stack
+//		//    +---------+      +--------+--------+
+//		//  -1|  table  |----->| Key    | Value  |
+//		//    |---------|      +--------+--------+ -+
+//		//  -2| result1 |      :                 :  |
+//		//    |---------|      :                 :  |
+//		//    |   v2    |      :                 :  |v.size() prepared.
+//		//    |---------|      :                 :  |
+//		//    :         :      :                 :  |
+//		//                     +- - - - - - - - -+ -+
+//		//
+//		lua_createtable(L, v.size(), 0);
+//
+//		lua_Integer i = 1;
+//		for (const auto & object : v)
+//		{
+//			//       stack
+//			//    +---------+
+//			//  -1| object  |
+//			//    |---------|      +--------+--------+
+//			//  -2|  table  |----->| Key    | Value  |
+//			//    |---------|      +--------+--------+
+//			//  -3| result1 |
+//			//    |---------|
+//			//    :         :
+//			Sticklib::push_classobject<T>(L, object, own);
+//
+//			//       stack
+//			//    +---------+      +--------+--------+
+//			//  -1|  table  |----->| Key    | Value  |
+//			//    |---------|      |--------+--------|
+//			//  -2| result1 |      :        :        :
+//			//    |---------|      |--------|--------|
+//			//    :         :      |   i    | object |
+//			//                     +--------+--------+
+//			lua_rawseti(L, -2, i);
+//			i++;
+//		}
+//	}
+////----- 21.05.25 Fukushiro M. 追加終 ()-----
+//----- 21.05.26 Fukushiro M. 削除終 ()-----
 
 	template<typename K, typename V>
 	static void push_hash(lua_State * L, const std::unordered_map<K, V> & v, bool own)
@@ -2233,269 +2389,271 @@ public:
 		lua_setfield(L, -2, name);
 	}
 
-	template<typename T>
-	static void set_classobject_to_table(lua_State * L, const char * name, T * object, bool own)
-	{
-		//                 Premise.
-		//        stack
-		//     +----------+
-		//   -1| table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-
-
-		//                                metatable
-		//        stack                 +-----------+   +----------------------------------------+
-		//     |----------|             |           |   |                       registry         |
-		//   -1| userdata |---------+   |           V   V                    +-------+-------+   |
-		//     |----------|         |   |   +----------+--------+            | Key   | Value |   |
-		//   -2| table A  |         |   |   |   Key    | Value  |            |-------|-------|   |
-		//     |----------|         |   |   |----------|--------|            |regName| table |---+
-		//     :          :         |   |   |  "__gc"  |c++func1<---+        +---A---+-------+
-		//                          |   |   +----------|--------+   |        :   |   :       :
-		//                          |   |   | "xxxxx"  |c++func2|   |            |
-		//                          |   |   +----------|--------+   |       metatable_name
-		//                          |   |   :          :        :   |
-		//                          V   |                           |
-		//     +----------+       +--------------------+            |
-		//     |  object  |<------|StickInstanceWrapper|      c++ Destructor
-		//     +----------+       |  class instance    |
-		//                        +--------------------+
-		//
-		push_classobject<T>(L, object, own);
-
-		//        stack
-		//     +----------+
-		//     | table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+--------+
-		//                       |   Key    | Value  |
-		//                       |----------|--------|
-		//                       :          :        :
-		//                       |----------|--------|
-		//                       |  name    |userdata| <-- set
-		//                       |----------|--------|
-		//                       :          :        :
-		lua_setfield(L, -2, name);
-	}
-
-
-#if 0
-	static void setnumber(lua_State * L, const char * name, lua_Number value)
-	{
-		//                 Premise.
-		//        stack
-		//     +----------+
-		//   -1| table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-
-		//        stack
-		//     +----------+
-		//   -1|  value   |
-		//     |----------|
-		//   -2| table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-		lua_pushnumber(L, value);
-
-		//        stack
-		//     +----------+
-		//     | table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-		//                       |----------|-------|
-		//                       |  name    | value | <-- set
-		//                       |----------|-------|
-		//                       :          :       :
-		lua_setfield(L, -2, name);
-	}
-
-	static void setinteger(lua_State * L, const char * name, lua_Integer value)
-	{
-		//                 Premise.
-		//        stack
-		//     +----------+
-		//   -1| table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-
-		//        stack
-		//     +----------+
-		//   -1|  value   |
-		//     |----------|
-		//   -2| table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-		lua_pushinteger(L, value);
-
-		//        stack
-		//     +----------+
-		//     | table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-		//                       |----------|-------|
-		//                       |  name    | value | <-- set
-		//                       |----------|-------|
-		//                       :          :       :
-		lua_setfield(L, -2, name);
-	}
-
-	static void setboolean(lua_State * L, const char * name, int value)
-	{
-		//                 Premise.
-		//        stack
-		//     +----------+
-		//   -1| table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-
-		//        stack
-		//     +----------+
-		//   -1|  value   |
-		//     |----------|
-		//   -2| table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-		lua_pushboolean(L, value);
-
-		//        stack
-		//     +----------+
-		//     | table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-		//                       |----------|-------|
-		//                       |  name    | value |
-		//                       |----------|-------|
-		//                       :          :       :
-		lua_setfield(L, -2, name);
-	}
-
-	static void setstring(lua_State * L, const char * name, const char * value)
-	{
-		//                 Premise.
-		//        stack
-		//     +----------+
-		//   -1| table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-
-		//        stack
-		//     +----------+
-		//   -1|  value   |
-		//     |----------|
-		//   -2| table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-		lua_pushstring(L, value);
-
-		//        stack
-		//     +----------+
-		//     | table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-		//                       |----------|-------|
-		//                       |  name    | value |
-		//                       |----------|-------|
-		//                       :          :       :
-		lua_setfield(L, -2, name);
-	}
-
-	static void setlightuserdata(lua_State * L, const char * name, void * value)
-	{
-		//                 Premise.
-		//        stack
-		//     +----------+
-		//   -1| table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-
-		//        stack
-		//     +----------+
-		//   -1|  value   |
-		//     |----------|
-		//   -2| table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-		lua_pushlightuserdata(L, value);
-
-		//        stack
-		//     +----------+
-		//     | table A  |--------------+
-		//     |----------|              |
-		//     :          :              V
-		//                       +----------+-------+
-		//                       |   Key    | Value |
-		//                       |----------|-------|
-		//                       :          :       :
-		//                       |----------|-------|
-		//                       |  name    | value |
-		//                       |----------|-------|
-		//                       :          :       :
-		lua_setfield(L, -2, name);
-	}
-#endif//0
+//----- 21.05.26 Fukushiro M. 削除始 ()-----
+//	template<typename T>
+//	static void set_classobject_to_table(lua_State * L, const char * name, T * object, bool own)
+//	{
+//		//                 Premise.
+//		//        stack
+//		//     +----------+
+//		//   -1| table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//
+//
+//		//                                metatable
+//		//        stack                 +-----------+   +----------------------------------------+
+//		//     |----------|             |           |   |                       registry         |
+//		//   -1| userdata |---------+   |           V   V                    +-------+-------+   |
+//		//     |----------|         |   |   +----------+--------+            | Key   | Value |   |
+//		//   -2| table A  |         |   |   |   Key    | Value  |            |-------|-------|   |
+//		//     |----------|         |   |   |----------|--------|            |regName| table |---+
+//		//     :          :         |   |   |  "__gc"  |c++func1<---+        +---A---+-------+
+//		//                          |   |   +----------|--------+   |        :   |   :       :
+//		//                          |   |   | "xxxxx"  |c++func2|   |            |
+//		//                          |   |   +----------|--------+   |       metatable_name
+//		//                          |   |   :          :        :   |
+//		//                          V   |                           |
+//		//     +----------+       +--------------------+            |
+//		//     |  object  |<------|StickInstanceWrapper|      c++ Destructor
+//		//     +----------+       |  class instance    |
+//		//                        +--------------------+
+//		//
+//		push_classobject<T>(L, object, own);
+//
+//		//        stack
+//		//     +----------+
+//		//     | table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+--------+
+//		//                       |   Key    | Value  |
+//		//                       |----------|--------|
+//		//                       :          :        :
+//		//                       |----------|--------|
+//		//                       |  name    |userdata| <-- set
+//		//                       |----------|--------|
+//		//                       :          :        :
+//		lua_setfield(L, -2, name);
+//	}
+//
+//
+//#if 0
+//	static void setnumber(lua_State * L, const char * name, lua_Number value)
+//	{
+//		//                 Premise.
+//		//        stack
+//		//     +----------+
+//		//   -1| table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//
+//		//        stack
+//		//     +----------+
+//		//   -1|  value   |
+//		//     |----------|
+//		//   -2| table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		lua_pushnumber(L, value);
+//
+//		//        stack
+//		//     +----------+
+//		//     | table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		//                       |----------|-------|
+//		//                       |  name    | value | <-- set
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		lua_setfield(L, -2, name);
+//	}
+//
+//	static void setinteger(lua_State * L, const char * name, lua_Integer value)
+//	{
+//		//                 Premise.
+//		//        stack
+//		//     +----------+
+//		//   -1| table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//
+//		//        stack
+//		//     +----------+
+//		//   -1|  value   |
+//		//     |----------|
+//		//   -2| table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		lua_pushinteger(L, value);
+//
+//		//        stack
+//		//     +----------+
+//		//     | table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		//                       |----------|-------|
+//		//                       |  name    | value | <-- set
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		lua_setfield(L, -2, name);
+//	}
+//
+//	static void setboolean(lua_State * L, const char * name, int value)
+//	{
+//		//                 Premise.
+//		//        stack
+//		//     +----------+
+//		//   -1| table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//
+//		//        stack
+//		//     +----------+
+//		//   -1|  value   |
+//		//     |----------|
+//		//   -2| table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		lua_pushboolean(L, value);
+//
+//		//        stack
+//		//     +----------+
+//		//     | table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		//                       |----------|-------|
+//		//                       |  name    | value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		lua_setfield(L, -2, name);
+//	}
+//
+//	static void setstring(lua_State * L, const char * name, const char * value)
+//	{
+//		//                 Premise.
+//		//        stack
+//		//     +----------+
+//		//   -1| table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//
+//		//        stack
+//		//     +----------+
+//		//   -1|  value   |
+//		//     |----------|
+//		//   -2| table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		lua_pushstring(L, value);
+//
+//		//        stack
+//		//     +----------+
+//		//     | table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		//                       |----------|-------|
+//		//                       |  name    | value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		lua_setfield(L, -2, name);
+//	}
+//
+//	static void setlightuserdata(lua_State * L, const char * name, void * value)
+//	{
+//		//                 Premise.
+//		//        stack
+//		//     +----------+
+//		//   -1| table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//
+//		//        stack
+//		//     +----------+
+//		//   -1|  value   |
+//		//     |----------|
+//		//   -2| table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		lua_pushlightuserdata(L, value);
+//
+//		//        stack
+//		//     +----------+
+//		//     | table A  |--------------+
+//		//     |----------|              |
+//		//     :          :              V
+//		//                       +----------+-------+
+//		//                       |   Key    | Value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		//                       |----------|-------|
+//		//                       |  name    | value |
+//		//                       |----------|-------|
+//		//                       :          :       :
+//		lua_setfield(L, -2, name);
+//	}
+//#endif//0
+//----- 21.05.26 Fukushiro M. 削除終 ()-----
 
 };
 

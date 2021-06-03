@@ -135,13 +135,13 @@
 </Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating Stick.h, Stick.cpp and Stick.html</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Stick.h;Stick.cpp;Stick.html</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdafx.h;..\..\LuaStick\files\Sticklib.h;TestClass.h;StickClassExample.h</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdafx.h;..\..\LuaStick\files\Sticklib.h;TestClass.h;StickClassExample.h;..\..\LuaStick\$(Configuration)\LuaStick.exe</AdditionalInputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo &gt; dummy
 ..\..\LuaStick\$(Configuration)\LuaStick.exe -out Stick stdafx.h ..\..\LuaStick\files\Sticklib.h TestClass.h StickClassExample.h 2&gt;error.log
 </Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating Stick.h, Stick.cpp and Stick.html</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Stick.h;Stick.cpp;Stick.html</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">stdafx.h;..\..\LuaStick\files\Sticklib.h;TestClass.h;StickClassExample.h</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">stdafx.h;..\..\LuaStick\files\Sticklib.h;TestClass.h;StickClassExample.h;..\..\LuaStick\$(Configuration)\LuaStick.exe</AdditionalInputs>
     </CustomBuild>
     <None Include="res\StickClassExample.rc2" />
   </ItemGroup>

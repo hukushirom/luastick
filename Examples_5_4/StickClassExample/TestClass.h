@@ -4,6 +4,36 @@
 
 #pragma once
 
+//----- 21.05.27 Fukushiro M. 削除始 ()-----
+//#include <unordered_set>
+//#include <set>
+//#include <unordered_map>
+//----- 21.05.27 Fukushiro M. 削除終 ()-----
+#include <map>
+
+/// <stickconv type1="::TestClass0*" type2="TC0*" type1to2="Sticklib::T_to_U<TC0*,::TestClass0*>" type2to1="Sticklib::T_to_U<::TestClass0*, TC0*>" />
+/// <stickconv type1="std::map<int,int>" type2="std::unordered_map<__int64,__int64>" type1to2="MapToUmap" type2to1="UmapToMap" />
+
+class TestClass0;
+
+using TC0 = TestClass0;
+
+
+inline void MapToUmap(std::unordered_map<__int64, __int64> & u, const std::map<int, int> & v)
+{
+	u.clear();
+	for (auto i : v)
+		u[i.first] = i.second;
+}
+
+inline void UmapToMap(std::map<int, int> & u, const std::unordered_map<__int64, __int64> & v)
+{
+	u.clear();
+	for (auto i : v)
+		u[(int)i.first] = (int)i.second;
+}
+
+
 /// <stick export="true" />
 /// <summary>
 /// Test Space.
@@ -158,8 +188,8 @@ public:
 	/// <summary>
 	/// Create object.
 	/// </summary>
-	/// <returns>TestClass0 object</returns>
-	static TestClass0 * Create0()
+	/// <returns autodel="true">TestClass0 object</returns>
+	static TC0 * Create0()
 	{
 		return new TestClass0();
 	}
@@ -208,6 +238,92 @@ public:
 		if (ea == EnumA::A)
 			ea = EnumA::B;
 	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Set title string.
+	/// </summary>
+	/// <param name="title" io="in">Title string</param>
+	void SetTitle(const std::string & title)
+	{
+		m_title = title;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Get title string.
+	/// </summary>
+	/// <returns>Title string</returns>
+	const std::string & GetTitle() const
+	{
+		return m_title;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Set uset.
+	/// </summary>
+	/// <param io="in" name="v">unordered_set</param>
+	void SetUset(const std::unordered_set<int> & v)
+	{
+		m_uset = v;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Get uset.
+	/// </summary>
+	/// <param io="out" name="v">unordered_set</param>
+	void GetUset(std::unordered_set<int> & v) const
+	{
+		v = m_uset;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Set uset.
+	/// </summary>
+	/// <param io="in" name="v">set</param>
+	void SetSet(const std::set<int> & v)
+	{
+		m_set = v;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Get uset.
+	/// </summary>
+	/// <param io="out" name="v">set</param>
+	void GetSet(std::set<int> & v) const
+	{
+		v = m_set;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Set map.
+	/// </summary>
+	/// <param io="in" name="v">map</param>
+	void SetMap(const std::map<int, int> & v)
+	{
+		m_map = v;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Get map.
+	/// </summary>
+	/// <param io="out" name="v">map</param>
+	void GetMap(std::map<int, int> & v) const
+	{
+		v = m_map;
+	}
+
+private:
+	std::string m_title;
+	std::unordered_set<int>	m_uset;
+	std::set<int>	m_set;
+	std::map<int, int>	m_map;
 };
 
 /// <stick export="true" />
@@ -249,7 +365,7 @@ public:
 	/// <summary>
 	/// Return TestClass1 object.
 	/// </summary>
-	/// <returns>TestClass1 object</returns>
+	/// <returns autodel="true">TestClass1 object</returns>
 	static TestClass1 * Create1()
 	{
 		return new TestClass1();
@@ -274,6 +390,30 @@ public:
 	{
 		return 15;
 	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Set TestClass0 array.
+	/// </summary>
+	/// <param name="array" io="in">TestClass0 array.</param>
+	void SetClass0Array(const std::vector<TestClass0 *> & array)
+	{
+		m_class0Array = array;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Get TestClass0 array.
+	/// </summary>
+	/// <param name="array" io="out">TestClass0 array.</param>
+	void GetClass0Array(std::vector<TestClass0 *> & array)
+	{
+		array = m_class0Array;
+	}
+
+
+private:
+	std::vector<TestClass0 *> m_class0Array;
 };
 
 /// <stick export="true" />
@@ -312,7 +452,7 @@ public:
 	/// <summary>
 	/// Create TestClass2 object.
 	/// </summary>
-	/// <param io="out" name="testClass2">TestClass2 object</param>
+	/// <param io="out" name="testClass2" autodel="true">TestClass2 object</param>
 	static void Create2(TestClass2 * & testClass2)
 	{
 		testClass2 = new TestClass2();

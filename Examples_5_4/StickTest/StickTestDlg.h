@@ -172,7 +172,7 @@ public:
 		/// <summary>
 		/// Add1s the specified a.
 		/// </summary>
-		/// <param name="a" io="out" ltype="classobject">a.</param>
+		/// <param name="a" io="out" ltype="X.A">a.</param>
 		int Add1(A * & a)
 		{
 			std::string xxx = XXX;
@@ -196,7 +196,7 @@ public:
 		/// Creates a.
 		/// </summary>
 		/// <param name="a" io="in">a.</param>
-		/// <returns ltype="classobject"></returns>
+		/// <returns ltype="X.A"></returns>
 		static A* CreateA(int a)
 		{
 			return new A(a);
@@ -462,6 +462,12 @@ protected:
 		std::string strParam2;
 		InCmd() : command(SticktraceDef::DebuggerCommand::NONE) {}
 		~InCmd() = default;
+		void Clear()
+		{
+			command = SticktraceDef::DebuggerCommand::NONE;
+			strParam1.clear();
+			strParam2.clear();
+		}
 	} m_incmd;
 
 	/// <summary>
@@ -476,13 +482,11 @@ protected:
 	/// <returns>true:Accepted/false:Timeout</returns>
 	virtual bool DGT_DebuggerCallback(
 		unsigned int dialogId,
-		SticktraceDef::DebuggerCommand command,
 		SticktraceDef::DebuggerCallbackParam* param
 	);
 
 	static bool DGT_DebuggerCallback(
 		unsigned int dialogId,
-		SticktraceDef::DebuggerCommand command,
 		SticktraceDef::DebuggerCallbackParam* param,
 		void* userData
 	);
@@ -529,5 +533,5 @@ public:
 /// To the stick test dialog.
 /// </summary>
 /// <param name="data" io="in">The data.</param>
-/// <returns ltype="classobject"></returns>
+/// <returns ltype="CStickTestDlg"></returns>
 extern CStickTestDlg* ToStickTestDlg(void* data);

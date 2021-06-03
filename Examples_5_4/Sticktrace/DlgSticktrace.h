@@ -42,6 +42,17 @@ public:
 	virtual BOOL OnInitDialog();
 	virtual void SetDebuggerCallback(SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc, void* debuggerCallbackData);
 
+protected:
+	static void ThreadForDebbugerCallback(
+		SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc,
+		void* debuggerCallbackData,
+		unsigned int dialogId,
+		SticktraceDef::DebuggerCommand command,
+		std::string strParam1,
+		std::string strParam2
+	);
+
+public:
 	bool APT_Show(bool show);
 	bool APT_IsVisible(bool & isVisible);
 	bool APT_IsScriptModified(bool & isModified);
@@ -54,6 +65,10 @@ public:
 	bool APT_NewSession();
 	bool APT_OnStart(SticktraceDef::ExecType execType);
 	bool APT_OnStop(SticktraceDef::ExecType execType);
+//----- 21.05.18 Fukushiro M. 削除始 ()-----
+//// 21.05.18 Fukushiro M. 1行追加 ()
+//	bool APT_OnErrorStop(const char * message);
+//----- 21.05.18 Fukushiro M. 削除終 ()-----
 	bool APT_OutputError(const char * message);
 	bool APT_OutputDebug(const char * message);
 	bool APT_SetWatch(const char * data);
@@ -100,6 +115,10 @@ private:
 			ON_STOP,
 			ON_SUSPENDED,
 			ON_RESUMED,
+//----- 21.05.18 Fukushiro M. 削除始 ()-----
+//// 21.05.18 Fukushiro M. 1行追加 ()
+//			ON_ERROR_STOP,
+//----- 21.05.18 Fukushiro M. 削除終 ()-----
 			JUMP,
 			OUTPUT_ERROR,
 			OUTPUT_DEBUG,
@@ -192,6 +211,10 @@ protected:
 	void OnStop(SticktraceDef::ExecType execType);
 	void OnSuspended();
 	void OnResumed();
+//----- 21.05.18 Fukushiro M. 削除始 ()-----
+//// 21.05.18 Fukushiro M. 1行追加 ()
+//	void OnErrorStop(const std::string & message);
+//----- 21.05.18 Fukushiro M. 削除終 ()-----
 	void OutputError(const std::string & message);
 	void OutputDebug(const std::string & message);
 	void SetWatch(const std::string & data);

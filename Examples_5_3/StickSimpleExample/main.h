@@ -72,7 +72,7 @@ namespace myconv
 		for (const auto & kv : src)
 		{
 			std::wstring key2;
-			Sticklib::astring_to_wstring(key2, kv.first);
+			Sticklib::T_to_U<std::wstring, std::string>(key2, kv.first);
 			dst[key2] = (int)kv.second;
 		}
 	}
@@ -84,7 +84,7 @@ namespace myconv
 		for (const auto & kv : src)
 		{
 			std::string key2;
-			Sticklib::wstring_to_astring(key2, kv.first);
+			Sticklib::T_to_U<std::string, std::wstring>(key2, kv.first);
 			dst[key2] = (__int64)kv.second;
 		}
 	}

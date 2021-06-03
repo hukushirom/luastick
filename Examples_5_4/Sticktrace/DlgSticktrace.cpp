@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include <thread>
 #include "Resource.h"
 #include "Astrwstr.h"
 #include "UtilString.h"
@@ -306,6 +307,22 @@ void CDlgSticktrace::SetDebuggerCallback(SticktraceDef::DebuggerCallbackFunc DGT
 	m_debuggerCallbackData = debuggerCallbackData;
 }
 
+void CDlgSticktrace::ThreadForDebbugerCallback(
+	SticktraceDef::DebuggerCallbackFunc DGT_debuggerCallbackFunc,
+	void* debuggerCallbackData,
+	unsigned int dialogId,
+	SticktraceDef::DebuggerCommand command,
+	std::string strParam1,
+	std::string strParam2
+)
+{
+	SticktraceDef::DebuggerCallbackParam param;
+	param.command = command;
+	param.strParam1 = strParam1.c_str();
+	param.strParam2 = strParam2.c_str();
+	DGT_debuggerCallbackFunc(dialogId, &param, debuggerCallbackData);
+}
+
 /// <summary>
 /// Set the visibility of the debugger window.
 /// This function works at the main application's thread.
@@ -560,6 +577,28 @@ bool CDlgSticktrace::APT_OnStop(SticktraceDef::ExecType execType)
 		return false;
 	return true;
 }
+
+//----- 21.05.18 Fukushiro M. 削除始 ()-----
+////----- 21.05.18 Fukushiro M. 追加始 ()-----
+///// <summary>
+///// Tcs the on error stop.
+///// This function works at the main application's thread.
+///// </summary>
+///// <param name="message">The message.</param>
+///// <returns>true:accepted/false:timeout</returns>
+//bool CDlgSticktrace::APT_OnErrorStop(const char * message)
+//{
+//	AutoLeaveCS acs(m_incmd.cs, m_incmd.cv);
+//	m_incmd.command = InCmd::Command::ON_ERROR_STOP;
+//	m_incmd.strParam1 = (message == nullptr) ? "" : message;
+//	PostMessage(WM_USER_COMMAND);
+//	// Wait for the command to be accepted by the Sticktrace Window.
+//	if (!acs.SleepConditionVariable(10000))
+//		return false;
+//	return true;
+//}
+////----- 21.05.18 Fukushiro M. 追加終 ()-----
+//----- 21.05.18 Fukushiro M. 削除終 ()-----
 
 /// <summary>
 /// Tcs the output error.
@@ -1173,6 +1212,34 @@ void CDlgSticktrace::OnResumed()
 	PostMessage(WM_IDLEUPDATECMDUI);
 }
 
+//----- 21.05.18 Fukushiro M. 削除始 ()-----
+////----- 21.05.18 Fukushiro M. 追加始 ()-----
+///// <summary>
+///// Notify the script runtime error to the main application and output the error message to the error message window.
+///// This function clears the last message and set the new message.
+///// Usually this function is called from the main application asynchronously.
+///// This function works at the Sticktrace Window's thread.
+///// </summary>
+///// <param name="message">The message.</param>
+//void CDlgSticktrace::OnErrorStop(const std::string & message)
+//{
+//	if (m_DGT_debuggerCallbackFunc != nullptr)
+//	{
+//		SticktraceDef::DebuggerCallbackParam param;
+//		param.strParam1 = message.c_str();
+//		m_DGT_debuggerCallbackFunc(m_dialogId, SticktraceDef::DebuggerCommand::ON_ERROR_STOP, &param, m_debuggerCallbackData);
+//	}
+//	std::wstring wmessage;
+//	Astrwstr::astr_to_wstr(wmessage, message);
+//	if (wmessage.back() != L'\n')
+//		wmessage += L"\r\n";
+//	auto len = m_errorout.GetWindowTextLength();
+//	m_errorout.SetSel(len, len);
+//	m_errorout.ReplaceSel(wmessage.c_str());
+//}
+////----- 21.05.18 Fukushiro M. 追加終 ()-----
+//----- 21.05.18 Fukushiro M. 削除終 ()-----
+
 /// <summary>
 /// Outputs the error message to the error message window.
 /// This function clears the last message and set the new message.
@@ -1191,6 +1258,21 @@ void CDlgSticktrace::OutputError(const std::string & message)
 	auto len = m_errorout.GetWindowTextLength();
 	m_errorout.SetSel(len, len);
 	m_errorout.ReplaceSel(wmessage.c_str());
+
+//----- 21.05.18 Fukushiro M. 追加始 ()-----
+	if (m_DGT_debuggerCallbackFunc != nullptr)
+	{
+//----- 21.05.19 Fukushiro M. 変更前 ()-----
+//		SticktraceDef::DebuggerCallbackParam param;
+//		param.command = SticktraceDef::DebuggerCommand::ON_ERROR_OUTPUT;
+//		param.strParam1 = message.c_str();
+//		m_DGT_debuggerCallbackFunc(m_dialogId, &param, m_debuggerCallbackData);
+//----- 21.05.19 Fukushiro M. 変更後 ()-----
+		std::thread{ ThreadForDebbugerCallback, m_DGT_debuggerCallbackFunc, m_debuggerCallbackData, m_dialogId, SticktraceDef::DebuggerCommand::ON_ERROR_OUTPUT, message, std::string() }.detach();
+//----- 21.05.19 Fukushiro M. 変更終 ()-----
+
+	}
+//----- 21.05.18 Fukushiro M. 追加終 ()-----
 }
 
 /// <summary>
@@ -1205,6 +1287,20 @@ void CDlgSticktrace::OutputDebug(const std::string & message)
 	std::wstring wmessage;
 	Astrwstr::astr_to_wstr(wmessage, message);
 	m_output.ReplaceSel(wmessage.c_str());
+
+//----- 21.05.18 Fukushiro M. 追加始 ()-----
+	if (m_DGT_debuggerCallbackFunc != nullptr)
+	{
+//----- 21.05.19 Fukushiro M. 変更前 ()-----
+//		SticktraceDef::DebuggerCallbackParam param;
+//		param.command = SticktraceDef::DebuggerCommand::ON_DEBUG_OUTPUT;
+//		param.strParam1 = message.c_str();
+//		m_DGT_debuggerCallbackFunc(m_dialogId, &param, m_debuggerCallbackData);
+//----- 21.05.19 Fukushiro M. 変更後 ()-----
+		std::thread{ ThreadForDebbugerCallback, m_DGT_debuggerCallbackFunc, m_debuggerCallbackData, m_dialogId, SticktraceDef::DebuggerCommand::ON_DEBUG_OUTPUT, message, std::string() }.detach();
+//----- 21.05.19 Fukushiro M. 変更終 ()-----
+	}
+//----- 21.05.18 Fukushiro M. 追加終 ()-----
 }
 
 /// <summary>
@@ -1553,60 +1649,67 @@ LRESULT CDlgSticktrace::OnUserCommand(WPARAM, LPARAM)
 			m_incmd.i64Param1 = m_textEditor.IsModified() ? 1 : 0;
 			break;
 		}
-
-		switch (command)
-		{
-		case CDlgSticktrace::InCmd::Command::NONE:
-			break;
-		case CDlgSticktrace::InCmd::Command::SHOW:
-			ShowWindow((i64Param1 != 0) ? SW_SHOW : SW_HIDE);
-			EnableWindow((i64Param1 != 0));
-			if (i64Param1 != 0)
-				::SetForegroundWindow(m_hWnd);
-			break;
-		case CDlgSticktrace::InCmd::Command::SET_SOURCE:
-		{
-			std::wstring wsrc;
-			Astrwstr::astr_to_wstr(wsrc, strParam3);
-			SetSource(strParam1, strParam2, wsrc);
-			break;
-		}
-		case CDlgSticktrace::InCmd::Command::NEW_SESSION:
-			NewSession();
-			break;
-		case CDlgSticktrace::InCmd::Command::ON_START:
-			OnStart((SticktraceDef::ExecType)i64Param1);
-			break;
-		case CDlgSticktrace::InCmd::Command::ON_STOP:
-			OnStop((SticktraceDef::ExecType)i64Param1);
-			break;
-		case CDlgSticktrace::InCmd::Command::ON_SUSPENDED:
-			OnSuspended();
-			break;
-		case CDlgSticktrace::InCmd::Command::ON_RESUMED:
-			OnResumed();
-			break;
-		case CDlgSticktrace::InCmd::Command::JUMP:
-			Jump(strParam1, (int)i64Param1, CFCTextEdit::MarkerType::MARKER_TRACELINE, false);
-			break;
-		case CDlgSticktrace::InCmd::Command::OUTPUT_ERROR:
-			OutputError(strParam1);
-			break;
-		case CDlgSticktrace::InCmd::Command::OUTPUT_DEBUG:
-			OutputDebug(strParam1);
-			break;
-		case CDlgSticktrace::InCmd::Command::SET_WATCH:
-			SetWatch(strParam1);
-			break;
-		case CDlgSticktrace::InCmd::Command::SET_VARIABLE_NOTIFY:
-			SetVariableNotify(i64Param1 != 0);
-			break;
-		default:
-			break;
-		}
-
 		acs.WakeConditionVariable();
 	}
+
+	switch (command)
+	{
+	case CDlgSticktrace::InCmd::Command::NONE:
+		break;
+	case CDlgSticktrace::InCmd::Command::SHOW:
+		ShowWindow((i64Param1 != 0) ? SW_SHOW : SW_HIDE);
+		EnableWindow((i64Param1 != 0));
+		if (i64Param1 != 0)
+			::SetForegroundWindow(m_hWnd);
+		break;
+	case CDlgSticktrace::InCmd::Command::SET_SOURCE:
+	{
+		std::wstring wsrc;
+		Astrwstr::astr_to_wstr(wsrc, strParam3);
+		SetSource(strParam1, strParam2, wsrc);
+		break;
+	}
+	case CDlgSticktrace::InCmd::Command::NEW_SESSION:
+		NewSession();
+		break;
+	case CDlgSticktrace::InCmd::Command::ON_START:
+		OnStart((SticktraceDef::ExecType)i64Param1);
+		break;
+	case CDlgSticktrace::InCmd::Command::ON_STOP:
+		OnStop((SticktraceDef::ExecType)i64Param1);
+		break;
+	case CDlgSticktrace::InCmd::Command::ON_SUSPENDED:
+		OnSuspended();
+		break;
+	case CDlgSticktrace::InCmd::Command::ON_RESUMED:
+		OnResumed();
+		break;
+//----- 21.05.18 Fukushiro M. 削除始 ()-----
+////----- 21.05.18 Fukushiro M. 追加始 ()-----
+//	case CDlgSticktrace::InCmd::Command::ON_ERROR_STOP:
+//		OnErrorStop(strParam1);
+//		break;
+////----- 21.05.18 Fukushiro M. 追加終 ()-----
+//----- 21.05.18 Fukushiro M. 削除終 ()-----
+	case CDlgSticktrace::InCmd::Command::JUMP:
+		Jump(strParam1, (int)i64Param1, CFCTextEdit::MarkerType::MARKER_TRACELINE, false);
+		break;
+	case CDlgSticktrace::InCmd::Command::OUTPUT_ERROR:
+		OutputError(strParam1);
+		break;
+	case CDlgSticktrace::InCmd::Command::OUTPUT_DEBUG:
+		OutputDebug(strParam1);
+		break;
+	case CDlgSticktrace::InCmd::Command::SET_WATCH:
+		SetWatch(strParam1);
+		break;
+	case CDlgSticktrace::InCmd::Command::SET_VARIABLE_NOTIFY:
+		SetVariableNotify(i64Param1 != 0);
+		break;
+	default:
+		break;
+	}
+
 	return 1;
 }
 
@@ -1872,10 +1975,15 @@ void CDlgSticktrace::OnFileSave()
 		std::string atext;
 		Astrwstr::wstr_to_astr(atext, wtext);
 
-		SticktraceDef::DebuggerCallbackParam param;
-		param.strParam1 = m_textEditor.GetContentName().c_str();
-		param.strParam2 = atext.c_str();
-		m_DGT_debuggerCallbackFunc(m_dialogId, SticktraceDef::DebuggerCommand::SAVE_SCRIPT, &param, m_debuggerCallbackData);
+//----- 21.05.19 Fukushiro M. 変更前 ()-----
+//		SticktraceDef::DebuggerCallbackParam param;
+//		param.command = SticktraceDef::DebuggerCommand::SAVE_SCRIPT;
+//		param.strParam1 = m_textEditor.GetContentName().c_str();
+//		param.strParam2 = atext.c_str();
+//		m_DGT_debuggerCallbackFunc(m_dialogId, &param, m_debuggerCallbackData);
+//----- 21.05.19 Fukushiro M. 変更後 ()-----
+		std::thread{ ThreadForDebbugerCallback, m_DGT_debuggerCallbackFunc, m_debuggerCallbackData, m_dialogId, SticktraceDef::DebuggerCommand::SAVE_SCRIPT, m_textEditor.GetContentName(), atext }.detach();
+//----- 21.05.19 Fukushiro M. 変更終 ()-----
 	}
 }
 

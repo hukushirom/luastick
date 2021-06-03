@@ -4,13 +4,34 @@
 
 #pragma once
 
-/// <stickconv type1="::TestClass0*" type2="TC0*" type1to2="Sticklib::T_to_U<::TestClass0*,TC0*>" type2to1="Sticklib::T_to_U<TC0*,::TestClass0*>" />
+//----- 21.05.27 Fukushiro M. 削除始 ()-----
+//#include <unordered_set>
+//#include <set>
+//#include <unordered_map>
+//----- 21.05.27 Fukushiro M. 削除終 ()-----
+#include <map>
+
+/// <stickconv type1="::TestClass0*" type2="TC0*" type1to2="Sticklib::T_to_U<TC0*,::TestClass0*>" type2to1="Sticklib::T_to_U<::TestClass0*, TC0*>" />
+/// <stickconv type1="std::map<int,int>" type2="std::unordered_map<__int64,__int64>" type1to2="MapToUmap" type2to1="UmapToMap" />
 
 class TestClass0;
 
 using TC0 = TestClass0;
 
 
+inline void MapToUmap(std::unordered_map<__int64, __int64> & u, const std::map<int, int> & v)
+{
+	u.clear();
+	for (auto i : v)
+		u[i.first] = i.second;
+}
+
+inline void UmapToMap(std::map<int, int> & u, const std::unordered_map<__int64, __int64> & v)
+{
+	u.clear();
+	for (auto i : v)
+		u[(int)i.first] = (int)i.second;
+}
 
 /// <stick export="true" />
 /// <summary>
@@ -24,6 +45,14 @@ namespace TestSpace
 	/// </summary>
 	/// <returns>ABC</returns>
 	std::string GetA();
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Test p is null or not.
+	/// </summary>
+	/// <param io="in" name="p">Pointer.</param>
+	/// <returns>true:NULL/false:Not NULL</returns>
+	bool IsNull(void * p);
 }
 
 
@@ -174,6 +203,16 @@ public:
 
 	/// <stick export="true" />
 	/// <summary>
+	/// Create null object.
+	/// </summary>
+	/// <returns autodel="true">TestClass0 object</returns>
+	static TC0 * CreateNull0()
+	{
+		return nullptr;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
 	/// 
 	/// </summary>
 	/// <param io="inout" name="test">Argument test.</param>
@@ -237,8 +276,71 @@ public:
 		return m_title;
 	}
 
+	/// <stick export="true" />
+	/// <summary>
+	/// Set uset.
+	/// </summary>
+	/// <param io="in" name="v">unordered_set</param>
+	void SetUset(const std::unordered_set<int> & v)
+	{
+		m_uset = v;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Get uset.
+	/// </summary>
+	/// <param io="out" name="v">unordered_set</param>
+	void GetUset(std::unordered_set<int> & v) const
+	{
+		v = m_uset;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Set uset.
+	/// </summary>
+	/// <param io="in" name="v">set</param>
+	void SetSet(const std::set<int> & v)
+	{
+		m_set = v;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Get uset.
+	/// </summary>
+	/// <param io="out" name="v">set</param>
+	void GetSet(std::set<int> & v) const
+	{
+		v = m_set;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Set map.
+	/// </summary>
+	/// <param io="in" name="v">map</param>
+	void SetMap(const std::map<int, int> & v)
+	{
+		m_map = v;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// Get map.
+	/// </summary>
+	/// <param io="out" name="v">map</param>
+	void GetMap(std::map<int, int> & v) const
+	{
+		v = m_map;
+	}
+
 private:
 	std::string m_title;
+	std::unordered_set<int>	m_uset;
+	std::set<int>	m_set;
+	std::map<int, int>	m_map;
 };
 
 /// <stick export="true" />
@@ -325,6 +427,7 @@ public:
 	{
 		array = m_class0Array;
 	}
+
 
 private:
 	std::vector<TestClass0 *> m_class0Array;
