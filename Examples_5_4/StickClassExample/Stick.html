@@ -1,4 +1,4 @@
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8628) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8652) -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,58 +8,96 @@
 </head>
 <body>
 <h1 class="manual-title">LuaStick Output API Manual</h1>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8520) -->
+
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8659) -->
+<div class="module-functions">
+	<h2 class="elements-title">STICK module</h2>
+	<p class="summary">Luastick default module</p>
+	<div class="module-function">
+		<h3 class="element-name">STICK.ObjectToUserdata<span class="element-name-additional"> function</span></h3>
+		<p class="summary">Converts the class-object to lightuserdata. In C++, it converts the class-object to void pointer.</p>
+		<p class="element-lua-title">Lua</p>
+		<pre class="element-lua-form"><code>lightuserdata return_value = STICK.ObjectToUserdata(class-object object)</code></pre>
+		<p class="element-cpp-title">C++</p>
+		<pre class="element-cpp-form"><code>Not Provided</code></pre>
+	</div>
+	<p class="element-member-title">Parameters</p>
+	<dl class="element-member">
+		<dt>return_value</dt>
+		<dd>lightuserdata type: Pointer of the class-object</dd>
+		<dt>object</dt>
+		<dd>class-object: Class-object</dd>
+	</dl>
+	<div class="module-function">
+		<h3 class="element-name">STICK.IsNullObject<span class="element-name-additional"> function</span></h3>
+		<p class="summary">Tests the object is null or not.</p>
+		<p class="element-lua-title">Lua</p>
+		<pre class="element-lua-form"><code>boolean return_value = STICK.IsNullObject(class-object object)</code></pre>
+		<p class="element-cpp-title">C++</p>
+		<pre class="element-cpp-form"><code>Not Provided</code></pre>
+	</div>
+	<p class="element-member-title">Parameters</p>
+	<dl class="element-member">
+		<dt>return_value</dt>
+		<dd>boolean type: true:The object is null/false:Not null</dd>
+		<dt>object</dt>
+		<dd>class-object type: Class-object</dd>
+	</dl>
+</div>
+
+
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8543) -->
 <div class="module-functions">
 	<h2 class="elements-title">Global scope</h2>
 	<p class="summary"></p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="module-function">
 		<h3 class="element-name">App<span class="element-name-additional"> function</span></h3>
 		<p class="summary">Get application object.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>StickClassExampleApp return_value = App()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>::CStickClassExampleApp* ::App()</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
 		<dd>StickClassExampleApp type: Application object</dd>
 	</dl>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8520) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8543) -->
 <div class="module-functions">
 	<h2 class="elements-title">TestSpace module</h2>
 	<p class="summary">Test Space.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="module-function">
 		<h3 class="element-name">TestSpace.GetA<span class="element-name-additional"> function</span></h3>
 		<p class="summary">Get ABC</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>string return_value = TestSpace.GetA()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>std::string ::TestSpace::GetA()</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
 		<dd>string type: ABC</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="module-function">
 		<h3 class="element-name">TestSpace.IsNull<span class="element-name-additional"> function</span></h3>
 		<p class="summary">Test p is null or not.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>boolean return_value = TestSpace.IsNull(lightuserdata p)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>bool ::TestSpace::IsNull(void* p)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
@@ -68,7 +106,7 @@
 		<dd>lightuserdata type: Pointer.</dd>
 	</dl>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8380) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8403) -->
 <div class="structure1">
 	<h2 class="elements-title">TestStruct0 structure</h2>
 	<p class="summary">LuaStick test struct.<br/><pre class="element-lua-form"><code>     +--------------------------------+           Help                         
@@ -114,7 +152,7 @@
     m_x = { [integer value], [integer value], ... },
     x = [number value],
 }</code></pre>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8425) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8448) -->
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>::TestStruct0 {
     int m_a;
@@ -167,78 +205,98 @@
 		<pre class="element-cpp-form"><code>std::unordered_map&lt;bool,::TestStruct0&gt;</code></pre>
 	</div>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8520) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8543) -->
 <div class="module-functions">
 	<h2 class="elements-title">TestClassA module</h2>
 	<p class="summary">LuaStick test class.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="module-function">
 		<h3 class="element-name">TestClassA.Get<span class="element-name-additional"> function</span></h3>
 		<p class="summary">Get number 10.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>integer return_value = TestClassA.Get()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>int ::TestClassA::Get()</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
 		<dd>integer type: Return 10</dd>
 	</dl>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8520) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8543) -->
 <div class="module-functions">
 	<h2 class="elements-title">TestClass0 module</h2>
 	<p class="summary">LuaStick test class.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="module-function">
 		<h3 class="element-name">TestClass0.Create0<span class="element-name-additional"> function</span></h3>
 		<p class="summary">Create object.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>TestClass0 return_value = TestClass0.Create0()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>TC0* ::TestClass0::Create0()</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
 		<dd>TestClass0 type: TestClass0 object</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="module-function">
 		<h3 class="element-name">TestClass0.CreateNull0<span class="element-name-additional"> function</span></h3>
 		<p class="summary">Create null object.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>TestClass0 return_value = TestClass0.CreateNull0()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>TC0* ::TestClass0::CreateNull0()</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
 		<dd>TestClass0 type: TestClass0 object</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
+	<div class="module-function">
+		<h3 class="element-name">TestClass0.GetX<span class="element-name-additional"> function</span></h3>
+		<p class="summary">GetX function.</p>
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
+		<p class="element-lua-title">Lua</p>
+		<pre class="element-lua-form"><code>integer return_value, integer x = TestClass0.GetX(integer x)</code></pre>
+		<p class="element-cpp-title">C++</p>
+		<pre class="element-cpp-form"><code>int ::TestClass0::GetX(int x)</code></pre>
+	</div>
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
+	<p class="element-member-title">Parameters</p>
+	<dl class="element-member">
+		<dt>return_value</dt>
+		<dd>integer type: return 0</dd>
+		<dt>x</dt>
+		<dd>integer type: test param</dd>
+		<dt>x</dt>
+		<dd>integer type: test param</dd>
+	</dl>
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="module-function">
 		<h3 class="element-name">TestClass0.New<span class="element-name-additional"> function</span></h3>
 		<p class="summary">Default constructor.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>class-object return_value = TestClass0.New()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass0()</code></pre>
 	</div>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8542) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8565) -->
 <div class="module-variables">
 	<h2 class="elements-title">TestClass0 module</h2>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8252) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8275) -->
 	<div class="module-variable">
 		<h3 class="element-name">TestClass0.J<span class="element-name-additional"> enumerated constant</span></h3>
 		<p class="summary"></p>
@@ -247,7 +305,7 @@
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>enum ::TestClass0:: { J }</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8252) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8275) -->
 	<div class="module-variable">
 		<h3 class="element-name">TestClass0.E<span class="element-name-additional"> enumerated constant</span></h3>
 		<p class="summary"></p>
@@ -256,7 +314,7 @@
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>enum ::TestClass0::EnumB { E }</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8252) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8275) -->
 	<div class="module-variable">
 		<h3 class="element-name">TestClass0.F<span class="element-name-additional"> enumerated constant</span></h3>
 		<p class="summary"></p>
@@ -265,7 +323,7 @@
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>enum ::TestClass0::EnumB { F }</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8252) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8275) -->
 	<div class="module-variable">
 		<h3 class="element-name">TestClass0.G<span class="element-name-additional"> enumerated constant</span></h3>
 		<p class="summary"></p>
@@ -275,21 +333,21 @@
 		<pre class="element-cpp-form"><code>enum ::TestClass0::EnumB { G }</code></pre>
 	</div>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8574) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8597) -->
 <div class="class-methods">
 	<h2 class="elements-title">TestClass0 class</h2>
 	<p class="summary">LuaStick test class.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:Get<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Get test.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>TestStruct0 test = [TestClass0 class-object]:Get(TestStruct0 test)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass0::Get(::TestStruct0&amp; test)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>test</dt>
@@ -297,17 +355,17 @@
 		<dt>test</dt>
 		<dd>TestStruct0 type: TestStruct0 object</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:GetArray<span class="element-name-additional"> method</span></h3>
 		<p class="summary"></p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>array&lt;TestStruct0&gt; test = [TestClass0 class-object]:GetArray(array&lt;TestStruct0&gt; test)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass0::GetArray(std::vector&lt;::TestStruct0&gt;&amp; test)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>test</dt>
@@ -315,17 +373,17 @@
 		<dt>test</dt>
 		<dd>array&lt;TestStruct0&gt; type: Argument test.</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:GetEnumA<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Get Enum A.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>integer ea = [TestClass0 class-object]:GetEnumA(integer ea)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass0::GetEnumA(::TestClass0::EnumA&amp; ea)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>ea</dt>
@@ -333,156 +391,156 @@
 		<dt>ea</dt>
 		<dd>integer type: Return enum A</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:GetMap<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Get map.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>hash&lt;integer,integer&gt; v = [TestClass0 class-object]:GetMap()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass0::GetMap(std::map&lt;int,int&gt;&amp; v)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>v</dt>
 		<dd>hash&lt;integer,integer&gt; type: map</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:GetSet<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Get uset.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>array&lt;integer&gt; v = [TestClass0 class-object]:GetSet()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass0::GetSet(std::set&lt;int&gt;&amp; v)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>v</dt>
 		<dd>array&lt;integer&gt; type: set</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:GetTitle<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Get title string.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>string return_value = [TestClass0 class-object]:GetTitle()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>const std::string&amp; ::TestClass0::GetTitle()</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
 		<dd>string type: Title string</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:GetUset<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Get uset.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>array&lt;integer&gt; v = [TestClass0 class-object]:GetUset()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass0::GetUset(std::unordered_set&lt;int&gt;&amp; v)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>v</dt>
 		<dd>array&lt;integer&gt; type: unordered_set</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:GetX<span class="element-name-additional"> method</span></h3>
 		<p class="summary">GetX function.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>integer return_value = [TestClass0 class-object]:GetX()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>int ::TestClass0::GetX()</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
 		<dd>integer type: return 0</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:SetMap<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Set map.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>[TestClass0 class-object]:SetMap(hash&lt;integer,integer&gt; v)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass0::SetMap(const std::map&lt;int,int&gt;&amp; v)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>v</dt>
 		<dd>hash&lt;integer,integer&gt; type: map</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:SetSet<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Set uset.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>[TestClass0 class-object]:SetSet(array&lt;integer&gt; v)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass0::SetSet(const std::set&lt;int&gt;&amp; v)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>v</dt>
 		<dd>array&lt;integer&gt; type: set</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:SetTitle<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Set title string.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>[TestClass0 class-object]:SetTitle(string title)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass0::SetTitle(const std::string&amp; title)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>title</dt>
 		<dd>string type: Title string</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass0:SetUset<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Set uset.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>[TestClass0 class-object]:SetUset(array&lt;integer&gt; v)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass0::SetUset(const std::unordered_set&lt;int&gt;&amp; v)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>v</dt>
 		<dd>array&lt;integer&gt; type: unordered_set</dd>
 	</dl>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8598) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8621) -->
 <div class="module-variables">
 	<h2 class="elements-title">TestClass0.EnumA module</h2>
 	<p class="summary">Enum A.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8252) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8275) -->
 	<div class="module-variable">
 		<h3 class="element-name">TestClass0.EnumA.AAA<span class="element-name-additional"> enumerated constant</span></h3>
 		<p class="summary">A in Enum A.</p>
@@ -491,7 +549,7 @@
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>enum class ::TestClass0::EnumA { A }</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8252) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8275) -->
 	<div class="module-variable">
 		<h3 class="element-name">TestClass0.EnumA.C<span class="element-name-additional"> enumerated constant</span></h3>
 		<p class="summary">C in Enum A.</p>
@@ -500,7 +558,7 @@
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>enum class ::TestClass0::EnumA { C }</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8252) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8275) -->
 	<div class="module-variable">
 		<h3 class="element-name">TestClass0.EnumA.B<span class="element-name-additional"> enumerated constant</span></h3>
 		<p class="summary">B in Enum A.</p>
@@ -510,7 +568,7 @@
 		<pre class="element-cpp-form"><code>enum class ::TestClass0::EnumA { B }</code></pre>
 	</div>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8380) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8403) -->
 <div class="structure1">
 	<h2 class="elements-title">TestStruct1 structure</h2>
 	<p class="summary">LuaStick test struct.</p>
@@ -534,7 +592,7 @@
     m_d = {
     }
 }</code></pre>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8425) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8448) -->
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>::TestStruct1 {
     ::TestStruct0 m_c;
@@ -585,137 +643,137 @@
 		<pre class="element-cpp-form"><code>std::unordered_map&lt;bool,::TestStruct1&gt;</code></pre>
 	</div>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8520) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8543) -->
 <div class="module-functions">
 	<h2 class="elements-title">TestClass1 module</h2>
 	<p class="summary">LuaStick test class.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="module-function">
 		<h3 class="element-name">TestClass1.Create1<span class="element-name-additional"> function</span></h3>
 		<p class="summary">Return TestClass1 object.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>TestClass1 return_value = TestClass1.Create1()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>::TestClass1* ::TestClass1::Create1()</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
 		<dd>TestClass1 type: TestClass1 object</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="module-function">
 		<h3 class="element-name">TestClass1.New<span class="element-name-additional"> function</span></h3>
 		<p class="summary">Default constructor.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>class-object return_value = TestClass1.New()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass1()</code></pre>
 	</div>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8574) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8597) -->
 <div class="class-methods">
 	<h2 class="elements-title">TestClass1 class</h2>
 	<p class="summary">LuaStick test class.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass1:Get<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Get function.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>integer return_value = [TestClass1 class-object]:Get()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>int ::TestClass1::Get()</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
 		<dd>integer type: Return 10</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass1:GetClass0Array<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Get TestClass0 array.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>array&lt;TestClass0&gt; array = [TestClass1 class-object]:GetClass0Array()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass1::GetClass0Array(std::vector&lt;::TestClass0*&gt;&amp; array)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>array</dt>
 		<dd>array&lt;TestClass0&gt; type: TestClass0 array.</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass1:GetX<span class="element-name-additional"> method</span></h3>
 		<p class="summary">GetX function.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>integer return_value = [TestClass1 class-object]:GetX()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>int ::TestClass1::GetX()</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
 		<dd>integer type: Return 15</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass1:SetClass0Array<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Set TestClass0 array.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>[TestClass1 class-object]:SetClass0Array(array&lt;TestClass0&gt; array)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass1::SetClass0Array(const std::vector&lt;::TestClass0*&gt;&amp; array)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>array</dt>
 		<dd>array&lt;TestClass0&gt; type: TestClass0 array.</dd>
 	</dl>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8520) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8543) -->
 <div class="module-functions">
 	<h2 class="elements-title">TestClass2 module</h2>
 	<p class="summary">LuaStick test class.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="module-function">
 		<h3 class="element-name">TestClass2.Create2<span class="element-name-additional"> function</span></h3>
 		<p class="summary">Create TestClass2 object.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>TestClass2 testClass2 = TestClass2.Create2()</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::TestClass2::Create2(::TestClass2*&amp; testClass2)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>testClass2</dt>
 		<dd>TestClass2 type: TestClass2 object</dd>
 	</dl>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="module-function">
 		<h3 class="element-name">TestClass2.New<span class="element-name-additional"> function</span></h3>
 		<p class="summary">Constructor. Its has an argument.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>TestClass2 return_value = TestClass2.New(integer a)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>::TestClass2* ::TestClass2(int a)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
@@ -724,10 +782,10 @@
 		<dd>integer type: A</dd>
 	</dl>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8542) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8565) -->
 <div class="module-variables">
 	<h2 class="elements-title">TestClass2 module</h2>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8218) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8241) -->
 	<div class="module-variable">
 		<h3 class="element-name">TestClass2.TESTCLASS0<span class="element-name-additional"> constant</span></h3>
 		<p class="summary">LuaStick test constant.</p>
@@ -737,21 +795,21 @@
 		<pre class="element-cpp-form"><code>const ::TestClass0&amp; ::TestClass2::TESTCLASS0</code></pre>
 	</div>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8574) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8597) -->
 <div class="class-methods">
 	<h2 class="elements-title">TestClass2 class</h2>
 	<p class="summary">LuaStick test class.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">TestClass2:Get2<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Call Get() function in testClass1.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>integer return_value, TestClass1 testClass1 = [TestClass2 class-object]:Get2(TestClass1 testClass1)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>int ::TestClass2::Get2(::TestClass1*&amp; testClass1)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>return_value</dt>
@@ -762,21 +820,21 @@
 		<dd>TestClass1 type: TestClass1 object</dd>
 	</dl>
 </div>
-<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8574) -->
+<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8597) -->
 <div class="class-methods">
 	<h2 class="elements-title">StickClassExampleApp class</h2>
 	<p class="summary">Application class.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8119) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8142) -->
 	<div class="class-method">
 		<h3 class="element-name">StickClassExampleApp:Output<span class="element-name-additional"> method</span></h3>
 		<p class="summary">Output the message to the message window.</p>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8129) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8152) -->
 		<p class="element-lua-title">Lua</p>
 		<pre class="element-lua-form"><code>[StickClassExampleApp class-object]:Output(string message)</code></pre>
 		<p class="element-cpp-title">C++</p>
 		<pre class="element-cpp-form"><code>void ::CStickClassExampleApp::Output(const wchar_t* message)</code></pre>
 	</div>
-	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8138) -->
+	<!-- Generated at "c:\src\lua\luastick\luastick\src\luastick.cpp"(8161) -->
 	<p class="element-member-title">Parameters</p>
 	<dl class="element-member">
 		<dt>message</dt>

@@ -82,7 +82,7 @@ Lua 5.4.3 用
 
 以下のようなコマンドラインで実行する。  
 ```  
->LuaStick.exe -out Stick -lang ja Sticklib.h main.h srcx.h  
+>LuaStick.exe -out Stick -lang ja extinsert.html Sticklib.h main.h srcx.h  
 ```  
 **-out**&emsp;出力するファイルの名前を指定する。  
 **-lang**&emsp;言語を指定する。詳しくは後述の「言語の指定」を参照。  
@@ -115,12 +115,16 @@ Lua 5.4.3 用
      |                 +----------+   |  
      +--------------------------------+  
 ```  
+**extinsert.html**
+- HTMLヘルプに挿入するHTML。  
+- ユーザーが作成する。ほとんどのケースで指定する必要がない。  
+
 **Sticklib.h**
-- Stick.cppの中で使われる関数が記述されたライブラリー。
+- Stick.cppの中で使われる関数が記述されたライブラリー。パラメーターに必ず指定しなければならない。  
 - LuaStick/filesフォルダーに存在する。  
 - ユーザーが変更する必要はない。  
 
-**main.h, srcx.h**   
+**main.h, srcx.h**
 - Luaにエクスポートする関数が記述されたヘッダーファイル。  
 - ユーザーが作成する。  
 - 以下で説明するタグの記載が必要。  

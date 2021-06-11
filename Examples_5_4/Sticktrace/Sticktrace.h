@@ -2150,18 +2150,21 @@ private:
 
 public:
 	/// <summary>
-	/// Initializes the specified stickrun.
+	/// Initializes the sticktrace instance. It must be called before a stickrun is attached.
 	/// </summary>
 	/// <param name="hwndParent">
 	/// Parent window. This function creates the debugger window. The window deprives the focus despite it is hidden window. So this function gives the focus back to hwndParent.
 	/// /NULL:Do not back the focus.
 	/// </param>
 	/// /nullptr or empty:Default value will be used.</param>
-	/// <param name="companyName">Name of company. Used to determine the name of registry./nullptr or empty:Default value will be used.</param>
-	/// <param name="packageName">Name of package. Used to determine the name of registry./nullptr:Default value will be used.</param>
-	/// <param name="applicationName">Name of application. Used to determine the name of registry./nullptr:Default value will be used.</param>
-	/// <param name="dialogId">ID of Debugger window. Used to determine the name of registry. You must specify different values if one application uses more than two debuggers.</param>
-	/// <param name="DGT_debuggerCallbackFunc">Callback function called from the debugger. It's called when script was saved./nullptr:No callback</param>
+	/// <param name="companyName">Name of company. It's used to determine the name of registry./nullptr or empty:Default value will be used.</param>
+	/// <param name="packageName">Name of package. It's used to determine the name of registry./nullptr:Default value will be used.</param>
+	/// <param name="applicationName">Name of application. It's used to determine the name of registry./nullptr:Default value will be used.</param>
+	/// <param name="dialogId">ID of Debugger window. It's used to determine the name of registry. You must specify different values if one application uses more than two debuggers.</param>
+	/// <param name="DGT_debuggerCallbackFunc">
+	/// Callback function called from the debugger window. It's called when script was saved./nullptr:No callback.
+	/// Caution: The thread debugger window running in different from the main application's thread. So this function must be thread safe.
+	/// </param>
 	/// <param name="debuggerCallbackData">The user defined data which is passed to DGT_debuggerCallbackFunc.</param>
 	void Initialize(
 		HWND hwndParent,

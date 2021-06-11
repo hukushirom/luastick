@@ -1308,7 +1308,30 @@ std::string FuncRec::GetWrapperFunctionName() const
 // 21.05.16 Fukushiro M. 1行変更 ()
 //	const int luaArgCount = (type == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)argNames.size();
 	const int luaArgCount = (type == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)inArgNames.size();
-	return FuncGroupRec::Get(parentId).GetWrapperFunctionName() + "__" + std::to_string(luaArgCount);
+
+//----- 21.06.09 Fukushiro M. 変更前 ()-----
+//	return FuncGroupRec::Get(parentId).GetWrapperFunctionName() + "__" + std::to_string(luaArgCount);
+//----- 21.06.09 Fukushiro M. 変更後 ()-----
+	// To avoid following case, add prefix.
+	// Static function and member function are exist in a class.
+	// They have same name.
+	// Member function's arguments number = static function's arguments number + 1.
+
+	std::string prefix;
+	switch (type)
+	{
+	case FuncRec::Type::STATIC:
+		prefix = "s";
+		break;
+	case FuncRec::Type::METHOD:
+		prefix = "m";
+		break;
+	case FuncRec::Type::CONSTRUCTOR:
+		prefix = "c";
+		break;
+	}
+	return prefix + FuncGroupRec::Get(parentId).GetWrapperFunctionName() + "__" + std::to_string(luaArgCount);
+//----- 21.06.09 Fukushiro M. 変更終 ()-----
 }
 
 std::string FuncRec::GetFullpathLuaname() const
@@ -8611,7 +8634,7 @@ static void OutputModuleHtml(StringBuffer & buffer, const ClassRec & classRec)
 	}
 } // OutputModuleHtml
 
-static void OutputHtml(StringBuffer & buffer, const ClassRec & classRec, const std::string & filename)
+static void OutputHtml(StringBuffer & buffer, const std::string & insertHtml, const ClassRec & classRec, const std::string & filename)
 {
 	buffer << FORMHTML(u8R"(
 <!-- ${SRCMARKER} -->
@@ -8625,7 +8648,15 @@ static void OutputHtml(StringBuffer & buffer, const ClassRec & classRec, const s
 <body>
 <h1 class="manual-title">LuaStick Output API Manual</h1>
 
+
 )", filename);
+
+	buffer << FORMTEXT(u8R"(
+<!-- ${SRCMARKER} -->
+${insertHtml}
+
+
+)", insertHtml);
 
 	OutputModuleHtml(buffer, classRec);
 
@@ -8642,6 +8673,13 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 	constexpr size_t STICKLIB_LEN = _countof(STICKLIB) - 1;
 	constexpr wchar_t STICKRUN[]{ L"Stickrun.h" };
 	constexpr wchar_t XXHASH[]{ L"xxhash.h" };
+//----- 21.06.10 Fukushiro M. 追加始 ()-----
+	constexpr wchar_t HTMLEXT[]{ L".html" };
+	constexpr size_t HTMLEXT_LEN = _countof(HTMLEXT) - 1;
+	constexpr wchar_t STICKHELP[]{ L"stickhelp.html" };
+
+	constexpr wchar_t DEFAULT_LANG[]{ L"en" };
+//----- 21.06.10 Fukushiro M. 追加終 ()-----
 
 	std::string dummy;
 	try
@@ -8654,34 +8692,53 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 		UtilMisc::ParseOptionArgs(optionToValue, sourceFiles, argc, argv);
 		if (optionToValue.find(OPTION_OUT) == optionToValue.end())
 			ThrowLeException(LeError::OPTION_NOT_SPECIFIED, OPTION_OUT);	// コマンドラインオプションが指定されていません。
-		if (sourceFiles.empty())
+
+		// Language. e.g. "ja","en","zh"...
+		const auto iOptionLang = optionToValue.find(OPTION_LANG);
+		if (iOptionLang != optionToValue.end())
+			Astrwstr::wstr_to_astr(LANG, iOptionLang->second);
+
+		std::vector<std::wstring> htmlFiles;
+		std::vector<std::wstring> headerFiles;
+		for (const auto & sourceFile : sourceFiles)
+		{
+			if (::_wcsicmp(UtilString::Right(sourceFile, HTMLEXT_LEN).c_str(), HTMLEXT) == 0)
+				htmlFiles.emplace_back(sourceFile);
+			else
+				headerFiles.emplace_back(sourceFile);
+		}
+		if (headerFiles.empty())
 			ThrowLeException(LeError::FILE_NOT_SPECIFIED);	// ファイルが指定されていません。
 
-		std::wstring stickrunPath;
-		std::wstring xxhashPath;
-		for (const auto & headFile : sourceFiles)
+		std::wstring tmpPath;
+		for (const auto & headFile : headerFiles)
 		{
-//----- 21.06.03 Fukushiro M. 変更前 ()-----
-//			std::wstring r(headFile);
-//			if (::_wcsicmp(UtilString::Right(r, STICKLIB_LEN).c_str(), STICKLIB) == 0)
-//			{
-//				stickrunPath = headFile;
-//				stickrunPath.erase(stickrunPath.length() - STICKLIB_LEN);
-//				stickrunPath += STICKRUN;
-//				break;
-//			}
-//----- 21.06.03 Fukushiro M. 変更後 ()-----
 			if (::_wcsicmp(UtilString::Right(headFile, STICKLIB_LEN).c_str(), STICKLIB) == 0)
 			{
-				auto tmpPath = headFile.substr(0, headFile.length() - STICKLIB_LEN);
-				stickrunPath = tmpPath + STICKRUN;
-				xxhashPath = tmpPath + XXHASH;
+				tmpPath = headFile.substr(0, headFile.length() - STICKLIB_LEN);
 				break;
 			}
-//----- 21.06.03 Fukushiro M. 変更終 ()-----
 		}
-		if (stickrunPath.empty())
+		if (tmpPath.empty())
 			ThrowLeException(LeError::FILE_NOT_SPECIFIED, STICKLIB);	// ファイルが指定されていません。
+
+		const std::wstring stickrunPath = tmpPath + STICKRUN;
+		const std::wstring xxhashPath = tmpPath + XXHASH;
+		std::wstring wstrLang;
+		if (LANG.empty())
+			wstrLang = DEFAULT_LANG;	// DEFAULT_LANG="en".
+		else
+			Astrwstr::astr_to_wstr(wstrLang, LANG);
+		const std::wstring stickhtmlPath = tmpPath + wstrLang + L"\\" + STICKHELP;
+		htmlFiles.insert(htmlFiles.begin(), stickhtmlPath);
+
+		std::string insertHtml;
+		for (const auto & htmlFile : htmlFiles)
+		{
+			std::vector<char> buffer;
+			UtilFile::LoadFile(buffer, htmlFile.c_str());
+			insertHtml += buffer.data();
+		}
 
 		// Output file path. It does not include extension. e.g. "C:\folder1\fileA"
 		const auto outFilePath = optionToValue.find(OPTION_OUT)->second;
@@ -8695,11 +8752,6 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 		);
 		// Output file name. It does not include extension. e.g. "fileA"
 		const std::wstring outFileName = fname;
-
-		// Language. e.g. "ja","en","zh"...
-		const auto iOptionLang = optionToValue.find(OPTION_LANG);
-		if (iOptionLang != optionToValue.end())
-			Astrwstr::wstr_to_astr(LANG, iOptionLang->second);
 
 		// class and it's member function array.
 		// std::vector<ClassRec> CLASS_AND_CFUNC_SET;
@@ -8720,7 +8772,7 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 
 )", _DATE_);
 
-		for (const auto & headFile : sourceFiles)
+		for (const auto & headFile : headerFiles)
 		{
 			OUTPUT_CPP_FILE_STREAM << FORMTEXT(u8R"(
 // ${SRCMARKER}
@@ -8754,7 +8806,7 @@ static unsigned __int64 WRAPPER_SEED = 0;
 
 )", _DATE_);
 
-		for (const auto & headFile : sourceFiles)
+		for (const auto & headFile : headerFiles)
 		{
 			OUTPUT_H_FILE_STREAM << FORMTEXT(u8R"(
 // ${SRCMARKER}
@@ -8772,7 +8824,7 @@ extern void luastick_init(lua_State* L);
 
 )");
 
-		for (const auto & sourceFile : sourceFiles)
+		for (const auto & sourceFile : headerFiles)
 		{
 			ReadBufferedFile readBufferedFile(sourceFile.c_str());
 			try
@@ -8803,7 +8855,7 @@ extern void luastick_init(lua_State* L);
 			}
 		}
 
-		for (const auto & sourceFile : sourceFiles)
+		for (const auto & sourceFile : headerFiles)
 		{
 			ReadBufferedFile readBufferedFile(sourceFile.c_str());
 			try
@@ -8958,7 +9010,7 @@ void luastick_init(lua_State* L)
 		UtilFile::SaveFile(OUTPUT_CPP_FILE_STREAM.get(dummy), (outFilePath + L".cpp").c_str());
 
 		StringBuffer htmlManualBuffer;
-		OutputHtml(htmlManualBuffer, classRec, path.filename().string());
+		OutputHtml(htmlManualBuffer, insertHtml, classRec, path.filename().string());
 		UtilFile::SaveFile(htmlManualBuffer.get(dummy), (outFilePath + L".html").c_str());
 	}
 	catch (LeException e)

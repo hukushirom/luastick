@@ -84,7 +84,7 @@ For Lua 5.4.3
 
 Executes like the following command line.  
 ```  
->LuaStick.exe -out Stick -lang en Sticklib.h main.h srcx.h  
+>LuaStick.exe -out Stick -lang en extinsert.html Sticklib.h main.h srcx.h  
 ```  
 **-out**&emsp;Specify the name of output files.
 **-lang**&emsp;Specify the language. See 'Specify the language' below for further details.
@@ -117,12 +117,16 @@ Components example of application files and binding source files created by LuaS
      |                 +----------+   |  
      +--------------------------------+  
 ```  
+**extinsert.html**
+- HTML text that will be inserted in the HTML API manual.  
+- Application developer must write them, but it does not need to be described in most cases.  
+
 **Sticklib.h**
-- C\+\+ libraries which are used in Stick.cpp.  
+- C\+\+ libraries which are used in Stick.cpp. It must always be described in the parameter.  
 - It exists in LuaStick/files directory.  
 - Application developer does not have to modify it.  
 
-**main.h, srcx.h**   
+**main.h, srcx.h**
 - C\+\+ header files in which exporting functions are written.  
 - Application developer must write them.  
 - stick tag must be used for the exporting functions.  

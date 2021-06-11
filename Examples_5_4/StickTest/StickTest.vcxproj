@@ -141,11 +141,11 @@
     <CustomBuild Include="dummy">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo &gt; dummy
-..\..\LuaStick\$(Configuration)\LuaStick.exe -out Stick stdafx.h  ..\..\LuaStick\files\Sticklib.h  StickTestDlg.h  2&gt;error.log</Command>
+..\..\LuaStick\$(Configuration)\LuaStick.exe -out Stick -lang en ..\Sticktrace\en\sticktracehelp.html stdafx.h  ..\..\LuaStick\files\Sticklib.h  StickTestDlg.h  2&gt;error.log</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Stick.cpp;Stick.h</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\LuaStick\$(Configuration)\LuaStick.exe;..\..\LuaStick\files\Sticklib.h;StickTestDlg.h</AdditionalInputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo &gt; dummy
-..\..\LuaStick\$(Configuration)\LuaStick.exe -out Stick stdafx.h  ..\..\LuaStick\files\Sticklib.h  StickTestDlg.h  2&gt;error.log</Command>
+..\..\LuaStick\$(Configuration)\LuaStick.exe -out Stick -lang en ..\Sticktrace\en\sticktracehelp.html stdafx.h  ..\..\LuaStick\files\Sticklib.h  StickTestDlg.h  2&gt;error.log</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Stick.cpp;Stick.h</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\LuaStick\$(Configuration)\LuaStick.exe;..\..\LuaStick\files\Sticklib.h;StickTestDlg.h</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating Stick.h, Stick.cpp and Stick.html</Message>

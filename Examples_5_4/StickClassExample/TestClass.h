@@ -239,6 +239,17 @@ public:
 	/// <summary>
 	/// GetX function.
 	/// </summary>
+	/// <param io="inout" name="x">test param</param>
+	/// <returns>return 0</returns>
+	static int GetX(int x)
+	{
+		return 0;
+	}
+
+	/// <stick export="true" />
+	/// <summary>
+	/// GetX function.
+	/// </summary>
 	/// <returns>return 0</returns>
 	virtual int GetX()
 	{
