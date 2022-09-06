@@ -779,13 +779,24 @@ return ''
 				if (m_hookFunc != nullptr)
 				{
 					// Set the source code, even if syntax error.
+//----- 22.09.06 Fukushiro M. 変更前 ()-----
+//					m_hookFunc(
+//						Stickrun::CallbackType::ON_LOAD_SCRIPT,
+//						&ScriptInfo(sandboxenv, name, source),
+//						m_lua_state,
+//						m_hookUserData,
+//						this
+//						);
+//----- 22.09.06 Fukushiro M. 変更後 ()-----
+					ScriptInfo scriptInfo(sandboxenv, name, source);
 					m_hookFunc(
 						Stickrun::CallbackType::ON_LOAD_SCRIPT,
-						&ScriptInfo(sandboxenv, name, source),
+						&scriptInfo,
 						m_lua_state,
 						m_hookUserData,
 						this
 						);
+//----- 22.09.06 Fukushiro M. 変更終 ()-----
 				}
 				if (result != 0)
 				{	//----- if error -----

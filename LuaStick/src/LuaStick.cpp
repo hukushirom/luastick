@@ -9001,7 +9001,9 @@ void luastick_init(lua_State* L)
 		OUTPUT_INITFUNC_STREAM << u8"}\n\n";
 
 		// std::tr2::sys::path path(outFilePath);
-		std::experimental::filesystem::path path(outFilePath);
+// 22.09.06 Fukushiro M. 1行変更 ()
+//		std::experimental::filesystem::path path(outFilePath);
+		std::filesystem::path path(outFilePath);
 
 		UtilFile::SaveFile(OUTPUT_H_FILE_STREAM.get(dummy), (outFilePath + L".h").c_str());
 

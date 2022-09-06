@@ -116,46 +116,64 @@ void FCEditDraw::Polyline (const CPoint* lpPoints, int nCount)
 	m_pDC->StrokePath();
 } // FCEditDraw::Polyline.
 
+//----- 22.09.06 Fukushiro M. 変更前 ()-----
+///*************************************************************************
+// * <関数>	FCEditDraw::Line
+// *
+// * <機能>	直線を引く。
+// *
+// * <引数>	pPoint0	:直線の第１座標を指定。
+// *			pPoint1	:直線の第２座標を指定。
+// *			pPoint3	:直線の第３座標を指定。・・・・
+// *
+// * <履歴>	00.04.09 Fukushiro M. 作成
+// *************************************************************************/
+//void FCEditDraw::Line (	const CPoint* pPoint0, const CPoint* pPoint1,
+//						const CPoint* pPoint2, const CPoint* pPoint3,
+//						const CPoint* pPoint4, const CPoint* pPoint5,
+//						const CPoint* pPoint6, const CPoint* pPoint7,
+//						const CPoint* pPoint8, const CPoint* pPoint9)
+//{
+//	std::vector<CPoint> vlgptPoly;
+//do {
+//	vlgptPoly.push_back(*pPoint0);
+//	vlgptPoly.push_back(*pPoint1);
+//	if (pPoint2 == NULL) break;
+//	vlgptPoly.push_back(*pPoint2);
+//	if (pPoint3 == NULL) break;
+//	vlgptPoly.push_back(*pPoint3);
+//	if (pPoint4 == NULL) break;
+//	vlgptPoly.push_back(*pPoint4);
+//	if (pPoint5 == NULL) break;
+//	vlgptPoly.push_back(*pPoint5);
+//	if (pPoint6 == NULL) break;
+//	vlgptPoly.push_back(*pPoint6);
+//	if (pPoint7 == NULL) break;
+//	vlgptPoly.push_back(*pPoint7);
+//	if (pPoint8 == NULL) break;
+//	vlgptPoly.push_back(*pPoint8);
+//	if (pPoint9 == NULL) break;
+//	vlgptPoly.push_back(*pPoint9);
+//} while (FALSE);
+//	Polyline(vlgptPoly.data(), (int)vlgptPoly.size());
+//} // FCEditDraw::Line.
+//----- 22.09.06 Fukushiro M. 変更後 ()-----
 /*************************************************************************
  * <関数>	FCEditDraw::Line
  *
  * <機能>	直線を引く。
  *
- * <引数>	pPoint0	:直線の第１座標を指定。
- *			pPoint1	:直線の第２座標を指定。
- *			pPoint3	:直線の第３座標を指定。・・・・
+ * <引数>	point0	:直線の第１座標を指定。
+ *			point1	:直線の第２座標を指定。
  *
  * <履歴>	00.04.09 Fukushiro M. 作成
  *************************************************************************/
-void FCEditDraw::Line (	const CPoint* pPoint0, const CPoint* pPoint1,
-						const CPoint* pPoint2, const CPoint* pPoint3,
-						const CPoint* pPoint4, const CPoint* pPoint5,
-						const CPoint* pPoint6, const CPoint* pPoint7,
-						const CPoint* pPoint8, const CPoint* pPoint9)
+void FCEditDraw::Line (const CPoint & point0, const CPoint & point1)
 {
-	std::vector<CPoint> vlgptPoly;
-do {
-	vlgptPoly.push_back(*pPoint0);
-	vlgptPoly.push_back(*pPoint1);
-	if (pPoint2 == NULL) break;
-	vlgptPoly.push_back(*pPoint2);
-	if (pPoint3 == NULL) break;
-	vlgptPoly.push_back(*pPoint3);
-	if (pPoint4 == NULL) break;
-	vlgptPoly.push_back(*pPoint4);
-	if (pPoint5 == NULL) break;
-	vlgptPoly.push_back(*pPoint5);
-	if (pPoint6 == NULL) break;
-	vlgptPoly.push_back(*pPoint6);
-	if (pPoint7 == NULL) break;
-	vlgptPoly.push_back(*pPoint7);
-	if (pPoint8 == NULL) break;
-	vlgptPoly.push_back(*pPoint8);
-	if (pPoint9 == NULL) break;
-	vlgptPoly.push_back(*pPoint9);
-} while (FALSE);
+	std::vector<CPoint> vlgptPoly { point0, point1 };
 	Polyline(vlgptPoly.data(), (int)vlgptPoly.size());
 } // FCEditDraw::Line.
+//----- 22.09.06 Fukushiro M. 変更終 ()-----
 
 void FCEditDraw::MoveTo(const CPoint & lgpt)
 {

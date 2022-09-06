@@ -30,11 +30,15 @@ public:
 	~FCEditDraw ();
 public:
 	void	Polyline (const CPoint* lpPoints, int nCount);
-	void	Line (	const CPoint* pPoint0, const CPoint* pPoint1,
-					const CPoint* pPoint2 = NULL, const CPoint* pPoint3 = NULL,
-					const CPoint* pPoint4 = NULL, const CPoint* pPoint5 = NULL,
-					const CPoint* pPoint6 = NULL, const CPoint* pPoint7 = NULL,
-					const CPoint* pPoint8 = NULL, const CPoint* pPoint9 = NULL);
+//----- 22.09.06 Fukushiro M. 変更前 ()-----
+//	void	Line (	const CPoint* pPoint0, const CPoint* pPoint1,
+//					const CPoint* pPoint2 = NULL, const CPoint* pPoint3 = NULL,
+//					const CPoint* pPoint4 = NULL, const CPoint* pPoint5 = NULL,
+//					const CPoint* pPoint6 = NULL, const CPoint* pPoint7 = NULL,
+//					const CPoint* pPoint8 = NULL, const CPoint* pPoint9 = NULL);
+//----- 22.09.06 Fukushiro M. 変更後 ()-----
+	void	Line (const CPoint & point0, const CPoint & point1);
+//----- 22.09.06 Fukushiro M. 変更終 ()-----
 	void	MoveTo (const CPoint& lgpt);
 	void	LineTo (const CPoint& lgpt);
 

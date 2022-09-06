@@ -1464,8 +1464,7 @@ void CDlgSticktrace::OnLButtonDown(UINT nFlags, CPoint point)
 		CClientDC dcFrame(this);
 		// 修正線描画用クラスを作成。
 		FCEditDraw edrawFrame(&dcFrame, FD_PANEBAR_WIDTH, FD_PANEBAR_COLOR ^ RGB(255, 255, 255), -1, 0, 0);
-		edrawFrame.Line(&CPoint(m_rtBar.left, m_rtBar.top),
-			&CPoint(m_rtBar.left, m_rtBar.bottom));
+		edrawFrame.Line(CPoint(m_rtBar.left, m_rtBar.top), CPoint(m_rtBar.left, m_rtBar.bottom));
 
 		m_hwndWhenBorderMoving = ::GetFocus();
 		SetTimer(BORDER_TIMER, 50, nullptr);
@@ -1489,8 +1488,7 @@ void CDlgSticktrace::OnLButtonUp(UINT nFlags, CPoint point)
 		CClientDC dcFrame(this);
 		// 修正線描画用クラスを作成。
 		FCEditDraw edrawFrame(&dcFrame, FD_PANEBAR_WIDTH, FD_PANEBAR_COLOR ^ RGB(255, 255, 255), -1, 0, 0);
-		edrawFrame.Line(&CPoint(m_rtBar.left, m_rtBar.top),
-			&CPoint(m_rtBar.left, m_rtBar.bottom));
+		edrawFrame.Line(CPoint(m_rtBar.left, m_rtBar.top), CPoint(m_rtBar.left, m_rtBar.bottom));
 
 		// ペインボーダーの移動距離。
 		const int pxMove = m_rtBar.CenterPoint().x - GetBorderRect().CenterPoint().x;
@@ -1518,8 +1516,7 @@ void CDlgSticktrace::OnMouseMove(UINT nFlags, CPoint point)
 		CClientDC dcFrame(this);
 		// 修正線描画用クラスを作成。
 		FCEditDraw edrawFrame(&dcFrame, FD_PANEBAR_WIDTH, FD_PANEBAR_COLOR ^ RGB(255, 255, 255), -1, 0, 0);
-		edrawFrame.Line(&CPoint(m_rtBar.left, m_rtBar.top),
-			&CPoint(m_rtBar.left, m_rtBar.bottom));
+		edrawFrame.Line(CPoint(m_rtBar.left, m_rtBar.top), CPoint(m_rtBar.left, m_rtBar.bottom));
 		//----- 新しいペイン分割線の座標を設定 -----
 		// ペインバーの座標を計算。m_rtBar.right は不使用。
 		m_rtBar.SetRect(point.x, m_rtBar.top, point.x, m_rtBar.bottom);
@@ -1538,8 +1535,7 @@ void CDlgSticktrace::OnMouseMove(UINT nFlags, CPoint point)
 			m_rtBar.left = rtChange.left - 10;
 		m_rtBar.right = m_rtBar.left;
 		//----- CFCMainFrame上に疑似ペイン分割線を描画 -----
-		edrawFrame.Line(&CPoint(m_rtBar.left, m_rtBar.top),
-			&CPoint(m_rtBar.left, m_rtBar.bottom));
+		edrawFrame.Line(CPoint(m_rtBar.left, m_rtBar.top), CPoint(m_rtBar.left, m_rtBar.bottom));
 	}
 	else
 	{	//----- ペインボーダー上でボタンが押されている以外の場合 -----
