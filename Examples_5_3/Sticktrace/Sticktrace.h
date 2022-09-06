@@ -2156,7 +2156,6 @@ public:
 	/// Parent window. This function creates the debugger window. The window deprives the focus despite it is hidden window. So this function gives the focus back to hwndParent.
 	/// /NULL:Do not back the focus.
 	/// </param>
-	/// /nullptr or empty:Default value will be used.</param>
 	/// <param name="companyName">Name of company. It's used to determine the name of registry./nullptr or empty:Default value will be used.</param>
 	/// <param name="packageName">Name of package. It's used to determine the name of registry./nullptr:Default value will be used.</param>
 	/// <param name="applicationName">Name of application. It's used to determine the name of registry./nullptr:Default value will be used.</param>
