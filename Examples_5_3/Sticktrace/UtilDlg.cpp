@@ -59,7 +59,7 @@ void UtilDlg::UndoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer)
 	{
 		if (irec->cmd == FCDiffRecW::INS)
 		{	//----- 挿入の場合 -----
-			edit->SetSel(irec->begin, irec->begin + irec->text.length());
+			edit->SetSel(irec->begin, (int)(irec->begin + irec->text.length()));
 			edit->ReplaceSel(L"");
 		}
 		else
@@ -95,7 +95,7 @@ void UtilDlg::RedoEdit (CEdit* edit, const std::vector<FCDiffRecW>& vUndoBuffer)
 		}
 		else
 		{	//----- 削除の場合 -----
-			edit->SetSel(irec->begin, irec->begin + irec->text.length());
+			edit->SetSel(irec->begin, (int)(irec->begin + irec->text.length()));
 			edit->ReplaceSel(L"");
 		}
 	}

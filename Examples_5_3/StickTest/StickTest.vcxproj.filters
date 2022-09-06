@@ -74,6 +74,5 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="dummy" />
-    <CustomBuild Include="dummy2" />
   </ItemGroup>
 </Project>

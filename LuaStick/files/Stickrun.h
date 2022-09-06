@@ -1315,7 +1315,7 @@ protected:
 		//         :              :                       :              :
 // 18.06.18 Fukushiro M. 1çsïœçX ( )
 //		const auto result = lua_pcall(m_lua_state, m_arg_count, m_results.size(), top_pos);
-		const auto result = lua_pcall(m_lua_state, m_callDataStack.back().m_arg_count, m_callDataStack.back().m_results.size(), top_pos);
+		const auto result = lua_pcall(m_lua_state, m_callDataStack.back().m_arg_count, (int)m_callDataStack.back().m_results.size(), top_pos);
 
 		//             no error                              if error
 		//

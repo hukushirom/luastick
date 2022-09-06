@@ -420,7 +420,7 @@ void FCRegBase::SaveRegString(
 	const std::wstring strRegVarKey(myGetCompAppSection(wcpSection));
 	SaveBinary(
 		(const BYTE*)wcpData,
-		(wcslen(wcpData) + 1) * sizeof(wchar_t),
+		(DWORD)((wcslen(wcpData) + 1) * sizeof(wchar_t)),
 		HKEY_CURRENT_USER,
 		strRegVarKey.c_str(),
 		wcpName

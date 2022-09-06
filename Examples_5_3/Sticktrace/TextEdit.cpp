@@ -673,14 +673,14 @@ BOOL CFCTextEdit::SearchBackward (const std::wstring & keyword)
 	GetSel(startCharIndex, endCharIndex);
 	startCharIndex--;
 	if (startCharIndex == -1)
-		startCharIndex = text.length();
+		startCharIndex = (int)text.length();
 	auto pos = std::wstring::npos;
 	for (int i = 0; i != 2; i++)
 	{
 		pos = text.rfind(keyword, startCharIndex);
 		if (pos != std::wstring::npos)
 			break;
-		startCharIndex = text.length();
+		startCharIndex = (int)text.length();
 	}
 	if (pos != std::wstring::npos)
 	{
@@ -712,7 +712,7 @@ void CFCTextEdit::GetLineText (std::wstring& text, int lineIndex) const
 	// 選択範囲の行を取得。
 	const int len = LineLength(LineIndex(lineIndex));
 	std::vector<wchar_t> vBuff(len + 1, L'\0');
-	GetLine(lineIndex, vBuff.data(), vBuff.size());
+	GetLine(lineIndex, vBuff.data(), (int)vBuff.size());
 	text = vBuff.data();
 } // CFCTextEdit::GetLineText.
 

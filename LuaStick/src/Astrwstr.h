@@ -1,7 +1,8 @@
 ﻿#pragma once
 
 #include <string>
-#include <codecvt>
+// 22.09.06 Fukushiro M. 1行削除 (追加)
+//#include <codecvt>
 
 class Astrwstr
 {
@@ -91,13 +92,13 @@ public:
 		{
 			auto iBuffSz = (wstr.length() + 1) * sizeof(wchar_t);
 			std::vector<char> vBuff(iBuffSz);
-			auto writtenLen = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.length(), vBuff.data(), (int)vBuff.size(), nullptr, nullptr);
+			auto writtenLen = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.length(), vBuff.data(), (int)vBuff.size(), nullptr, nullptr);
 			if (writtenLen == 0)
 			{
 				//----- The size might become more than twice of the source size -----
-				iBuffSz = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.length(), nullptr, 0, nullptr, nullptr);
+				iBuffSz = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.length(), nullptr, 0, nullptr, nullptr);
 				vBuff.resize(iBuffSz);
-				writtenLen = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.length(), vBuff.data(), (int)vBuff.size(), nullptr, nullptr);
+				writtenLen = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.length(), vBuff.data(), (int)vBuff.size(), nullptr, nullptr);
 			}
 			vBuff[writtenLen] = L'\0';
 			astr = vBuff.data();

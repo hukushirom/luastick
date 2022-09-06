@@ -1086,7 +1086,7 @@ bool CDlgSticktrace::JumpErrorLocation()
 	const int startLineIndex = m_errorout.LineFromChar(startCharIndex);
 	const auto len = m_errorout.LineLength(m_errorout.LineIndex(startLineIndex));
 	std::vector<wchar_t> vBuff(len + 1, L'\0');
-	m_errorout.GetLine(startLineIndex, vBuff.data(), vBuff.size());
+	m_errorout.GetLine(startLineIndex, vBuff.data(), (int)vBuff.size());
 	std::string strline;
 	Astrwstr::wstr_to_astr(strline, vBuff.data());
 	//const wchar_t* wcpLine = vBuff.data();
@@ -1753,11 +1753,11 @@ LRESULT CDlgSticktrace::OnUserTextEditMarkerClicked(WPARAM wParam, LPARAM lParam
 	ASSERT(wParam == IDC_SCE_EDT_SCRIPT);
 	const auto name = m_sourceNameArray.at(((CTabCtrl*)GetDlgItem(IDC_SCE_TAB_SCRIPT))->GetCurSel());
 
-	const BOOL isThereMarker = m_textEditor.IsThereMarker(CFCTextEdit::MARKER_BREAKPOINT, name, lParam);
+	const BOOL isThereMarker = m_textEditor.IsThereMarker(CFCTextEdit::MARKER_BREAKPOINT, name, (int)lParam);
 	if (isThereMarker)
-		m_textEditor.RemoveMarker(CFCTextEdit::MARKER_BREAKPOINT, name, lParam);
+		m_textEditor.RemoveMarker(CFCTextEdit::MARKER_BREAKPOINT, name, (int)lParam);
 	else
-		m_textEditor.AddMarker(CFCTextEdit::MARKER_BREAKPOINT, name, lParam);
+		m_textEditor.AddMarker(CFCTextEdit::MARKER_BREAKPOINT, name, (int)lParam);
 	if (m_textEditor.IsThereMarkerRegion())
 		m_textEditor.RedrawMarker();
 	return 1;
@@ -2960,7 +2960,7 @@ BOOL CDlgSticktrace::PreTranslateMessage(MSG* pMsg)
 		if (isAlt)
 		{
 			// 仮想キーを実際のキャラクタに変換。
-			UINT dwAft = ::MapVirtualKey(pMsg->wParam, 2);
+			UINT dwAft = ::MapVirtualKey((UINT)pMsg->wParam, 2);
 			// 通常のキー（スペースキーから~の次）の場合。
 			if (0x20 <= dwAft && dwAft <= 0x7f)
 			{

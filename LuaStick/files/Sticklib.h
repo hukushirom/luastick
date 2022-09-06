@@ -8,8 +8,11 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <string>
-#include <codecvt>
-#include <exception>
+// 22.09.06 Fukushiro M. 1行削除 (追加)
+//#include <codecvt>
+// 22.09.06 Fukushiro M. 1行変更 ()
+//#include <exception>
+#include <stdexcept>
 
 #if defined(WIN32)
 #include <wtypes.h>	// For BOOL.
@@ -362,47 +365,62 @@ public:
 		u = (U)t;
 	}
 
-//----- 21.05.26 Fukushiro M. 変更前 ()-----
-//	static std::string & wstring_to_astring(std::string & str, const std::wstring & wstr)
+//----- 22.09.06 Fukushiro M. 変更前 ()-----
+//	template<>
+//	static void T_to_U<std::string, std::wstring>(std::string & u, std::wstring const & t)
 //	{
 //		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t > converter;
-//		str = converter.to_bytes(wstr);
-//		return str;
+//		u = converter.to_bytes(t);
 //	}
 //
-//	static std::wstring & astring_to_wstring(std::wstring & wstr, const std::string & astr)
+//	template<>
+//	static void T_to_U<std::wstring, std::string>(std::wstring & u, std::string const & t)
 //	{
 //		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t > converter;
-//		wstr = converter.from_bytes(astr);
-//		return wstr;
+//		u = converter.from_bytes(t);
 //	}
-//----- 21.05.26 Fukushiro M. 変更後 ()-----
+//----- 22.09.06 Fukushiro M. 変更後 ()-----
 	template<>
 	static void T_to_U<std::string, std::wstring>(std::string & u, std::wstring const & t)
 	{
-		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t > converter;
-		u = converter.to_bytes(t);
+		if (!t.empty())
+		{
+			auto iBuffSz = (t.length() + 1) * sizeof(wchar_t);
+			std::vector<char> vBuff(iBuffSz);
+			auto writtenLen = WideCharToMultiByte(CP_UTF8, 0, t.c_str(), (int)t.length(), vBuff.data(), (int)vBuff.size(), nullptr, nullptr);
+			if (writtenLen == 0)
+			{
+				//----- The size might become more than twice of the source size -----
+				iBuffSz = WideCharToMultiByte(CP_UTF8, 0, t.c_str(), (int)t.length(), nullptr, 0, nullptr, nullptr);
+				vBuff.resize(iBuffSz);
+				writtenLen = WideCharToMultiByte(CP_UTF8, 0, t.c_str(), (int)t.length(), vBuff.data(), (int)vBuff.size(), nullptr, nullptr);
+			}
+			vBuff[writtenLen] = L'\0';
+			u = vBuff.data();
+		}
+		else
+		{
+			u.clear();
+		}
 	}
 
 	template<>
 	static void T_to_U<std::wstring, std::string>(std::wstring & u, std::string const & t)
 	{
-		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t > converter;
-		u = converter.from_bytes(t);
+		if (!t.empty())
+		{
+			std::vector<wchar_t> vBuff(t.length() + 1);
+			const auto writeLen = MultiByteToWideChar(CP_UTF8, 0, t.c_str(), (int)t.length(), vBuff.data(), (int)vBuff.size());
+			vBuff[writeLen] = L'\0';
+			u = vBuff.data();
+		}
+		else
+		{
+			u.clear();
+		}
 	}
-//----- 21.05.26 Fukushiro M. 変更終 ()-----
+//----- 22.09.06 Fukushiro M. 変更終 ()-----
 
-//----- 21.05.26 Fukushiro M. 変更前 ()-----
-//	static void astring_to_atext(char * & atx, const std::string & lstr)
-//	{
-//		atx = (char *)lstr.c_str();
-//	}
-//
-//	static void atext_to_astring(std::string & lstr, char * const & atx)
-//	{
-//		lstr = atx;
-//	}
-//----- 21.05.26 Fukushiro M. 変更後 ()-----
 	template<>
 	static void T_to_U<char *, std::string>(char * & u, std::string const & t)
 	{
@@ -414,7 +432,6 @@ public:
 	{
 		u = t;
 	}
-//----- 21.05.26 Fukushiro M. 変更終 ()-----
 
 //----- 21.05.27 Fukushiro M. 変更前 ()-----
 //	static void wstring_to_wtext(wchar_t *& wtext, const std::wstring & wstr)
@@ -1446,7 +1463,7 @@ public:
 		//    :         :      :                 :  |
 		//                     +- - - - - - - - -+ -+
 		//
-		lua_createtable(L, v.size(), 0);
+		lua_createtable(L, (int)v.size(), 0);
 
 		lua_Integer i = 1;
 		for (const auto & value : v)
@@ -1558,7 +1575,7 @@ public:
 		//                     :                   :  |
 		//                     +- - - - - - - - - -+ -+
 		//
-		lua_createtable(L, v.size(), 0);
+		lua_createtable(L, (int)v.size(), 0);
 
 		for (const auto & kv : v)
 		{
@@ -2237,7 +2254,7 @@ public:
 		lua_pop(L, 1);
 	}
 
-	static void set_functions(lua_State * L, const luaL_Reg methods[]) throw(...)
+	static void set_functions(lua_State * L, const luaL_Reg methods[]) noexcept(false)
 	{
 		//                 Premise.
 		//        stack

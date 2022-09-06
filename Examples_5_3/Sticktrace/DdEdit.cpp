@@ -317,7 +317,7 @@ void CFCDdEdit::AddUndoBuffer ()
 		m_vUndoBuffer.resize(m_iCurUndoBuffer);
 		// Undoバッファー追加。
 		std::vector<FCDiffRecW> vBuff;
-		UtilStr::CompText(vBuff, m_currentText.c_str(), m_currentText.length(), wstrText.c_str(), wstrText.length());
+		UtilStr::CompText(vBuff, m_currentText.c_str(), (int)m_currentText.length(), wstrText.c_str(), (int)wstrText.length());
 
 		// If the elapsed time since last editting is under 500 msec, mearge last undo buffer and new buffer together.
 		if (textEditedMillisec - m_lastTextEditedMillisec < 500)
@@ -325,7 +325,7 @@ void CFCDdEdit::AddUndoBuffer ()
 		else
 			m_vUndoBuffer.emplace_back(vBuff);
 
-		m_iCurUndoBuffer = m_vUndoBuffer.size();
+		m_iCurUndoBuffer = (int)m_vUndoBuffer.size();
 		m_currentText = wstrText;
 
 		m_lastTextEditedMillisec = textEditedMillisec;
