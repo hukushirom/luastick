@@ -5,9 +5,19 @@
 #include "AnyValue.h"
 #include "LeException.h"
 
+/// <summary>
+/// Class for string functions.
+/// </summary>
 class UtilString
 {
 public:
+	/// <summary>
+	/// Format string.
+	/// </summary>
+	/// <typeparam name="...Args"></typeparam>
+	/// <param name="format">Format.</param>
+	/// <param name="...args">Arguments.</param>
+	/// <returns></returns>
 	template<typename ... Args>
 	static std::string Format(const std::string & format, Args ... args)
 	{
@@ -16,6 +26,13 @@ public:
 		return std::string(buffer.data(), buffer.size() - 1);
 	}
 
+	/// <summary>
+	/// Format string.
+	/// </summary>
+	/// <typeparam name="...Args"></typeparam>
+	/// <param name="format">Format.</param>
+	/// <param name="...args">Arguments.</param>
+	/// <returns></returns>
 	template<typename ... Args>
 	static std::wstring Format(const std::wstring & format, Args ... args)
 	{

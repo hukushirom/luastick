@@ -215,6 +215,13 @@
 
 constexpr const wchar_t* OPTION_OUT = L"out";
 constexpr const wchar_t* OPTION_LANG = L"lang";
+constexpr const wchar_t* OPTION_API = L"api";
+
+/// <summary>
+/// Maximum count of API.
+/// </summary>
+constexpr const int MAX_API = 5;
+
 
 /// <summary>
 /// Make dummy class object. Use for function's argument.
@@ -419,28 +426,6 @@ static StringBuffer OUTPUT_EXPORTFUNC_STREAM;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//----- 20.02.20  変更前 ()-----
-//// [extern inline TT:TT *& FFF (PPP)]のTTT:TT *&,FFF,PPP)を抽出 "^extern\s+inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
-//static const std::regex FUNC_EXT_INL_XML(R"(^extern\s+inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
-//
-//// [extern TT:TT *& FFF (PPP)]のTTT:TT *&,FFF,PPP)を抽出 "^extern\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
-//static const std::regex FUNC_EXT_XML(R"(^extern\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
-//
-//// [static inline TT:TT *& FFF (PPP)]のTTT:TT *&,FFF,PPP)を抽出 "^static\s+inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
-//static const std::regex FUNC_STC_INL_XML(R"(^static\s+inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
-//
-//// [static TT:TT *& FFF (PPP)]のTTT:TT *&,FFF,PPP)を抽出 "^static\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
-//static const std::regex FUNC_STC_XML(R"(^static\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
-//
-//// [virtual TT:TT *& FFF (PPP)]のTTT:TT *&,FFF,PPP)を抽出 "^virtual\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
-//static const std::regex FUNC_VIR_XML(R"(^virtual\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
-//
-//// [inline TT:TT *& FFF (PPP)]のTTT:TT *&,FFF,PPP)を抽出 "^inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
-//static const std::regex FUNC_INL_XML(R"(^inline\s+([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
-//
-//// [TT:TT *& FFF (PPP)]のTTT:TT *&,FFF,PPP)を抽出 "^([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
-//static const std::regex FUNC_REGULAR_XML(R"(^([a-zA-Z_][\w:\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
-//----- 20.02.20  変更後 ()-----
 // [extern inline TT:TT<T,T> *& FFF (PPP)]のTT:TT<T,T> *&,FFF,PPP)を抽出 "^extern\s+inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 static const std::regex FUNC_EXT_INL_XML(R"(^extern\s+inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
 
@@ -461,17 +446,11 @@ static const std::regex FUNC_INL_XML(R"(^inline\s+([a-zA-Z_][\w:<,>\*\& ]*)\s+([
 
 // [TT:TT<T,T> *& FFF (PPP)]のTT:TT<T,T> *&,FFF,PPP)を抽出 "^([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\(([^\)]+)\)"
 static const std::regex FUNC_REGULAR_XML(R"(^([a-zA-Z_][\w:<,>\*\& ]*)\s+([a-zA-Z_]\w*)\s*\((.+)$)");
-//----- 20.02.20  変更終 ()-----
 
-//----- 19.11.20 Fukushiro M. 変更前 ()-----
-//// Extract "std::wstring *&" and "argbBack" from "std::wstring *&argbBack"
-//static const std::regex ARG_XML(R"(^\s*([a-zA-Z_][\w:\*\& ]*)\b([a-zA-Z_]\w*)\s*$)");
-//----- 19.11.20 Fukushiro M. 変更後 ()-----
 // Extract "std::wstring *&" and "argbBack" from "std::wstring *&argbBack"
 // e.g. "std::vector<int> & arg" -> "std::vector<int> & " , "arg"
 // e.g. "std::map<int, string> & arg" -> "std::map<int, string> & " , "arg"
 static const std::regex ARG_XML(R"(^\s*([a-zA-Z_][\w:<>,\*\&\s]*)\b([a-zA-Z_]\w*)\s*$)");
-//----- 19.11.20 Fukushiro M. 変更終 ()-----
 
 // [const]
 static const std::regex CONST_DEF(R"(\bconst\b)");
@@ -741,6 +720,8 @@ struct EnumRec
 	std::string summary;		// summary of this enum.
 	std::unordered_map<std::string, std::string> luanameToCname;	// Lua name -> C++ name
 	std::unordered_map<std::string, std::string> luanameToSummary;	// Lua name -> Summary
+// 23.10.30 Fukushiro M. 1行追加 ()
+	std::unordered_set<int> outputApi;
 
 	std::string GetFullpathElementCprefix() const;
 	std::string GetFullpathElementLuaprefix() const;
@@ -780,6 +761,8 @@ struct ConstantRec
 	std::string constantLuaname;	// luaname of constant name. if luaname is not specified, primary constant name is set.
 	std::string summary;
 	std::vector<std::string> cToLuaConversionPath;	// e.g. "const int A=..." ->  {"int", "i32_to_i64", "__int64"}
+// 23.10.30 Fukushiro M. 1行追加 ()
+	std::unordered_set<int> outputApi;
 
 	std::string GetFullpathCname() const;
 	std::string GetFullpathLuaname() const;
@@ -815,6 +798,8 @@ struct VariableRec
 	std::string summary;
 	std::vector<std::string> cToLuaConversionPath;	// e.g. "int A" ->  {"int", "i32_to_i64", "__int64"}
 	std::vector<std::string> luaToCConversionPath;	// e.g. "int A" ->  {"__int64", "i64_to_i32", "int"}
+// 23.10.30 Fukushiro M. 1行追加 ()
+	std::unordered_set<int> outputApi;
 
 	std::string GetFullpathCname() const;
 	std::string GetFullpathLuaname() const;
@@ -887,7 +872,6 @@ struct FuncRec
 	int parentId;
 	Type type;
 	std::string funcCname;
-// 21.06.02 Fukushiro M. 1行追加 ()
 	bool isRawFunc;
 	std::string funcLuaname;	// luaname of function name. if luaname is not specified, primary is set.
 	std::string summary;
@@ -909,19 +893,15 @@ struct FuncRec
 	//      ~~~~~~~~~~~
 	std::unordered_map<std::string, std::string> argNameToRawCtype;
 
-//----- 21.05.19 Fukushiro M. 追加始 ()-----
 	// Argument name set which has autodel option.
 	// e.g. <param name="hello" autodel="true"...>  <param name="world" autodel="true"...>  <returns autodel="true">
 	// autoDelargNames={ "hello", "world", "__lstickvar_ret" }
 	std::unordered_set<std::string> autoDelArgNames;
-//----- 21.05.19 Fukushiro M. 追加終 ()-----
 
 	// Argument name -> summary.
 	// return value's summary is registered as "__lstickvar_ret".
 	// It's used for HTML help and definition of function's return variable.
 	std::unordered_map<std::string, std::string> argNameToSummary;
-// 21.05.19 Fukushiro M. 1行削除 ()
-//	std::vector<std::pair<std::string, std::string>> argNameToSummary;
 
 	// Input Argument names.
 	// e.g. int FuncA(const char* a, double b) -> inArgNames={"a", "b"}
@@ -944,6 +924,9 @@ struct FuncRec
 	/// The exceptions that this function returns.
 	/// </summary>
 	std::vector<std::string> exceptions;
+
+// 23.10.30 Fukushiro M. 1行追加 ()
+	std::unordered_set<int> outputApi;
 
 	LuaType ArgNameToLuaType(const std::string & argName) const
 	{
@@ -968,12 +951,10 @@ struct FuncRec
 	std::string GetFullpathLuanameForCall() const;
 	std::string GetFullpathCname() const;
 
-//----- 21.05.24 Fukushiro M. 追加始 ()-----
 	int GetParentClassId() const
 	{
 		return FuncGroupRec::Get(parentId).parentId;
 	}
-//----- 21.05.24 Fukushiro M. 追加終 ()-----
 
 	static std::vector<std::unique_ptr<FuncRec>> FUNCREC_ARRAY;
 
@@ -1028,6 +1009,9 @@ struct ClassRec
 	std::map<std::string, int> luanameToRegularEnumId;
 	std::map<std::string, int> luanameToClassEnumId;
 
+// 23.10.30 Fukushiro M. 1行追加 ()
+	std::unordered_set<int> outputApi;
+
 	std::string GetFullpathLuaname() const
 	{
 		if (parentId == -1)
@@ -1059,12 +1043,7 @@ struct ClassRec
 
 	int FindClass(const std::string & className) const
 	{
-//----- 19.12.10 Fukushiro M. 変更前 ()-----
-//		std::vector<std::string> dummy;
-//		return FindClass(UtilString::Split(dummy, className, "::"));
-//----- 19.12.10 Fukushiro M. 変更後 ()-----
 		return FindClass(UtilString::Split(Dummy<std::vector<std::string>>(), className, "::"));
-//----- 19.12.10 Fukushiro M. 変更終 ()-----
 	}
 
 	int FindClass(const std::vector<std::string> & classNameArray) const
@@ -1199,13 +1178,6 @@ std::string EnumRec::GetFullpathElementCprefix() const
 /// <returns></returns>
 std::string EnumRec::GetFullpathElementLuaprefix() const
 {
-//----- 20.03.01  変更前 ()-----
-//	auto className = ClassRec::Get(parentId).GetFullpathLuaname();
-//	if (enumType == EnumRec::Type::ENUM_CLASS)
-//		return className + "." + enumLuaname + ".";
-//	else
-//		return className + ".";
-//----- 20.03.01  変更後 ()-----
 	auto className = ClassRec::Get(parentId).GetFullpathLuaname();
 	if (className.empty())
 		return (enumType == EnumRec::Type::ENUM_CLASS) ?
@@ -1217,7 +1189,6 @@ std::string EnumRec::GetFullpathElementLuaprefix() const
 			className + "." + enumLuaname + "."
 			:
 			className + ".";
-//----- 20.03.01  変更終 ()-----
 }
 
 /// <summary>
@@ -1240,13 +1211,6 @@ std::string EnumRec::GetFullpathCname() const
 /// <returns></returns>
 std::string EnumRec::GetFullpathLuaname() const
 {
-//----- 20.03.01  変更前 ()-----
-//	auto className = ClassRec::Get(parentId).GetFullpathLuaname();
-//	if (enumType == EnumRec::Type::ENUM_CLASS)
-//		return className + "." + enumLuaname;
-//	else
-//		ThrowLeSystemError();
-//----- 20.03.01  変更後 ()-----
 	auto className = ClassRec::Get(parentId).GetFullpathLuaname();
 	if (enumType != EnumRec::Type::ENUM_CLASS)
 		ThrowLeSystemError();
@@ -1305,13 +1269,8 @@ std::string VariableRec::GetFullpathLuaname() const
 
 std::string FuncRec::GetWrapperFunctionName() const
 {
-// 21.05.16 Fukushiro M. 1行変更 ()
-//	const int luaArgCount = (type == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)argNames.size();
 	const int luaArgCount = (type == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)inArgNames.size();
 
-//----- 21.06.09 Fukushiro M. 変更前 ()-----
-//	return FuncGroupRec::Get(parentId).GetWrapperFunctionName() + "__" + std::to_string(luaArgCount);
-//----- 21.06.09 Fukushiro M. 変更後 ()-----
 	// To avoid following case, add prefix.
 	// Static function and member function are exist in a class.
 	// They have same name.
@@ -1331,7 +1290,6 @@ std::string FuncRec::GetWrapperFunctionName() const
 		break;
 	}
 	return prefix + FuncGroupRec::Get(parentId).GetWrapperFunctionName() + "__" + std::to_string(luaArgCount);
-//----- 21.06.09 Fukushiro M. 変更終 ()-----
 }
 
 std::string FuncRec::GetFullpathLuaname() const
@@ -1363,8 +1321,6 @@ std::string FuncRec::GetFullpathCname() const
 {
 	const auto & funcGroupRec = FuncGroupRec::Get(parentId);
 	const auto classFullpathCname = ClassRec::Get(funcGroupRec.parentId).GetFullpathCname();
-// 21.05.19 Fukushiro M. 1行変更 ()
-//	return classFullpathCname + "::" + funcCname;
 	return (type == Type::CONSTRUCTOR) ? classFullpathCname : (classFullpathCname + "::" + funcCname);
 }
 
@@ -1433,126 +1389,6 @@ static std::string LuaTypeToSetFuncName(LuaType luaType)
 		ThrowLeException(LeError::TYPE_UNDEFINED, luaType.ToString());
 	return i->second.m_setFunc;
 }
-
-/*
-/// <summary>
-/// Extract typename from type description, and make full-typename.
-/// e.g.
-/// varTypeSource="const unsigned   int *" -> typeNameBefore="", typeNameAfter="", return false
-/// varTypeSource=" class X * &" -> typeNameBefore="X", typeNameAfter="::A::B::X", return true
-/// varTypeSource=" const enum X *" -> typeNameBefore="X", typeNameAfter="::A::B::X", return true
-/// </summary>
-/// <param name="typeNameBefore">typename</param>
-/// <param name="typeNameAfter">full typename</param>
-/// <param name="varTypeSource">Source text of variable's type description.</param>
-/// <param name="classRec">Class record.</param>
-/// <returns>true:replacement was fond/false:replacement was not fond</returns>
-static bool NormalizeVarTypeSubSub(
-	std::string & typeNameBefore,
-	std::string & typeNameAfter,
-	const std::string & varTypeSource,
-	const ClassRec & classRec
-)
-{
-	static const std::regex REX_CONST(R"(\bconst\b)");
-
-	typeNameBefore.clear();
-	typeNameAfter.clear();
-
-	// e.g. "const enum class  TypeU * & "
-	auto typeName = varTypeSource;
-
-	// e.g. "const enum class  TypeU * & " -> "const enum class  TypeU   "
-	typeName = UtilString::Replace(typeName, "*", "", "&", "");
-
-	// e.g. "const enum class  TypeU   " -> " enum class  TypeU   "
-	typeName = std::regex_replace(typeName, REX_CONST, "");
-
-	// e.g. " enum class  TypeU   " -> " enum class TypeU "
-	typeName = std::regex_replace(typeName, MULTISPACE_DEF, " ");
-
-	// e.g. " enum class TypeU " -> "enum class TypeU"
-	UtilString::Trim(typeName);
-
-	// e.g. typeName="enum class TypeU", "struct TypeU", "TypeU", etc.
-	
-	if (classRec.classType != ClassRec::Type::NONE)
-	{
-		std::string fullTypeName;	// e.g. "::A::B::X"
-		std::smatch results;
-		if (
-			// Extracts 'CCC' from "enum CCC "
-			// ENUM_NAME_XML(R"(^enum\s+([a-zA-Z_]\w*)\s*$)");
-			// Extracts 'CCC' from "enum class CCC "
-			// ENUM_CLASS_NAME_XML(R"(^enum\s+class\s+([a-zA-Z_]\w*)\b\s*$)");
-
-			std::regex_search(typeName, results, ENUM_NAME_XML) ||
-			std::regex_search(typeName, results, ENUM_CLASS_NAME_XML)
-			)
-		{	// if "enum ~".
-			// e.g. "enum class TypeU" -> "TypeU"
-			typeName = results[1].str();
-			const auto enumId = classRec.FindEnum(typeName);
-			if (enumId == -1)
-				ThrowLeException(LeError::TYPE_UNDEFINED, typeName);
-			const auto & enumRec = EnumRec::Get(enumId);
-			// e.g. "TypeU" -> "::A::B::TypeU"
-			fullTypeName = enumRec.GetFullpathCname();
-		}
-		else if (
-			// Extracts 'CCC' from "class CCC ~"
-			// CLASS_XML(R"(^class\s+([a-zA-Z_]\w*)\b)");
-			// Extracts 'CCC' from "struct CCC ~"
-			// STRUCT_XML(R"(^struct\s+([a-zA-Z_]\w*)\b)");
-			// Extracts 'CCC' from "union CCC ~"
-			// UNION_XML(R"(^union\s+([a-zA-Z_]\w*)\b)");
-
-			std::regex_search(typeName, results, CLASS_XML) ||
-			std::regex_search(typeName, results, STRUCT_XML) ||
-			std::regex_search(typeName, results, UNION_XML)
-			)
-		{	// if "class ~", "struct ~"
-			// e.g. "class TypeU" -> "TypeU"
-			typeName = results[1].str();
-			const auto classId = classRec.FindClass(typeName);
-			if (classId == -1)
-				ThrowLeException(LeError::TYPE_UNDEFINED, typeName);
-			const auto & classRec = ClassRec::Get(classId);
-			// e.g. "TypeU" -> "::A::B::TypeU"
-			fullTypeName = classRec.GetFullpathCname();
-		}
-		else
-		{
-			const auto enumId = classRec.FindEnum(typeName);
-			if (enumId != -1)
-			{
-				// e.g. "TypeU" <--- if "TypeU" of "enum TypeU"
-				const auto & enumRec = EnumRec::Get(enumId);
-				// e.g. "TypeU" -> "::A::B::TypeU"
-				fullTypeName = enumRec.GetFullpathCname();
-			}
-			else
-			{
-				const auto classId = classRec.FindClass(typeName);
-				if (classId != -1)
-				{
-					// e.g. "TypeU" <--- if "TypeU" of "class TypeU"
-					const auto & classRec = ClassRec::Get(classId);
-					// e.g. "TypeU" -> "::A::B::TypeU"
-					fullTypeName = classRec.GetFullpathCname();
-				}
-			}
-		}
-
-		if (!fullTypeName.empty())
-		{
-			typeNameBefore = typeName;
-			typeNameAfter = fullTypeName;
-		}
-	}
-	return !typeNameBefore.empty();
-} // NormalizeVarTypeSubSub.
-*/
 
 /// <summary>
 /// Normalizes the Type of the variable.
@@ -2285,14 +2121,6 @@ static void GetLuaToCppConverter(
 		{
 		case PATH_TYPE_1:	// PathType[1]
 			break;
-//----- 20.02.20  変更前 ()-----
-//		case PATH_TYPE_2:	// PathType[2]
-//			successPath.insert(successPath.end(), { "&", cType_S + '*' });
-//			break;
-//		default: // case PATH_TYPE_3:	// PathType[3]
-//			successPath.insert(successPath.end(), { "*", cType_T + '&' });
-//			break;
-//----- 20.02.20  変更後 ()-----
 		case PATH_TYPE_2:	// PathType[2]
 		{
 			auto lastType = successPath.back();
@@ -2305,7 +2133,6 @@ static void GetLuaToCppConverter(
 			successPath.insert(successPath.end(), { "*", lastType + '&' });
 			break;
 		}
-//----- 20.02.20  変更終 ()-----
 		}
 	}
 	else if (errorCode != LeError::ErrorCode::NONE)
@@ -3217,15 +3044,6 @@ static void GetCppToLuaConverter(
 				case PATH_TYPE_1:	// PathType[1]
 					successPath.insert(successPath.begin(), { "", "" });
 					break;
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_2:	// PathType[2]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), { "", "", cType_S + '*', "*", cType_S + '&' });
-//					break;
-//				default: // case PATH_TYPE_3:	// PathType[3]
-//					successPath.insert(successPath.begin(), { "", "", cType_T, "&" });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_2:	// PathType[2]
 				{
 					auto topType = successPath.front();
@@ -3239,21 +3057,11 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { "", "", topType, "&" });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				}
 				break;
 			case '*':	// Rule-2.
 				switch (pathType)
 				{
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_1:	// PathType[1]
-//					successPath.insert(successPath.begin(), { cType_S, "&" });
-//					break;
-//				case PATH_TYPE_2:	// PathType[2]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), { cType_S, "&", cType_S + '*', "*", cType_S + '&' });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front().substr(0, successPath.front().length() - 1);
@@ -3267,7 +3075,6 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType, "&", topType + '*', "*", topType + '&' });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				default: // case PATH_TYPE_3:	// PathType[3]
 					ThrowLeSystemError();
 				}
@@ -3278,18 +3085,12 @@ static void GetCppToLuaConverter(
 				case PATH_TYPE_1:	// PathType[1]
 					successPath.insert(successPath.begin(), { "", "" });
 					break;
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_3:	// PathType[3]
-//					successPath.insert(successPath.begin(), { "", "", cType_T, "&" });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_3:	// PathType[3]
 				{
 					auto topType = successPath.front().substr(0, successPath.front().length() - 1);
 					successPath.insert(successPath.begin(), { "", "", topType, "&" });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				default: // case PATH_TYPE_2:	// PathType[2]
 					ThrowLeSystemError();
 				}
@@ -3302,19 +3103,6 @@ static void GetCppToLuaConverter(
 			case '&':	// Rule-1.
 				switch (pathType)
 				{
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_1:	// PathType[1]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), cType_T + '&');
-//					break;
-//				case PATH_TYPE_2:	// PathType[2]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), { cType_S + "*&", "*", cType_S + '&' });
-//					break;
-//				default: // case PATH_TYPE_3:	// PathType[3]
-//					successPath.insert(successPath.begin(), { cType_T + '&', "&" });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front();
@@ -3335,7 +3123,6 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '&', "&" });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				}
 				break;
 			case '*':	// Rule-2.
@@ -3343,12 +3130,6 @@ static void GetCppToLuaConverter(
 				{
 				case PATH_TYPE_1:	// PathType[1]
 					break;
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_2:	// PathType[2]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), { cType_S + '*', "*", cType_S + '&' });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_2:	// PathType[2]
 				{
 					auto topType = successPath.front();
@@ -3356,7 +3137,6 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '*', "*", topType + '&' });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				default: // case PATH_TYPE_3:	// PathType[3]
 					ThrowLeSystemError();
 				}
@@ -3366,18 +3146,12 @@ static void GetCppToLuaConverter(
 				{
 				case PATH_TYPE_1:	// PathType[1]
 					break;
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_3:	// PathType[3]
-//					successPath.insert(successPath.begin(), { cType_T, "&" });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_3:	// PathType[3]
 				{
 					auto topType = successPath.front().substr(0, successPath.front().length() - 1);
 					successPath.insert(successPath.begin(), { topType, "&" });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				default: // case PATH_TYPE_2:	// PathType[2]
 					ThrowLeSystemError();
 				}
@@ -3391,19 +3165,6 @@ static void GetCppToLuaConverter(
 			case '&':	// Rule-1.
 				switch (pathType)
 				{
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_1:	// PathType[1]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), cType_T + '&');
-//					break;
-//				case PATH_TYPE_2:	// PathType[2]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), { cType_S + "*&", "*", cType_S + '&' });
-//					break;
-//				default: // case PATH_TYPE_3:	// PathType[3]
-//					successPath.insert(successPath.begin(), { cType_T + '&', "&" });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front();
@@ -3424,7 +3185,6 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '&', "&" });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				}
 				break;
 			case '*':	// Rule-2.
@@ -3432,12 +3192,6 @@ static void GetCppToLuaConverter(
 				{
 				case PATH_TYPE_1:	// PathType[1]
 					break;
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_2:	// PathType[2]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), { cType_S + '*', "*", cType_S + '&' });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_2:	// PathType[2]
 				{
 					auto topType = successPath.front();
@@ -3445,7 +3199,6 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '*', "*", topType + '&' });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				default: // case PATH_TYPE_3:	// PathType[3]
 					ThrowLeSystemError();
 				}
@@ -3455,18 +3208,12 @@ static void GetCppToLuaConverter(
 				{
 				case PATH_TYPE_1:	// PathType[1]
 					break;
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_3:	// PathType[3]
-//					successPath.insert(successPath.begin(), { cType_T, "&" });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_3:	// PathType[3]
 				{
 					auto topType = successPath.front().substr(0, successPath.front().length() - 1);
 					successPath.insert(successPath.begin(), { topType, "&" });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				default: // case PATH_TYPE_2:	// PathType[2]
 					ThrowLeSystemError();
 				}
@@ -3481,19 +3228,6 @@ static void GetCppToLuaConverter(
 			case '&':	// Rule-1.
 				switch (pathType)
 				{
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_1:	// PathType[1]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), cType_T + '&');
-//					break;
-//				case PATH_TYPE_2:	// PathType[2]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), { cType_S + "*&", "*", cType_S + '&' });
-//					break;
-//				default: // case PATH_TYPE_3:	// PathType[3]
-//					successPath.insert(successPath.begin(), { cType_T + '&', "&" });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front();
@@ -3514,22 +3248,11 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '&', "&" });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				}
 				break;
 			case '*':	// Rule-2.
 				switch (pathType)
 				{
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_1:	// PathType[1]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), cType_S + "*&");
-//					break;
-//				case PATH_TYPE_2:	// PathType[2]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), { cType_S + "*&", "*", cType_S + '&' });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front().substr(0, successPath.front().length() - 1);
@@ -3544,7 +3267,6 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + "*&", "*", topType + '&' });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				default: // case PATH_TYPE_3:	// PathType[3]
 					ThrowLeSystemError();
 				}
@@ -3552,15 +3274,6 @@ static void GetCppToLuaConverter(
 			default:	// Rule-3.
 				switch (pathType)
 				{
-//----- 20.02.20  変更前 ()-----
-//				case PATH_TYPE_1:	// PathType[1]
-//					successPath.erase(successPath.begin());
-//					successPath.insert(successPath.begin(), cType_T + '&');
-//					break;
-//				case PATH_TYPE_3:	// PathType[3]
-//					successPath.insert(successPath.begin(), { cType_T + '&', "&" });
-//					break;
-//----- 20.02.20  変更後 ()-----
 				case PATH_TYPE_1:	// PathType[1]
 				{
 					auto topType = successPath.front();
@@ -3574,7 +3287,6 @@ static void GetCppToLuaConverter(
 					successPath.insert(successPath.begin(), { topType + '&', "&" });
 					break;
 				}
-//----- 20.02.20  変更終 ()-----
 				default: // case PATH_TYPE_2:	// PathType[2]
 					ThrowLeSystemError();
 				}
@@ -3676,10 +3388,6 @@ static void ParseArgments(
 			std::string varType;
 			NormalizeVarType(varType, rawCtype, results[1].str(), classRec);
 
-//----- 21.05.25 Fukushiro M. 削除始 ()-----
-//			if (varType == "Sticklib::classobject")
-//				ThrowLeException(LeError::NOT_SUPPORTED, "It is prohibited to use Sticklib::classobject as the type of argument.");
-//----- 21.05.25 Fukushiro M. 削除終 ()-----
 
 			const auto varName = results[2].str();
 			// Argument name -> raw c++ Type.
@@ -3840,7 +3548,6 @@ static bool ParseFuncDef(
 static bool CheckFunction(
 	FuncRec::Type & funcTypeReturn,
 	std::string & funcNameReturn,
-// 21.06.01 Fukushiro M. 1行追加 ()
 	bool & isRawFuncReturn,
 	std::vector<std::string> & argNamesReturn,
 	std::unordered_map<std::string, std::string> & argNameToCtypeReturn,
@@ -3962,20 +3669,17 @@ static bool CheckFunction(
 				argNameToCtype[argName_Ctype.first] = i->second;
 		}
 
-// 21.06.01 Fukushiro M. 1行追加 ()
 		bool isRawFunc = false;
 
 		for (const auto & argName_ctype : argNameToCtype)
 		{
 			const auto & argName = argName_ctype.first;
 			auto varCtype = argName_ctype.second;
-//----- 21.06.02 Fukushiro M. 追加始 ()-----
 			if (varCtype == "lua_State*")
 			{
 				isRawFunc = true;
 				break;
 			}
-//----- 21.06.02 Fukushiro M. 追加終 ()-----
 
 			std::vector<std::string> successPath;
 			if (inArgNames.find(argName) != inArgNames.end())
@@ -4003,14 +3707,6 @@ static bool CheckFunction(
 					varCtype = successPath.back();
 					luaType = CtypeToLuaType(successPath.front());
 				}
-//----- 21.05.25 Fukushiro M. 削除始 ()-----
-//				else if (funcType == FuncRec::Type::CONSTRUCTOR && argName == "__lstickvar_ret")
-//				{	//----- If the function is constructor and argName is its return value, specifies destination Lua-type -----
-//
-////					luaType = LuaType("classobject");
-//					luaType = LuaType::NIL;
-//				}
-//----- 21.05.25 Fukushiro M. 削除終 ()-----
 				else
 				{
 					auto iAliasLtype = specifiedArgNameToAliasLtype.find(argName);
@@ -4028,7 +3724,6 @@ static bool CheckFunction(
 			}
 		}
 
-//----- 21.06.02 Fukushiro M. 追加始 ()-----
 		if (isRawFunc)
 		{
 			if (argNameToCtype.size() != 1)
@@ -4041,14 +3736,12 @@ static bool CheckFunction(
 			inArgNames.clear();
 			outArgNames.clear();
 		}
-//----- 21.06.02 Fukushiro M. 追加終 ()-----
 
 		if (funcType == FuncRec::Type::CONSTRUCTOR)
 			funcCname = "New";
 
 		funcTypeReturn = funcType;
 		funcNameReturn = funcCname;
-// 21.06.01 Fukushiro M. 1行追加 ()
 		isRawFuncReturn = isRawFunc;
 		argNamesReturn = argNames;
 		argNameToCtypeReturn = argNameToCtype;
@@ -4128,8 +3821,6 @@ static void OutputFuncWrapper(
 	// Lua function argument count. If function is class method, one number must be added : self-class object.
 	// e.g. Lua side : X:Get()  -->  C++ wrapper side : void lm__X__Get__1(X* x) { x->Get(); }
 
-// 21.05.23 Fukushiro M. 1行削除 ()
-//	const int luaArgCount = (funcRec.type == FuncRec::Type::METHOD) ? (int)funcRec.inArgNames.size() + 1 : (int)funcRec.inArgNames.size();
 
 	const ClassRec & currentClassRec = ClassRec::Get(funcRec.GetParentClassId());
 
@@ -4161,27 +3852,6 @@ static void OutputFuncWrapper(
 
 )");
 
-//----- 21.06.02 Fukushiro M. 変更前 ()-----
-//	// Outputs like the following.
-//	// ------------------------------------------------------
-//	// static int lm__X__B__Add1__1(lua_State* L)
-//	// {
-//	//     try
-//	//     {
-//	//         if (lua_gettop(L) != 2)
-//	//             throw std::invalid_argument("Count of arguments is not correct.");
-//	OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-//static int ${wrapperFunctionName}(lua_State* L)
-//{
-//	// ${SRCMARKER}
-//	try
-//	{
-//		// Check the count of arguments.
-//		if (lua_gettop(L) != ${luaArgCount})
-//			throw std::invalid_argument("Count of arguments is not correct.");
-//
-//)", wrapperFunctionName, luaArgCount);
-//----- 21.06.02 Fukushiro M. 変更後 ()-----
 	// Outputs like the following.
 	// ------------------------------------------------------
 	// static int lm__X__B__Add1__1(lua_State* L)
@@ -4209,7 +3879,6 @@ static int ${wrapperFunctionName}(lua_State* L)
 
 )", luaArgCount);
 	}
-//----- 21.06.02 Fukushiro M. 変更終 ()-----
 
 	// e.g. Member function.
 	// +------------------------------------------------------------------------------------+
@@ -4307,22 +3976,9 @@ static int ${wrapperFunctionName}(lua_State* L)
 	{
 		// Output above Block-1.
 
-//----- 21.05.24 Fukushiro M. 変更前 ()-----
-//		// Func name is "Sticklib::check_lvalue"
-//		const auto luaValueGetFuncName = LuaTypeToGetFuncName(LuaType("classobject"));
-//		// C++ type name is "Manglib::classobject"
-//		const auto luaCTypeName = LuaTypeToCTypeName(LuaType("classobject"));
-//----- 21.05.24 Fukushiro M. 変更後 ()-----
-//----- 21.05.25 Fukushiro M. 変更前 ()-----
-//		auto classLuaType = UtilString::Format("class-object(%s)", currentClassRec.GetFullpathCname().c_str());
-//		// Func name is "Sticklib::check_lvalue"
-//		const auto luaValueGetFuncName = LuaTypeToGetFuncName(classLuaType);
-//----- 21.05.25 Fukushiro M. 変更後 ()-----
 		// Func name is "Sticklib::check_lvalue"
 		const auto luaValueGetFuncName = LuaTypeToGetFuncName(CtypeToLuaType(currentClassRec.GetFullpathCname() + "*"));
-//----- 21.05.25 Fukushiro M. 変更終 ()-----
 
-//----- 21.05.24 Fukushiro M. 変更終 ()-----
 
 		// Outputs like the following.
 		// ------------------------------------------------------
@@ -4463,7 +4119,6 @@ static int ${wrapperFunctionName}(lua_State* L)
 		}
 	}
 
-//----- 21.06.02 Fukushiro M. 追加始 ()-----
 	if (funcRec.isRawFunc)
 	{
 		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
@@ -4472,7 +4127,6 @@ static int ${wrapperFunctionName}(lua_State* L)
 
 )");
 	}
-//----- 21.06.02 Fukushiro M. 追加終 ()-----
 
 	if (funcRec.type == FuncRec::Type::METHOD)
 	{	//----- if regular class -----
@@ -4543,14 +4197,12 @@ static int ${wrapperFunctionName}(lua_State* L)
 )", currentClassRec.GetFullpathCname());
 	}
 
-//----- 21.06.02 Fukushiro M. 追加始 ()-----
 	if (funcRec.isRawFunc)
 	{
 		OUTPUT_EXPORTFUNC_STREAM << "L";
 	}
 	else
 	{
-//----- 21.06.02 Fukushiro M. 追加終 ()-----
 		// Output above Block-6, Block-7. Output function's arguments.
 		for (const auto & argName : argNames)
 		{	//----- loop every argument -----
@@ -4561,7 +4213,6 @@ static int ${wrapperFunctionName}(lua_State* L)
 (${rawCtype})${argName}
 )", rawCtype, argName);
 		}
-// 21.06.02 Fukushiro M. 1行追加 ()
 	}
 
 	OUTPUT_EXPORTFUNC_STREAM << u8");\n";
@@ -4569,13 +4220,7 @@ static int ${wrapperFunctionName}(lua_State* L)
 
 	if (funcRec.type == FuncRec::Type::CONSTRUCTOR)
 	{	//----- When constructor -----
-//----- 21.05.24 Fukushiro M. 変更前 ()-----
-//		const auto pushFunc = LuaTypeToSetFuncName(LuaType("classobject"));
-//----- 21.05.24 Fukushiro M. 変更後 ()-----
-// 21.05.25 Fukushiro M. 1行変更 ()
-//		const auto pushFunc = LuaTypeToSetFuncName(LuaType(UtilString::Format("class-object(%s)", currentClassRec.GetFullpathCname().c_str())));
 		const auto pushFunc = LuaTypeToSetFuncName(CtypeToLuaType(currentClassRec.GetFullpathCname() + "*"));
-//----- 21.05.24 Fukushiro M. 変更終 ()-----
 		// Output above Block-8.
 		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
@@ -4672,65 +4317,7 @@ static int ${wrapperFunctionName}(lua_State* L)
 			argMinorNumber++;
 		}
 
-//----- 21.05.25 Fukushiro M. 削除始 ()-----
-//		if (funcRec.ArgNameToLuaType(argName) == LuaType("classobject"))
-//		{	//----- if class object -----
-//			// Output above Block-10.
-//			std::string uniqueName = funcRec.argNameToCtype.at(argName);
-//			UtilString::TrimRight(uniqueName, '&', '*');
-//			uniqueName = ClassRec::FullpathNameToUniqueName(uniqueName);
-//			const auto pushFunc = LuaTypeToSetFuncName(funcRec.ArgNameToLuaType(argName));
-////----- 21.05.19 Fukushiro M. 変更前 ()-----
-////			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-////		// ${SRCMARKER}
-////		${pushFunc}(L, false, ${tmpArgName}, "${uniqueName}");
-////
-////)", pushFunc, tmpArgName, uniqueName);
-////----- 21.05.19 Fukushiro M. 変更後 ()-----
-//			const std::string autoDel = (funcRec.autoDelArgNames.find(argName) != funcRec.autoDelArgNames.end()) ? "true" : "false";
-//			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-//		// ${SRCMARKER}
-//		${pushFunc}(L, ${autoDel}, ${tmpArgName}, "${uniqueName}");
-//
-//)", pushFunc, autoDel, tmpArgName, uniqueName);
-////----- 21.05.19 Fukushiro M. 変更終 ()-----
-//		}
-//		else
-//		{	//----- if not class object -----
-//----- 21.05.25 Fukushiro M. 削除終 ()-----
 
-//----- 21.05.25 Fukushiro M. 変更前 ()-----
-////----- 21.05.24 Fukushiro M. 追加始 ()-----
-//		auto argLuaType = funcRec.ArgNameToLuaType(argName);
-//		auto classobjLuaType =
-//			(argLuaType.CompareHead(LuaType("class-object(")) == 0) ? LuaType("class-object(") :
-//			(argLuaType.CompareHead(LuaType("array<class-object>(")) == 0) ? LuaType("array<class-object>(") :
-//			LuaType::NIL;
-//		if (classobjLuaType != LuaType::NIL)
-//		{	//----- if class object or class object array -----
-//			// e.g. argLuaType="class-object(ObjSet)", classobjLuaType="class-object("
-//			auto fullpathClassName = argLuaType.ToString().substr(classobjLuaType.ToString().length(), argLuaType.ToString().length() - classobjLuaType.ToString().length() - 1);
-//			auto uniqueName = ClassRec::FullpathNameToUniqueName(fullpathClassName);
-//			const auto pushFunc = LuaTypeToSetFuncName(argLuaType);
-//			const std::string autoDel = (funcRec.autoDelArgNames.find(argName) != funcRec.autoDelArgNames.end()) ? "true" : "false";
-//			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-//		// ${SRCMARKER}
-//		${pushFunc}(L, ${tmpArgName}, ${autoDel}, "${uniqueName}");
-//
-//)", pushFunc, tmpArgName, autoDel, uniqueName);
-//		}
-//		else
-//		{
-////----- 21.05.24 Fukushiro M. 追加終 ()-----
-//				// Output above Block-10.
-//				const auto pushFunc = LuaTypeToSetFuncName(funcRec.ArgNameToLuaType(argName));
-//				OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-//		// ${SRCMARKER}
-//		${pushFunc}(L, ${tmpArgName});
-//
-//)", pushFunc, tmpArgName);
-//		}
-//----- 21.05.25 Fukushiro M. 変更後 ()-----
 		const auto pushFunc = LuaTypeToSetFuncName(CtypeToLuaType(UtilString::Replace(conversionPath.back(), "&", "")));
 		const std::string autoDel = (funcRec.autoDelArgNames.find(argName) != funcRec.autoDelArgNames.end()) ? "true" : "false";
 		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
@@ -4738,10 +4325,8 @@ static int ${wrapperFunctionName}(lua_State* L)
 		${pushFunc}(L, ${tmpArgName}, ${autoDel});
 
 )", pushFunc, tmpArgName, autoDel);
-//----- 21.05.25 Fukushiro M. 変更終 ()-----
 	}
 
-//----- 21.06.02 Fukushiro M. 追加始 ()-----
 	if (funcRec.isRawFunc)
 	{
 		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
@@ -4750,7 +4335,6 @@ static int ${wrapperFunctionName}(lua_State* L)
 
 )");
 	}
-//----- 21.06.02 Fukushiro M. 追加終 ()-----
 
 	OUTPUT_EXPORTFUNC_STREAM << u8"	}\n";
 
@@ -4869,73 +4453,6 @@ static bool CheckClass(
 			ThrowLeException(LeError::WRONG_DEFINED_TAG, specifiedRecType);
 
 		classType = ClassRec::Type::NONE;
-//----- 20.01.16 Fukushiro M. 変更前 ()-----
-//		if (specifiedRecType.empty())
-//		{			// depend on classRealType.
-//			switch (classRealType)
-//			{
-//			case ClassRealType::CLASS:
-//			case ClassRealType::STRUCT:
-//			case ClassRealType::UNION:
-//				classType = ClassRec::Type::CLASS;
-//				break;
-//			case ClassRealType::NAMESPACE:
-//				classType = ClassRec::Type::NAMESPACE;
-//				break;
-//			default:	// STOP.
-//				ThrowLeSystemError();
-//			}
-//		}
-//		else if (specifiedRecType == "class")
-//		{	// as class.
-//			switch (classRealType)
-//			{
-//			case ClassRealType::CLASS:
-//			case ClassRealType::STRUCT:
-//			case ClassRealType::UNION:
-//				classType = ClassRec::Type::CLASS;
-//				break;
-//			case ClassRealType::NAMESPACE:
-//				ThrowLeGenericError("Type 'class' was specified for namespace.");
-//			default:	// STOP.
-//				ThrowLeSystemError();
-//			}
-//		}
-//		else if (specifiedRecType == "inconstructible")
-//		{	// as class.
-//			switch (classRealType)
-//			{
-//			case ClassRealType::CLASS:
-//			case ClassRealType::STRUCT:
-//				classType = ClassRec::Type::INCONSTRUCTIBLE;
-//				break;
-//			case ClassRealType::UNION:
-//				ThrowLeGenericError("Type 'inconstructible' was specified for union.");
-//				break;
-//			case ClassRealType::NAMESPACE:
-//				ThrowLeGenericError("Type 'class' was specified for namespace.");
-//			default:	// STOP.
-//				ThrowLeSystemError();
-//			}
-//		}
-//		else if (specifiedRecType == "namespace")
-//		{	// as static class or namespace.
-//			switch (classRealType)
-//			{
-//			case ClassRealType::CLASS:
-//			case ClassRealType::STRUCT:
-//				classType = ClassRec::Type::STATICCLASS;
-//				break;
-//			case ClassRealType::UNION:
-//				ThrowLeException(LeError::WRONG_DEFINED_TAG, "Type 'namescape' was specified for union.");
-//			case ClassRealType::NAMESPACE:
-//				classType = ClassRec::Type::NAMESPACE;
-//				break;
-//			default:	// STOP.
-//				ThrowLeSystemError();
-//			}
-//		}
-//----- 20.01.16 Fukushiro M. 変更後 ()-----
 		switch (classRealType)
 		{
 		case ClassRealType::CLASS:
@@ -4997,7 +4514,6 @@ static bool CheckClass(
 		default:	// STOP.
 			ThrowLeSystemError();
 		}
-//----- 20.01.16 Fukushiro M. 変更終 ()-----
 		return true;
 	}
 	else
@@ -5302,7 +4818,8 @@ static bool CheckVariable(
 /// e.g. <stick export="true" type="namespace" />
 /// </summary>
 /// <param name="tag">The tag.</param>
-/// <param name="isExport">true:following function must be exported/false:not.</param>
+/// <param name="isExport">true:following function must be exported/false:not exported</param>
+/// <param name="exportApi">empty:not exported/0:following function must be exported to every API/1~5:following function must be exported to specified API.</param>
 /// <param name="classStrType">Specified with "type" attributes.</param>
 /// <param name="lname">Specified with "lname" attributes.</param>
 /// <param name="ctype">Specified with "ctype" attributes.</param>
@@ -5310,6 +4827,7 @@ static bool CheckVariable(
 static void HandleStickTag(
 	const UtilXml::Tag & tag,
 	bool & isExport,
+	std::unordered_set<int> & exportApi,
 	std::string & classStrType,
 	std::string & lname,
 	std::string & ctype,
@@ -5317,21 +4835,39 @@ static void HandleStickTag(
 	std::string & specifiedSuper
 )
 {
-	// get xxx from export="xxx"
-	auto v = UtilMisc::FindMapValue(tag.attributes, "export");
-//----- 20.06.15 Fukushiro M. 変更前 ()-----
-//	if (v == "true")
-//		isExport = true;
-//	else if (v == "false")
-//		isExport = false;
-//	else
-//		ThrowLeException(LeError::WRONG_DEFINED_TAG, tag.name);
-//----- 20.06.15 Fukushiro M. 変更後 ()-----
+	// get from export="true"
+	auto v = UtilMisc::FindMapValue(tag.attributes, "export", std::string("false"));
 	if (v == "true")
+	{
 		isExport = true;
-	else
+	}
+	else if (v == "false")
+	{
 		isExport = false;
-//----- 20.06.15 Fukushiro M. 変更終 ()-----
+	}
+	else
+	{
+		ThrowLeException(LeError::UNEXPECTED_CHAR, v);
+	}
+//----- 23.10.30 Fukushiro M. 追加始 ()-----
+	// get 1 2 3 from api="1 2 3"
+	v = UtilMisc::FindMapValue(tag.attributes, "api", std::string("0"));
+	exportApi.clear();
+	std::vector<std::string> items;
+	UtilString::Split(items, v, " ");
+	for (auto item : items)
+	{
+		UtilString::Trim(item);
+		if (!item.empty())
+		{
+			int value;
+			if (!UtilMisc::TryParse(value, item.c_str(), 10))
+				ThrowLeException(LeError::UNEXPECTED_CHAR, v);
+			exportApi.insert(value);
+		}
+	}
+//----- 23.10.30 Fukushiro M. 追加終 ()-----
+
 	// get xxx from type="xxx"
 	classStrType = UtilMisc::FindMapValue(tag.attributes, "type");
 	// get xxx from lname="xxx"
@@ -5351,7 +4887,6 @@ static void HandleStickTag(
 	specifiedSuper = UtilMisc::FindMapValue(tag.attributes, "super");
 }
 
-//----- 19.11.29 Fukushiro M. 追加始 ()-----
 /// <summary>
 /// Handles the luatype tag.
 /// e.g. <sticktype name="boolean" ctype="bool" getfunc="Sticklib::check_lvalue" setfunc="Sticklib::push_lvalue" />
@@ -5398,10 +4933,6 @@ static void RegisterStickconvTag(const UtilXml::Tag & tag, bool isImporting)
 	if (type1to2.empty() && type2to1.empty())
 		ThrowLeException(LeError::WRONG_DEFINED_TAG, "At least one of type1to2 or type2to1 must be filled in.");
 
-//----- 21.05.25 Fukushiro M. 削除始 ()-----
-//	if (isImporting && (type1 == "Sticklib::classobject" || type2 == "Sticklib::classobject"))
-//		ThrowLeException(LeError::WRONG_DEFINED_TAG, "It is prohibited to describe Sticklib::classobject converter.");
-//----- 21.05.25 Fukushiro M. 削除終 ()-----
 
 	NormalizeVarType(type1, Dummy<std::string>(), type1, ClassRec());
 	NormalizeVarType(type2, Dummy<std::string>(), type2, ClassRec());
@@ -5421,7 +4952,6 @@ static void RegisterStickconvTag(const UtilXml::Tag & tag, bool isImporting)
 		CTYPE_2TO1_CONVERTER[std::make_pair(type1, type2)] = type2to1;
 	}
 }
-//----- 19.11.29 Fukushiro M. 追加終 ()-----
 
 /// <summary>
 /// Handles the luadef tag.
@@ -5431,51 +4961,6 @@ static void RegisterStickdefTag(const UtilXml::Tag & tag)
 {
 	// get xxx from "Type="xxx"
 	auto type = UtilMisc::FindMapValue(tag.attributes, "type");
-//----- 19.12.15 Fukushiro M. 削除始 ()-----
-//	if (type == "c-lua" || type.empty())
-//	{
-//		// get xxx from "ctype="xxx"
-//		auto c_type = UtilMisc::FindMapValue(tag.attributes, "ctype");
-//		if (!c_type.empty())
-//			c_type = NormalizeVarType(Dummy<std::string>(), c_type, ClassRec());
-//		// get xxx from "luatype="xxx"
-//		auto str_luatype = UtilMisc::FindMapValue(tag.attributes, "sticktype");
-//		const LuaType lua_type(str_luatype);
-//		// get xxx from "luatoc="xxx"
-//		auto lua_to_c = UtilMisc::FindMapValue(tag.attributes, "luatoc");
-//		// get xxx from "ctolua="xxx"
-//		auto c_to_lua = UtilMisc::FindMapValue(tag.attributes, "ctolua");
-//		if (!lua_to_c.empty())
-//			CTYPE_TO_LTYPE_L2C[c_type] = std::make_tuple(lua_type, lua_to_c);
-//		if (!c_to_lua.empty())
-//			CTYPE_TO_LTYPE_C2L[c_type] = std::make_tuple(lua_type, c_to_lua);
-//	}
-//	else if (type == "c-c")
-//	{
-//		// get xxx from "ctype1="xxx"
-//		auto c_type_1 = UtilMisc::FindMapValue(tag.attributes, "ctype1");
-//		if (!c_type_1.empty())
-//			c_type_1 = NormalizeVarType(Dummy<std::string>(), c_type_1, ClassRec());
-//		// get xxx from "ctype2="xxx"
-//		auto c_type_2 = UtilMisc::FindMapValue(tag.attributes, "ctype2");
-//		if (!c_type_2.empty())
-//			c_type_2 = NormalizeVarType(Dummy<std::string>(), c_type_2, ClassRec());
-//		// get xxx from "c1toc2="xxx"
-//		auto c_1_to_c_2 = UtilMisc::FindMapValue(tag.attributes, "c1toc2");
-//		// get xxx from "c2toc1="xxx"
-//		auto c_2_to_c_1 = UtilMisc::FindMapValue(tag.attributes, "c2toc1");
-//		if (!c_1_to_c_2.empty())
-//		{
-//			CTYPE1_CTYPE2_TO_C1TOC2[std::make_pair(c_type_1, c_type_2)] = c_1_to_c_2;
-//			CTYPE1_CTYPE2_TO_C2TOC1[std::make_pair(c_type_2, c_type_1)] = c_1_to_c_2;
-//		}
-//		if (!c_2_to_c_1.empty())
-//		{
-//			CTYPE1_CTYPE2_TO_C1TOC2[std::make_pair(c_type_2, c_type_1)] = c_2_to_c_1;
-//			CTYPE1_CTYPE2_TO_C2TOC1[std::make_pair(c_type_1, c_type_2)] = c_2_to_c_1;
-//		}
-//	}
-//----- 19.12.15 Fukushiro M. 削除終 ()-----
 	if (type == "exception")
 	{
 		// get xxx from "cref="xxx"
@@ -5513,11 +4998,8 @@ static void HandleParamTag(
 	std::unordered_map<std::string, std::string> & argNameToIO,
 	std::unordered_map<std::string, std::string> & argNameToAliasCtype,
 	std::unordered_map<std::string, LuaType> & argNameToAliasLtype,
-// 21.05.19 Fukushiro M. 1行追加 ()
 	std::unordered_set<std::string> & autoDelArgNames,
 	std::unordered_map<std::string, std::string> & xmlCommentArgNameToSummary
-// 21.05.19 Fukushiro M. 1行削除 ()
-//	std::vector<std::pair<std::string, std::string>> & xmlCommentArgNameToSummary
 )
 {
 	// e.g. "<param name="argbBack" io="in">"
@@ -5548,7 +5030,6 @@ static void HandleParamTag(
 			argNameToAliasLtype[name] = LuaType(ltype);
 		}
 
-//----- 21.05.19 Fukushiro M. 追加始 (For AdvanceSoft ＆標準化予定)-----
 		// get xxx from "autodel="xxx"
 		auto autodel = UtilMisc::FindMapValue(tag.attributes, "autodel");
 		if (!autodel.empty())
@@ -5558,12 +5039,9 @@ static void HandleParamTag(
 			else if (autodel != "false")
 				ThrowLeException(LeError::WRONG_DEFINED_TAG, tag.name, "Invalid value in attribute 'autodel'", autodel);
 		}
-//----- 21.05.19 Fukushiro M. 追加終 (For AdvanceSoft ＆標準化予定)-----
 
 		// get summary.
 		xmlCommentArgNameToSummary[name] = UtilString::GetLangPart(LANG, tag.GetText());
-// 21.05.19 Fukushiro M. 1行削除 ()
-//		xmlCommentArgNameToSummary.emplace_back(std::make_pair(name, UtilString::GetLangPart(LANG, tag.GetText())));
 	}
 } // HandleParamTag.
 
@@ -5581,11 +5059,8 @@ static void HandleReturnsTag(
 	const UtilXml::Tag & tag,
 	std::unordered_map<std::string, std::string> & argNameToAliasCtype,
 	std::unordered_map<std::string, LuaType> & argNameToAliasLtype,
-// 21.05.19 Fukushiro M. 1行追加 ()
 	std::unordered_set<std::string> & autoDelArgNames,
 	std::unordered_map<std::string, std::string> & xmlCommentArgNameToSummary
-// 21.05.19 Fukushiro M. 1行削除 ()
-//	std::vector<std::pair<std::string, std::string>> & xmlCommentArgNameToSummary
 )
 {
 	// get xxx from "ctype="xxx"
@@ -5604,7 +5079,6 @@ static void HandleReturnsTag(
 		argNameToAliasLtype["__lstickvar_ret"] = LuaType(ltype);
 	}
 
-//----- 21.05.19 Fukushiro M. 追加始 (For AdvanceSoft ＆標準化予定)-----
 	// get xxx from "autodel="xxx"
 	auto autodel = UtilMisc::FindMapValue(tag.attributes, "autodel");
 	if (!autodel.empty())
@@ -5614,12 +5088,9 @@ static void HandleReturnsTag(
 		else if (autodel != "false")
 			ThrowLeException(LeError::WRONG_DEFINED_TAG, tag.name, "Invalid value in attribute 'autodel'", autodel);
 	}
-//----- 21.05.19 Fukushiro M. 追加終 (For AdvanceSoft ＆標準化予定)-----
 
 	// get summary.
 	xmlCommentArgNameToSummary["__lstickvar_ret"] = UtilString::GetLangPart(LANG, tag.GetText());
-// 21.05.19 Fukushiro M. 1行削除 ()
-//	xmlCommentArgNameToSummary.emplace_back(std::make_pair("__lstickvar_ret", UtilString::GetLangPart(LANG, tag.GetText())));
 
 } // HandleReturnsTag.
 
@@ -5974,95 +5445,6 @@ static void OutputStructPushFuncContent(const ClassRec & classRec)
 			tmpVarName = nextTmpVarName;
 		}
 
-//----- 21.05.25 Fukushiro M. 削除始 ()-----
-////----- 21.05.24 Fukushiro M. 追加始 ()-----
-//		// "::TestClass0*". Do not remove '*'. 
-//		auto fullpathCtypeAst = UtilString::Replace(variableRec.cToLuaConversionPath.back(), "&", "");
-//		auto varLuaType = CtypeToLuaType(fullpathCtypeAst);
-//		if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("class-object(")) == 0)
-//		{	//----- if class object is defined as static variable -----
-//			auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
-//			const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
-//			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-//		// ${SRCMARKER}
-//		//
-//		// Sticklib::set_classobject_to_table(L, "var1", false, obj, "${uniqueClassName}");
-//		// See the comment described at 'Sticklib::set_classobject_to_table'.
-//		//
-//		//        stack  
-//		//     +----------+      +---------+---------+
-//		//   -1|  TABLE   |----->| Key     | Value   |
-//		//     |----------|      +---------+---------+
-//		//     :          :      | "var1"  |  obj    |
-//		//                       +---------+---------+
-//		//
-//		Sticklib::set_classobject_to_table<${fullpathCtype}>(L, "${variableRec.variableLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
-//	}
-//
-//)", fullpathCtype, variableRec.variableLuaname, tmpVarName, uniqueClassName);
-//		}
-//		else if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("array<class-object>(")) == 0)
-//		{	//----- if array of class object is defined as static variable -----
-//			auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
-//			const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
-//			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-//		// ${SRCMARKER}
-//		//
-//		// Sticklib::set_classobjectarray_to_table(L, "var1", false, obj, "${uniqueClassName}");
-//		// See the comment described at 'Sticklib::set_classobjectarray_to_table'.
-//		//
-//		//        stack  
-//		//     +----------+      +---------+---------+
-//		//   -1|  TABLE   |----->| Key     | Value   |
-//		//     |----------|      +---------+---------+      +-----+--------+
-//		//     :          :      | "var1"  | TABLE   |----->| Key | Value  |
-//		//                       +---------+---------+      +-----+--------+
-//		//                                                  | 1   | value1 |
-//		//                                                  +-----+--------+
-//		//                                                  | 2   | value2 |
-//		//                                                  +-----+--------+
-//		//                                                  :              :
-//		//
-//		Sticklib::set_classobjectarray_to_table<${fullpathCtype}>(L, "${variableRec.variableLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
-//	}
-//
-//)", fullpathCtype, variableRec.variableLuaname, tmpVarName, uniqueClassName);
-//		}
-//		else
-////----- 21.05.24 Fukushiro M. 追加終 ()-----
-//----- 21.05.25 Fukushiro M. 削除終 ()-----
-//----- 21.05.25 Fukushiro M. 削除始 ()-----
-//		if (variableRec.cToLuaConversionPath.back() == "Sticklib::classobject")
-//		{	//----- if class object is defined as static variable -----
-//			// Get the class type of the class object.
-//			auto preClassType = variableRec.cToLuaConversionPath[variableRec.cToLuaConversionPath.size() - 3];
-//			preClassType = UtilString::Replace(preClassType, "*", "", "&", "");
-//			// Get the unique name (like "lm__TestClass0__") of the class.
-//			auto preClassId = ClassRec::Get(0).FindClass(preClassType);
-//			const std::string uniqueClassName = ClassRec::Get(preClassId).GetUniqueClassName();
-//
-//			OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
-//		// ${SRCMARKER}
-//		//
-//		// Sticklib::set_classobject_to_table(L, "var1", false, obj, "${uniqueClassName}");
-//		// See the comment described at 'Sticklib::set_classobject_to_table'.
-//		//
-//		//        stack  
-//		//     +----------+      +---------+---------+
-//		//   -1|  TABLE   |----->| Key     | Value   |
-//		//     |----------|      +---------+---------+
-//		//     :          :      | "var1"  |  obj    |
-//		//                       +---------+---------+
-//		//
-//		Sticklib::set_classobject_to_table(L, "${variableRec.variableLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
-//	}
-//
-//)", variableRec.variableLuaname, tmpVarName, uniqueClassName);
-//		}
-//		else
-//----- 21.05.25 Fukushiro M. 削除終 ()-----
-// 21.05.25 Fukushiro M. 1行削除 ()
-//		{
 		auto varLastCtype = UtilString::Replace(variableRec.cToLuaConversionPath.back(), "&", "");
 		auto pushLuaValueFunc = LuaTypeToSetFuncName(CtypeToLuaType(varLastCtype));
 
@@ -6096,8 +5478,6 @@ static void OutputStructPushFuncContent(const ClassRec & classRec)
 
 )", pushLuaValueFunc, variableRec.variableLuaname, tmpVarName);
 
-// 21.05.25 Fukushiro M. 1行削除 ()
-//		}
 	}
 } // static void OutputStructPushFuncContent(const ClassRec & classRec).
 
@@ -6297,19 +5677,8 @@ static void RegisterEnumConverter(const EnumRec & enumRec)
 	// e.g.
 	// enum A { ... } -> enumName="A"
 	const std::string enumName = enumRec.GetFullpathCname();
-//----- 21.05.27 Fukushiro M. 変更前 ()-----
-//	const std::string i64_to_enum = std::string("Sticklib::int64_to_enumT<") + enumName + ">";
-//	const std::string enum_to_i64 = std::string("Sticklib::enumT_to_int64<") + enumName + ">";
-//----- 21.05.27 Fukushiro M. 変更後 ()-----
 	const std::string i64_to_enum = std::string("Sticklib::T_to_U<") + enumName + ", __int64>";
 	const std::string enum_to_i64 = std::string("Sticklib::T_to_U<__int64, ") + enumName + ">";
-//----- 21.05.27 Fukushiro M. 変更終 ()-----
-//----- 20.01.19 Fukushiro M. 変更前 ()-----
-//	CTYPE_1TO2_CONVERTER[std::make_pair("__int64", enumName)] = i64_to_enum;
-//	CTYPE_1TO2_CONVERTER[std::make_pair(enumName, "__int64")] = enum_to_i64;
-//	CTYPE_2TO1_CONVERTER[std::make_pair("__int64", enumName)] = enum_to_i64;
-//	CTYPE_2TO1_CONVERTER[std::make_pair(enumName, "__int64")] = i64_to_enum;
-//----- 20.01.19 Fukushiro M. 変更後 ()-----
 	UtilXml::Tag tag;
 	tag.name = "stickconv";
 	tag.attributes["type1"] = "__int64";
@@ -6318,131 +5687,8 @@ static void RegisterEnumConverter(const EnumRec & enumRec)
 	tag.attributes["type2to1"] = enum_to_i64;
 	// tag.type = UtilXml::Tag::ONESHOT;
 	RegisterStickconvTag(tag, false);
-//----- 20.01.19 Fukushiro M. 変更終 ()-----
 }
 
-//----- 21.05.25 Fukushiro M. 削除始 ()-----
-////// <summary>
-///// Registers the class converter.
-///// This is equivalent of reading "<stickdef type="c-lua" luatype="userdata" ctype="::X::A*" luatoc="Sticklib::linteger_to_intT<__int64>" ctolua="Sticklib::intT_to_linteger<__int64>" />".
-///// </summary>
-///// <param name="classRec">The class record.</param>
-//static void RegisterClassConverter(const ClassRec & classRec)
-//{
-//	// Think about the following case.
-//	// ----------------
-//	// class A {};
-//	// void Func(A& a);
-//	// ----------------
-//	// The above program should convert to the following.
-//	// ----------------
-//	// Manglib::classobject p;
-//	// p = lua_popobject(L);
-//	// A* a;
-//	// classobject_to_typeptr<A>(a, p);
-//	// Func(*a);
-//	// ----------------
-//	// So, register void* <--> A* converter in this function, and register A* --> A procedure in the function GetLuaToCppConverter.
-//
-//	const std::string className = classRec.GetFullpathCname();
-//	const std::string object_to_classp = std::string("Sticklib::classobject_to_typeptr<") + className + ">";
-//	const std::string classp_to_object = std::string("Sticklib::typeptr_to_classobject<") + className + ">";
-////----- 20.01.19 Fukushiro M. 変更前 ()-----
-////	CTYPE_1TO2_CONVERTER[std::make_pair("Sticklib::classobject", className + "*")] = object_to_classp;
-////	CTYPE_1TO2_CONVERTER[std::make_pair(className + "*", "Sticklib::classobject")] = classp_to_object;
-////	CTYPE_2TO1_CONVERTER[std::make_pair("Sticklib::classobject", className + "*")] = classp_to_object;
-////	CTYPE_2TO1_CONVERTER[std::make_pair(className + "*", "Sticklib::classobject")] = object_to_classp;
-////----- 20.01.19 Fukushiro M. 変更後 ()-----
-//	UtilXml::Tag tag;
-//	tag.name = "stickconv";
-//	tag.attributes["type1"] = "Sticklib::classobject";
-//	tag.attributes["type2"] = className + "*";
-//	tag.attributes["type1to2"] = object_to_classp;
-//	tag.attributes["type2to1"] = classp_to_object;
-////	tag.type = UtilXml::Tag::ONESHOT;
-//	RegisterStickconvTag(tag, false);
-////----- 20.01.19 Fukushiro M. 変更終 ()-----
-//}
-//----- 21.05.25 Fukushiro M. 削除終 ()-----
-
-//----- 21.05.26 Fukushiro M. 削除始 ()-----
-////// <summary>
-///// Registers a lua-type and type-converter for the struct.
-///// This is equivalent of reading below.
-///// <sticktype name="__xxxx___" ctype="::MyStruct" getfunc="Sticklib::check_lvalue" setfunc="Sticklib::push_lvalue" />
-///// <sticktype name="array<__xxxx___>" ctype="std::vector<::MyStruct>" getfunc="Sticklib::check_array<::MyStruct>" setfunc="Sticklib::push_array<::MyStruct>" />
-///// <sticktype name="hash<number,__xxxx___>" ctype="std::unordered_map<double,::MyStruct>" getfunc="Sticklib::check_hash<double,::MyStruct>" setfunc="Sticklib::push_hash<double,::MyStruct>" />
-/////   :
-///// <stickconv type1="std::vector<MyStruct>" type2="std::unordered_set<MyStruct>" type1to2="Sticklib::vector_to_uset<MyStruct,MyStruct>" type2to1="Sticklib::uset_to_vector<MyStruct,MyStruct>" />
-/////   :
-///// </summary>
-///// <param name="classRec">The class record.</param>
-//static void RegisterStructType(const ClassRec & classRec)
-//{
-//	const auto fullLuaName = classRec.GetFullpathLuaname();
-//	const auto fullCname = classRec.GetFullpathCname();
-//
-//	UtilXml::Tag typeTag;
-//	typeTag.name = "sticktype";
-//
-//	typeTag.attributes["name"] = fullLuaName;
-//	typeTag.attributes["ctype"] = fullCname;
-//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_lvalue<%s>", fullCname.c_str());
-//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_lvalue<%s>", fullCname.c_str());
-//	RegisterSticktypeTag(typeTag);
-//
-//	typeTag.attributes["name"] = UtilString::Format("array<%s>", fullLuaName.c_str());
-//	typeTag.attributes["ctype"] = UtilString::Format("std::vector<%s>", fullCname.c_str());
-//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_array<%s>", fullCname.c_str());
-//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_array<%s>", fullCname.c_str());
-//	RegisterSticktypeTag(typeTag);
-//
-//	typeTag.attributes["name"] = UtilString::Format("hash<number,%s>", fullLuaName.c_str());
-//	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<double,%s>", fullCname.c_str());
-//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<double,%s>", fullCname.c_str());
-//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<double,%s>", fullCname.c_str());
-//	RegisterSticktypeTag(typeTag);
-//
-//	typeTag.attributes["name"] = UtilString::Format("hash<integer,%s>", fullLuaName.c_str());
-//	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<__int64,%s>", fullCname.c_str());
-//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<__int64,%s>", fullCname.c_str());
-//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<__int64,%s>", fullCname.c_str());
-//	RegisterSticktypeTag(typeTag);
-//
-//	typeTag.attributes["name"] = UtilString::Format("hash<boolean,%s>", fullLuaName.c_str());
-//	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<bool,%s>", fullCname.c_str());
-//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<bool,%s>", fullCname.c_str());
-//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<bool,%s>", fullCname.c_str());
-//	RegisterSticktypeTag(typeTag);
-//
-//	typeTag.attributes["name"] = UtilString::Format("hash<string,%s>", fullLuaName.c_str());
-//	typeTag.attributes["ctype"] = UtilString::Format("std::unordered_map<std::string,%s>", fullCname.c_str());
-//	typeTag.attributes["getfunc"] = UtilString::Format("Sticklib::check_hash<std::string,%s>", fullCname.c_str());
-//	typeTag.attributes["setfunc"] = UtilString::Format("Sticklib::push_hash<std::string,%s>", fullCname.c_str());
-//	RegisterSticktypeTag(typeTag);
-//
-////----- 21.05.25 Fukushiro M. 追加始 ()-----
-//	UtilXml::Tag convTag;
-//	convTag.name = "stickconv";
-//
-//	convTag.attributes["type1"] = UtilString::Format("std::vector<%s>", fullCname.c_str());
-//	convTag.attributes["type2"] = UtilString::Format("std::unordered_set<%s>", fullCname.c_str());
-//	convTag.attributes["type1to2"] = UtilString::Format("Sticklib::vector_to_uset<%s,%s>", fullCname.c_str(), fullCname.c_str());
-//	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::uset_to_vector<%s,%s>", fullCname.c_str(), fullCname.c_str());
-//	RegisterStickconvTag(convTag, false);
-//
-//	convTag.attributes["type1"] = UtilString::Format("std::vector<%s>", fullCname.c_str());
-//	convTag.attributes["type2"] = UtilString::Format("std::set<%s>", fullCname.c_str());
-//	convTag.attributes["type1to2"] = UtilString::Format("Sticklib::vector_to_set<%s,%s>", fullCname.c_str(), fullCname.c_str());
-//	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::set_to_vector<%s,%s>", fullCname.c_str(), fullCname.c_str());
-//	RegisterStickconvTag(convTag, false);
-//
-////----- 21.05.25 Fukushiro M. 追加終 ()-----
-//}
-//----- 21.05.26 Fukushiro M. 削除終 ()-----
-
-
-//----- 21.05.23 Fukushiro M. 追加始 ()-----
 //// <summary>
 /// Registers a lua-type of a class and struct.
 /// This is equivalent of reading below.
@@ -6514,41 +5760,6 @@ static void RegisterClassType(const ClassRec & classRec)
 	convTag.attributes["type2to1"] = UtilString::Format("Sticklib::set_to_vector<%s,%s>", fullCname.c_str(), fullCname.c_str());
 	RegisterStickconvTag(convTag, false);
 }
-//----- 21.05.23 Fukushiro M. 追加終 ()-----
-
-//----- 20.03.07  削除始 ()-----
-///// <summary>
-///// Decide the possibility of xml text.
-///// text is 3 slash comment.
-///// Purpose of this function is to remove like this line: '/// // <stickconv ...>'
-///// </summary>
-///// <param name="text">Comment text after 3 slash</param>
-///// <returns>true:Might be xml/false:Is not xml</returns>
-//static bool Is3SlashXml(const char * text)
-//{
-//	// case1:
-//	// <stickconv type1="std::string" type2="char*" type1to2="Sticklib::astring_to_atext" type2to1="Sticklib::atext_to_astring" />
-//	// case2:
-//	// <stickconv
-//	// type1="std::string" type2="char*" type1to2="Sticklib::astring_to_atext" type2to1="Sticklib::atext_to_astring"
-//	// />
-//	// case3:
-//	// <stickconv type1=
-//	// "std::string" type2="char*" type1to2="Sticklib::astring_to_atext" type2to1="Sticklib::atext_to_astring" />
-//	// case4:
-//	// <stickconv type1
-//	// ="std::string" type2="char*" type1to2="Sticklib::astring_to_atext" type2to1="Sticklib::atext_to_astring" />
-//
-//	return (
-//		('a' <= text[0] && text[0] <= 'z') ||
-//		('A' <= text[0] && text[0] <= 'Z') ||
-//		text[0] == '\"' ||
-//		text[0] == '<' ||
-//		text[0] == '=' ||
-//		(text[0] == '/' && text[1] == '>')
-//		);
-//}
-//----- 20.03.07  削除終 ()-----
 
 /// <summary>
 /// Join continuous "///" comment.
@@ -6575,15 +5786,10 @@ static std::string Join3SlashComment(ReadBufferedFile & readBufferedFile)
 		text = UtilString::SkipSpaceTab(text);
 		if (Skip3Slash(text))
 		{
-//----- 20.03.15  変更前 ()-----
-//			text = UtilString::SkipSpaceTab(text);
-//			commentText += text;
-//----- 20.03.15  変更後 ()-----
 			// Skip first one space.
 			if (*text == ' ') text++;
 			commentText += text;
 			commentText += "\r\n";
-//----- 20.03.15  変更終 ()-----
 		}
 		else
 		{
@@ -6664,6 +5870,8 @@ static void ParseEnumContent(
 {
 	// <stick export="true">
 	bool xmlCommentIsExport = false;
+	// <stick api="1 2 3"> It does not used for enum member.
+	std::unordered_set<int> xmlCommentExportApi;
 	// <stick lname="????">
 	std::string xmlCommentLuaname;
 	// <summary>????</summary>
@@ -6672,6 +5880,7 @@ static void ParseEnumContent(
 	auto xmlCommentClear = [&]
 	{
 		xmlCommentIsExport = false;
+		xmlCommentExportApi.clear();
 		xmlCommentLuaname.clear();
 		xmlCommentSummary.clear();
 	}; 
@@ -6719,6 +5928,7 @@ static void ParseEnumContent(
 							HandleStickTag(
 								tag,
 								xmlCommentIsExport,
+								xmlCommentExportApi,
 								Dummy<std::string>(),
 								xmlCommentLuaname,
 								Dummy<std::string>(),
@@ -6726,12 +5936,12 @@ static void ParseEnumContent(
 								Dummy<std::string>()
 							);
 						}
-//----- 20.06.15 Fukushiro M. 追加始 ()-----
 						else if (tag.name == "summary")
 						{
 							HandleStickTag(
 								tag,
 								xmlCommentIsExport,
+								xmlCommentExportApi,
 								Dummy<std::string>(),
 								xmlCommentLuaname,
 								Dummy<std::string>(),
@@ -6741,7 +5951,6 @@ static void ParseEnumContent(
 							if (xmlCommentIsExport)
 								xmlCommentSummary = UtilString::GetLangPart(LANG, tag.GetText());
 						}
-//----- 20.06.15 Fukushiro M. 追加終 ()-----
 					}
 				}
 			}
@@ -6785,7 +5994,7 @@ static void ParseEnumContent(
 		}
 	}
 	ThrowLeException(LeError::UNEXPECTED_EOF);
-}
+} // ParseEnumContent.
 
 /// <summary>
 /// Parses the source. First step.
@@ -6813,6 +6022,8 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 {
 	// <stick export="true">
 	bool xmlCommentIsExport = false;
+	// <stick api="1 2 3">
+	std::unordered_set<int> xmlCommentExportApi;
 	// <stick type="????">
 	std::string xmlCommentClassType;
 	// <stick lname="????">
@@ -6827,6 +6038,7 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 	auto xmlCommentClear = [&]
 	{
 		xmlCommentIsExport = false;
+		xmlCommentExportApi.clear();
 		xmlCommentClassType.clear();
 		xmlCommentLuaname.clear();
 		xmlCommentCtype.clear();
@@ -6882,12 +6094,11 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 						}
 						else
 						{
-// 20.06.15 Fukushiro M. 1行変更 ()
-//							if (tag.name == "stick")
 							if (tag.name == "stick" || tag.name == "summary")
 								HandleStickTag(
 									tag,
 									xmlCommentIsExport,
+									xmlCommentExportApi,
 									xmlCommentClassType,
 									xmlCommentLuaname,
 									xmlCommentCtype,
@@ -6938,21 +6149,6 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 					std::string nextSuperClassName;
 					if (CheckClass(nextClassType, nextClassName, nextSuperClassName, text, xmlCommentClassType))
 					{
-//----- 20.05.18  変更前 ()-----
-//						if (
-//							(
-//								classRec.classType == ClassRec::Type::CLASS ||
-//								classRec.classType == ClassRec::Type::INCONSTRUCTIBLE ||
-//								classRec.classType == ClassRec::Type::STRUCT ||
-//								classRec.classType == ClassRec::Type::STATICCLASS
-//							)
-//							&&
-//							nextClassType == ClassRec::Type::NAMESPACE
-//							)
-//							ThrowLeException(LeError::TAG_OCCURED_UNEXPECTED_PLACE, "Cannot use namespace inside of the class.");
-//						if (classRec.memberClassLuanameSet.find(xmlCommentLuaname.empty() ? nextClassName : xmlCommentLuaname) != classRec.memberClassLuanameSet.end())
-//							ThrowLeException(LeError::REGISTER_SAME_NAME, "Cannot register same class name twice.", xmlCommentLuaname.empty() ? nextClassName : xmlCommentLuaname);
-//----- 20.05.18  変更後 ()-----
 						if (
 							classRec.classType == ClassRec::Type::CLASS ||
 							classRec.classType == ClassRec::Type::INCONSTRUCTIBLE ||
@@ -6967,7 +6163,6 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							if (classRec.memberClassLuanameSet.find(xmlCommentLuaname.empty() ? nextClassName : xmlCommentLuaname) != classRec.memberClassLuanameSet.end())
 								ThrowLeException(LeError::REGISTER_SAME_NAME, "Cannot register same class name twice.", xmlCommentLuaname.empty() ? nextClassName : xmlCommentLuaname);
 						}
-//----- 20.05.18  変更終 ()-----
 						if (!xmlCommentSuper.empty())
 						{	//----- If super-class was specified with xml-comment -----
 							if (xmlCommentSuper == "-")
@@ -6978,7 +6173,6 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 
 						if (IsContinuousBlock(readBufferedFile))
 						{	//----- if block description is following -----
-//----- 21.05.22 Fukushiro M. 追加始 ()-----
 							auto memberClassId = classRec.FindClass(nextClassName);
 							if (memberClassId != -1)
 							{	//----- nextClassName was already registered in another header file. Namespace can appear more than two times -----
@@ -6988,12 +6182,13 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							}
 							else
 							{	//----- It is first time nextClassName appears -----
-//----- 21.05.22 Fukushiro M. 追加終 ()-----
 								auto & memberClassRec = ClassRec::New(classRec.id);
 								memberClassRec.classType = nextClassType;
 								memberClassRec.classCname = nextClassName;
 								memberClassRec.classLuaname = xmlCommentLuaname.empty() ? nextClassName : xmlCommentLuaname;
 								memberClassRec.superClassId = nextSuperClassName.empty() ? -1 : classRec.FindClass(nextSuperClassName);
+								// 23.10.30 Fukushiro M. 1行追加 ()
+								memberClassRec.outputApi = xmlCommentExportApi;
 								classRec.memberClassIdArray.emplace_back(memberClassRec.id);
 								// already used class lname.
 								classRec.memberClassLuanameSet.insert(memberClassRec.classLuaname);
@@ -7010,7 +6205,6 @@ static void ParseSource1(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 
 								// Parses source until next encounter with '}'.
 								ParseSource1(readBufferedFile, memberClassRec);
-// 21.05.22 Fukushiro M. 1行追加 ()
 							}
 						}
 
@@ -7076,22 +6270,20 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 	// variable name -> ltype alias.
 	// e.g. <param name="abc" ltype="lightuserdata" > -> { "abc" -> "lightuserdata" }
 	std::unordered_map<std::string, LuaType> xmlCommentArgNameToAliasLtype;
-//----- 21.05.19 Fukushiro M. 追加始 ()-----
 	// Argument name set which has autodel option.
 	// e.g. <param name="hello" autodel="true"...>  <param name="world" autodel="true"...>  <returns autodel="true">
 	// autoDelargNames={ "hello", "world", "__lstickvar_ret" }
 	std::unordered_set<std::string> xmlCommentAutoDelArgNames;
-//----- 21.05.19 Fukushiro M. 追加終 ()-----
 	// variable name -> summary
 	// e.g. <param name="abc">hello</param> -> { "abc" -> "hello" }
 	std::unordered_map<std::string, std::string> xmlCommentArgNameToSummary;
-// 21.05.19 Fukushiro M. 1行削除 ()
-//	std::vector<std::pair<std::string, std::string>> xmlCommentArgNameToSummary;
 
 	// exception name array. <exception cref="?????" ...>
 	std::vector<std::string> xmlCommentExceptions;
 	// <stick export="true">
 	bool xmlCommentIsExport = false;
+	// <stick api="1 2 3">
+	std::unordered_set<int> xmlCommentExportApi;
 	// <stick type="????">
 	std::string xmlCommentClassType;
 	// <stick lname="????">
@@ -7108,11 +6300,11 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 		xmlCommentArgNameToIO.clear();
 		xmlCommentArgNameToAliasCtype.clear();
 		xmlCommentArgNameToAliasLtype.clear();
-// 21.05.19 Fukushiro M. 1行追加 ()
 		xmlCommentAutoDelArgNames.clear();
 		xmlCommentArgNameToSummary.clear();
 		xmlCommentExceptions.clear();
 		xmlCommentIsExport = false;
+		xmlCommentExportApi.clear();
 		xmlCommentClassType.clear();
 		xmlCommentLuaname.clear();
 		xmlCommentCtype.clear();
@@ -7164,7 +6356,6 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 									xmlCommentArgNameToIO,
 									xmlCommentArgNameToAliasCtype,
 									xmlCommentArgNameToAliasLtype,
-// 21.05.19 Fukushiro M. 1行追加 ()
 									xmlCommentAutoDelArgNames,
 									xmlCommentArgNameToSummary
 								);
@@ -7173,7 +6364,6 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 									tag,
 									xmlCommentArgNameToAliasCtype,
 									xmlCommentArgNameToAliasLtype,
-// 21.05.19 Fukushiro M. 1行追加 ()
 									xmlCommentAutoDelArgNames,
 									xmlCommentArgNameToSummary
 								);
@@ -7189,6 +6379,7 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 								HandleStickTag(
 									tag,
 									xmlCommentIsExport,
+									xmlCommentExportApi,
 									xmlCommentClassType,
 									xmlCommentLuaname,
 									xmlCommentCtype,
@@ -7196,12 +6387,12 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 									Dummy<std::string>()
 								);
 							}
-//----- 20.06.15 Fukushiro M. 追加始 ()-----
 							else if (tag.name == "summary")
 							{
 								HandleStickTag(
 									tag,
 									xmlCommentIsExport,
+									xmlCommentExportApi,
 									xmlCommentClassType,
 									xmlCommentLuaname,
 									xmlCommentCtype,
@@ -7211,7 +6402,6 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 								if (xmlCommentIsExport)
 									xmlCommentSummary = UtilString::GetLangPart(LANG, tag.GetText());
 							}
-//----- 20.06.15 Fukushiro M. 追加終 ()-----
 						}
 					}
 				}
@@ -7236,7 +6426,6 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 						// [extern TTT FFF (PPP)]のTTT,FFF,PPPを抽出
 						FuncRec::Type funcType;
 						std::string funcCname;
-// 21.06.02 Fukushiro M. 1行追加 ()
 						bool isRawFunc;
 						std::vector<std::string> argNames;
 						std::unordered_map<std::string, std::string> argNameToCtype;
@@ -7250,7 +6439,6 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							CheckFunction(
 								funcType,
 								funcCname,
-// 21.06.02 Fukushiro M. 1行追加 ()
 								isRawFunc,
 								argNames,
 								argNameToCtype,
@@ -7269,8 +6457,6 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							)
 						{
 							const std::string funcLuaname = xmlCommentLuaname.empty() ? funcCname : xmlCommentLuaname;
-// 21.05.16 Fukushiro M. 1行変更 ()
-//							const int luaArgCount = (funcType == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)argNames.size();
 							const int luaArgCount = (funcType == FuncRec::Type::METHOD) ? (int)inArgNames.size() + 1 : (int)inArgNames.size();
 							auto & funcLuanameToFuncGroupId =
 								(funcType == FuncRec::Type::METHOD) ?
@@ -7291,13 +6477,11 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							auto & funcRec = FuncRec::New(funcGroupRec.id);
 							funcRec.type = funcType;
 							funcRec.funcCname = funcCname;
-// 21.06.02 Fukushiro M. 1行追加 ()
 							funcRec.isRawFunc = isRawFunc;
 							funcRec.funcLuaname = funcLuaname;
 							funcRec.argNames = argNames;
 							funcRec.argNameToCtype = argNameToCtype;
 							funcRec.argNameToRawCtype = argNameToRawCtype;
-// 21.05.19 Fukushiro M. 1行追加 ()
 							funcRec.autoDelArgNames = xmlCommentAutoDelArgNames;
 							funcRec.argNameToSummary = xmlCommentArgNameToSummary;
 							funcRec.inArgNames = inArgNames;
@@ -7305,6 +6489,8 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							funcRec.inArgNameToLuaToCppConversionPath = inArgNameToLuaToCppConversionPath;
 							funcRec.outArgNameToCppToLuaConversionPath = outArgNameToCppToLuaConversionPath;
 							funcRec.exceptions = xmlCommentExceptions;
+// 23.10.30 Fukushiro M. 1行追加 ()
+							funcRec.outputApi = xmlCommentExportApi;
 							funcGroupRec.argCountToFuncId[luaArgCount] = funcRec.id;
 							funcRec.summary = xmlCommentSummary;
 							break;
@@ -7344,6 +6530,8 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 								enumRec.summary = xmlCommentSummary;
 								enumRec.luanameToCname = luanameToCname;
 								enumRec.luanameToSummary = luanameToSummary;
+// 23.10.30 Fukushiro M. 1行追加 ()
+								enumRec.outputApi = xmlCommentExportApi;
 								if (nextEnumType == EnumRec::Type::REGULAR)
 									classRec.luanameToRegularEnumId[enumRec.enumLuaname] = enumRec.id;
 								else
@@ -7377,6 +6565,8 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							constantRec.constantLuaname = xmlCommentLuaname.empty() ? constantName : xmlCommentLuaname;
 							constantRec.summary = xmlCommentSummary;
 							constantRec.cToLuaConversionPath = cToLuaConversionPath;
+// 23.10.30 Fukushiro M. 1行追加 ()
+							constantRec.outputApi = xmlCommentExportApi;
 							classRec.constantLuanameToConstantId[constantRec.constantLuaname] = constantRec.id;
 							break;
 						}
@@ -7408,6 +6598,8 @@ static void ParseSource2(ReadBufferedFile & readBufferedFile, ClassRec & classRe
 							variableRec.summary = xmlCommentSummary;
 							variableRec.cToLuaConversionPath = cToLuaConversionPath;
 							variableRec.luaToCConversionPath = luaToCConversionPath;
+// 23.10.30 Fukushiro M. 1行追加 ()
+							variableRec.outputApi = xmlCommentExportApi;
 							classRec.variableLuanameToVariableId[variableRec.variableLuaname] = variableRec.id;
 							break;
 						}
@@ -7463,10 +6655,12 @@ static void CreateDefaultConstructors(ClassRec & classRec)
 			auto & funcRec = FuncRec::New(funcGroupRec.id);
 			funcRec.type = FuncRec::Type::CONSTRUCTOR;
 			funcRec.funcCname = classRec.classCname;
-// 21.06.02 Fukushiro M. 1行追加 ()
 			funcRec.isRawFunc = false;
 			funcRec.funcLuaname = "New";
 			funcRec.summary = "Default constructor.";
+// 23.10.30 Fukushiro M. 1行追加 ()
+			funcRec.outputApi = classRec.outputApi;
+
 			std::string funcCtype;
 			NormalizeVarType(funcCtype, Dummy<std::string>(), classRec.classCname, classRec);
 			if (funcRec.argNameToCtype.find("__lstickvar_ret") == funcRec.argNameToCtype.end())
@@ -7479,17 +6673,11 @@ static void CreateDefaultConstructors(ClassRec & classRec)
 				GetCppToLuaConverter(
 					CppToLuaConversionType::FUNC_RETURN,
 					funcCtype + "*",
-// 21.05.25 Fukushiro M. 1行変更 ()
-//					LuaType("classobject"),
 					LuaType::NIL,
 					successPath
 				);
 				funcRec.outArgNameToCppToLuaConversionPath["__lstickvar_ret"] = successPath;
 			}
-//----- 19.12.11 Fukushiro M. 削除始 ()-----
-//			if (funcRec.argNameToLuatype.find("__lstickvar_ret") == funcRec.argNameToLuatype.end())
-//				funcRec.argNameToLuatype["__lstickvar_ret"] = LuaType("classobject");
-//----- 19.12.11 Fukushiro M. 削除終 ()-----
 			funcGroupRec.argCountToFuncId[0] = funcRec.id;
 		}
 	}
@@ -7522,8 +6710,6 @@ static int ${funcGroupRec.GetWrapperFunctionName()}(lua_State* L)
 	{
 		const auto argCount = argCountFuncId.first;
 		const auto & funcRec = FuncRec::Get(argCountFuncId.second);
-// 21.05.23 Fukushiro M. 1行削除 ()
-//		const auto argCount = funcRec.inArgNames.size();
 		OUTPUT_EXPORTFUNC_STREAM << FORMTEXT(u8R"(
 	case ${argCount}:
 		// ${SRCMARKER}
@@ -7722,7 +6908,8 @@ static void OutputClassPushArgFuncsToHeader(const ClassRec & classRec)
 /// }
 /// </summary>
 /// <param name="classRec">The class record.</param>
-static void OutputStickInitCpp(const ClassRec & classRec)
+/// <param name="outputApiId">Current API-ID</param>
+static void OutputStickInitCpp(const ClassRec & classRec, int outputApiId)
 {
 	if (
 		classRec.classType == ClassRec::Type::STRUCT &&
@@ -7768,17 +6955,21 @@ static void OutputStickInitCpp(const ClassRec & classRec)
 		if (funcGroupRec.argCountToFuncId.size() == 1)
 		{
 			const auto & funcRec = FuncRec::Get(funcGroupRec.argCountToFuncId.begin()->second);
-			wrapperFunCname = funcRec.GetWrapperFunctionName();
+			if (funcRec.outputApi.find(0) != funcRec.outputApi.end() || funcRec.outputApi.find(outputApiId) != funcRec.outputApi.end())
+				wrapperFunCname = funcRec.GetWrapperFunctionName();
 		}
 		else
 		{
 			wrapperFunCname = funcGroupRec.GetWrapperFunctionName();
 		}
-		OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+		if (!wrapperFunCname.empty())
+		{
+			OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 			// ${SRCMARKER}
 			{ "${funcGroupRec.luaname}", ${wrapperFunCname} },
 
 )", funcGroupRec.luaname, wrapperFunCname);
+		}
 	}
 
 	OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
@@ -7811,34 +7002,37 @@ static void OutputStickInitCpp(const ClassRec & classRec)
 			for (const auto & luanameEnumId : luanameToEnumId)
 			{
 				const auto & enumRec = EnumRec::Get(luanameEnumId.second);
-				if (enumRec.enumType == EnumRec::Type::ENUM_CLASS)
+				if (enumRec.outputApi.find(0) != enumRec.outputApi.end() || enumRec.outputApi.find(outputApiId) != enumRec.outputApi.end())
 				{
-					OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+					if (enumRec.enumType == EnumRec::Type::ENUM_CLASS)
+					{
+						OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 	// ${SRCMARKER}
 	Sticklib::push_table(L, "${enumRec.enumLuaname}");
 
 )", enumRec.enumLuaname);
-				}
-				for (const auto & lname_cname : enumRec.luanameToCname)
-				{
-					OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+					}
+					for (const auto & lname_cname : enumRec.luanameToCname)
+					{
+						OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 	// ${SRCMARKER}
 	Sticklib::set_lvalue_to_table<__int64>(L, "${lname_cname.first}", (__int64)${enumRec.GetFullpathElementCprefix()}${lname_cname.second}, false);
 
 )", lname_cname.first, lname_cname.second, enumRec.GetFullpathElementCprefix());
-				}
-				if (enumRec.enumType == EnumRec::Type::ENUM_CLASS)
-				{
-					OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+					}
+					if (enumRec.enumType == EnumRec::Type::ENUM_CLASS)
+					{
+						OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 	// ${SRCMARKER}
 	Sticklib::pop(L);
 
 
 )");
-				}
-				else
-				{
-					OUTPUT_INITFUNC_STREAM << u8"\n";
+					}
+					else
+					{
+						OUTPUT_INITFUNC_STREAM << u8"\n";
+					}
 				}
 			}
 		}
@@ -7869,110 +7063,64 @@ static void OutputStickInitCpp(const ClassRec & classRec)
 		int argMajorNumber = 0;
 		for (const auto & constantAndId : classRec.constantLuanameToConstantId)
 		{
-			argMajorNumber++;
-			int argMinorNumber = 1;
 			const auto & constantRec = ConstantRec::Get(constantAndId.second);
-			const auto & conversionPath = constantRec.cToLuaConversionPath;
+			if (constantRec.outputApi.find(0) != constantRec.outputApi.end() || constantRec.outputApi.find(outputApiId) != constantRec.outputApi.end())
+			{
+				argMajorNumber++;
+				int argMinorNumber = 1;
+				const auto & conversionPath = constantRec.cToLuaConversionPath;
 
-			// conversionPath={ A*& -> * -> A& -> A_to_str -> std::string }
-			// ------------------------
-			// A*& a = (A*&)Const;
-			// A& b = *a;
-			// std::string c;
-			// A_to_str(c, b);
-			// ------------------------
+				// conversionPath={ A*& -> * -> A& -> A_to_str -> std::string }
+				// ------------------------
+				// A*& a = (A*&)Const;
+				// A& b = *a;
+				// std::string c;
+				// A_to_str(c, b);
+				// ------------------------
 
-			auto varCtype = conversionPath.front();
-			auto tmpVarName = UtilString::Format("_var_%d_%d", argMajorNumber, argMinorNumber);
-			OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+				auto varCtype = conversionPath.front();
+				auto tmpVarName = UtilString::Format("_var_%d_%d", argMajorNumber, argMinorNumber);
+				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
 		${varCtype} ${tmpVarName} = (${varCtype})${constantRec.GetFullpathCname()};
 
 )", varCtype, tmpVarName, constantRec.GetFullpathCname());
-			argMinorNumber++;
+				argMinorNumber++;
 
-			for (size_t i = 1; i != conversionPath.size(); i += 2)
-			{
-				const auto & convFunc = conversionPath.at(i);		// Converter.
-				const auto & varCtype = conversionPath.at(i + 1);	// Type of variable.
-				auto nextTmpVarName = UtilString::Format("_var_%d_%d", argMajorNumber, argMinorNumber);
-				if (convFunc == "*" || convFunc == "&")
+				for (size_t i = 1; i != conversionPath.size(); i += 2)
 				{
-					OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+					const auto & convFunc = conversionPath.at(i);		// Converter.
+					const auto & varCtype = conversionPath.at(i + 1);	// Type of variable.
+					auto nextTmpVarName = UtilString::Format("_var_%d_%d", argMajorNumber, argMinorNumber);
+					if (convFunc == "*" || convFunc == "&")
+					{
+						OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
 		${varCtype} ${nextTmpVarName} = ${convFunc}${tmpVarName};
 
 )", varCtype, nextTmpVarName, convFunc, tmpVarName);
-				}
-				else
-				{
-					OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+					}
+					else
+					{
+						OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
 		${varCtype} ${nextTmpVarName};
 		${convFunc}(${nextTmpVarName}, ${tmpVarName});
 
 )", varCtype, nextTmpVarName, convFunc, tmpVarName);
+					}
+					tmpVarName = nextTmpVarName;
+					argMinorNumber++;
 				}
-				tmpVarName = nextTmpVarName;
-				argMinorNumber++;
-			}
-//----- 21.05.25 Fukushiro M. 削除始 ()-----
-////----- 21.05.24 Fukushiro M. 追加始 ()-----
-//			// "::TestClass0*". Do not remove '*'. 
-//			auto fullpathCtypeAst = UtilString::Replace(conversionPath.back(), "&", "");
-//			auto varLuaType = CtypeToLuaType(fullpathCtypeAst);
-//			if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("class-object(")) == 0)
-//			{	//----- if class object is defined as static constant -----
-//				auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
-//				const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
-//				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
-//		// ${SRCMARKER}
-//		Sticklib::set_classobject_to_table<${fullpathCtype}>(L, "${constantRec.constantLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
-//
-//)", fullpathCtype, constantRec.constantLuaname, tmpVarName, uniqueClassName);
-//			}
-//			else if (varLuaType != LuaType::NIL && varLuaType.CompareHead(LuaType("array<class-object>(")) == 0)
-//			{	//----- if class object is defined as static constant -----
-//				auto fullpathCtype = UtilString::Replace(fullpathCtypeAst, "*", "");
-//				const std::string uniqueClassName = ClassRec::FullpathNameToUniqueName(fullpathCtype);
-//				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
-//		// ${SRCMARKER}
-//		Sticklib::set_classobjectarray_to_table<${fullpathCtype}>(L, "${constantRec.constantLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
-//
-//)", fullpathCtype, constantRec.constantLuaname, tmpVarName, uniqueClassName);
-//			}
-//			else
-////----- 21.05.24 Fukushiro M. 追加終 ()-----
-////----- 21.05.25 Fukushiro M. 削除始 ()-----
-////			if (conversionPath.back() == "Sticklib::classobject")
-////			{	//----- if class object is defined as static constant -----
-////				// Get the class type of the class object.
-////				auto preClassType = conversionPath[conversionPath.size() - 3];
-////				preClassType = UtilString::Replace(preClassType, "*", "", "&", "");
-////				// Get the unique name (like "lm__TestClass0__") of the class.
-////				auto preClassId = ClassRec::Get(0).FindClass(preClassType);
-////				const std::string uniqueClassName = ClassRec::Get(preClassId).GetUniqueClassName();
-////
-////				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
-////		// ${SRCMARKER}
-////		Sticklib::set_classobject_to_table(L, "${constantRec.constantLuaname}", false, ${tmpVarName}, "${uniqueClassName}");
-////
-////)", constantRec.constantLuaname, tmpVarName, uniqueClassName);
-////			}
-////			else
-////----- 21.05.25 Fukushiro M. 削除終 ()-----
-//			{
-//----- 21.05.25 Fukushiro M. 削除終 ()-----
-			// "::TestClass0*". Do not remove '*'. 
-			auto fullpathCtypeAst = UtilString::Replace(conversionPath.back(), "&", "");
-			OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+
+				// "::TestClass0*". Do not remove '*'. 
+				auto fullpathCtypeAst = UtilString::Replace(conversionPath.back(), "&", "");
+				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
 		Sticklib::set_lvalue_to_table<${fullpathCtypeAst}>(L, "${constantRec.constantLuaname}", ${tmpVarName}, false);
 
 )", fullpathCtypeAst, constantRec.constantLuaname, tmpVarName);
-
-// 21.05.25 Fukushiro M. 1行削除 ()
-//			}
+			}
 		}
 		OUTPUT_INITFUNC_STREAM << u8"	}\n";
 	}
@@ -8019,17 +7167,21 @@ static void OutputStickInitCpp(const ClassRec & classRec)
 			if (funcGroupRec.argCountToFuncId.size() == 1)
 			{
 				const auto & funcRec = FuncRec::Get(funcGroupRec.argCountToFuncId.begin()->second);
-				wrapperFunCname = funcRec.GetWrapperFunctionName();
+				if (funcRec.outputApi.find(0) != funcRec.outputApi.end() || funcRec.outputApi.find(outputApiId) != funcRec.outputApi.end())
+					wrapperFunCname = funcRec.GetWrapperFunctionName();
 			}
 			else
 			{
 				wrapperFunCname = funcGroupRec.GetWrapperFunctionName();
 			}
-			OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
+			if (!wrapperFunCname.empty())
+			{
+				OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 		// ${SRCMARKER}
 		{ "${funcGroupRec.luaname}", ${wrapperFunCname} },
 
 )", funcGroupRec.luaname, wrapperFunCname);
+			}
 		}
 		OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 		{ nullptr, nullptr },
@@ -8063,7 +7215,8 @@ static void OutputStickInitCpp(const ClassRec & classRec)
 	for (const auto & classId : classRec.memberClassIdArray)
 	{
 		const auto & subcm = ClassRec::Get(classId);
-		OutputStickInitCpp(subcm);
+		if (subcm.outputApi.find(0) != subcm.outputApi.end() || subcm.outputApi.find(outputApiId) != subcm.outputApi.end())
+			OutputStickInitCpp(subcm, outputApiId);
 	}
 	OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 	// ${SRCMARKER}
@@ -8071,9 +7224,9 @@ static void OutputStickInitCpp(const ClassRec & classRec)
 
 
 )");
-} // static void OutputStickInitCpp(const ClassRec & classRec).
+} // static void OutputStickInitCpp(const ClassRec & classRec, int outputApiId).
 
-static void OutputModuleFuncHtml(StringBuffer & buffer, const FuncRec & funcRec)
+static void OutputModuleFuncHtml(StringBuffer & buffer, const FuncRec & funcRec, int outputApiId)
 {
 	// Lua output argument list. e.g. "integer a, string b = ";
 	std::string outLuaArgList;
@@ -8160,19 +7313,6 @@ static void OutputModuleFuncHtml(StringBuffer & buffer, const FuncRec & funcRec)
 
 )");
 
-//----- 21.05.19 Fukushiro M. 変更前 ()-----
-//		for (const auto variableName_Id : funcRec.argNameToSummary)
-//		{
-//			auto argName = (variableName_Id.first == "__lstickvar_ret") ? std::string("return_value") : variableName_Id.first;
-//			auto summary = variableName_Id.second;
-//			auto luaTypeName = funcRec.ArgNameToLuaType(variableName_Id.first).ToString();
-//			buffer << FORMHTML(u8R"(
-//		<dt>${argName}</dt>
-//		<dd>${luaTypeName} type: ${summary}</dd>
-//
-//)", argName, luaTypeName, summary);
-//		}
-//----- 21.05.19 Fukushiro M. 変更後 ()-----
 		std::vector<std::string> orderedArgName;
 		for (const auto & argName : argNames)
 		{
@@ -8199,7 +7339,6 @@ static void OutputModuleFuncHtml(StringBuffer & buffer, const FuncRec & funcRec)
 )", variableName, luaTypeName, summary);
 			}
 		}
-//----- 21.05.19 Fukushiro M. 変更終 ()-----
 
 
 		buffer << FORMHTML(u8R"(
@@ -8209,7 +7348,7 @@ static void OutputModuleFuncHtml(StringBuffer & buffer, const FuncRec & funcRec)
 	}
 } // OutputModuleFuncHtml
 
-static void OutputModuleVariableHtml(StringBuffer & buffer, const ConstantRec & constRec)
+static void OutputModuleVariableHtml(StringBuffer & buffer, const ConstantRec & constRec, int outputApiId)
 {
 	std::string returnLuatype = constRec.GetLuaType().ToString() + " ";
 	std::string returnCtype;
@@ -8241,7 +7380,7 @@ static void OutputModuleVariableHtml(StringBuffer & buffer, const ConstantRec & 
 )", constRec.GetFullpathLuaname(), constRec.summary, returnLuatype, returnCtype, constRec.GetFullpathCname());
 }
 
-static void OutputModuleEnumHtml(StringBuffer & buffer, const EnumRec & enumRec)
+static void OutputModuleEnumHtml(StringBuffer & buffer, const EnumRec & enumRec, int outputApiId)
 {
 	std::string returnCtype;
 	switch (enumRec.enumType)
@@ -8276,10 +7415,20 @@ static void OutputModuleEnumHtml(StringBuffer & buffer, const EnumRec & enumRec)
 	}
 } // OutputModuleEnumHtml.
 
-static void OutputStructLuaElementHtml(StringBuffer & buffer, const ClassRec & classRec, std::string spaceCode)
+/// <summary>
+/// Output structure's member as Lua format to HTML.
+/// 構造体のメンバー変数をLua形式でHTMLに出力する。
+/// </summary>
+/// <param name="buffer"></param>
+/// <param name="classRec"></param>
+/// <param name="spaceCode"></param>
+/// <param name="outputApiId"></param>
+static void OutputStructLuaElementHtml(StringBuffer & buffer, const ClassRec & classRec, std::string spaceCode, int outputApiId)
 {
+	// Superclassが有る場合、Superclassのメンバーも追加出力する。
+	// If superclass exists, output members of superclass too.
 	if (classRec.superClassId != -1)
-		OutputStructLuaElementHtml(buffer, ClassRec::Get(classRec.superClassId), spaceCode);
+		OutputStructLuaElementHtml(buffer, ClassRec::Get(classRec.superClassId), spaceCode, outputApiId);
 
 	for (const auto & variableName_Id : classRec.variableLuanameToVariableId)
 	{
@@ -8336,6 +7485,7 @@ static void OutputStructLuaElementHtml(StringBuffer & buffer, const ClassRec & c
 			//     type = [integer value],
 
 			buffer << FORMHTML(u8R"(
+<!-- ${SRCMARKER} -->
 ${spaceCode}${variableRec.variableLuaname} = ${luaValueText},
 
 )", spaceCode, variableRec.variableLuaname, luaValueText);
@@ -8349,17 +7499,16 @@ ${spaceCode}${variableRec.variableLuaname} = ${luaValueText},
 			//    }
 
 			// Assume it is struct.
-// 21.05.25 Fukushiro M. 1行変更 ()
-//			auto subClassId = ClassRec::Get(0).FindClass(UtilString::Replace(variableRec.cToLuaConversionPath.back(), "&", ""));
 			auto subClassId = ClassRec::Get(0).FindClass(UtilString::Replace(UtilString::Replace(variableRec.cToLuaConversionPath.back(), "*", "", "&", "")));
 			const auto & subClassRec = ClassRec::Get(subClassId);
 
 			buffer << FORMHTML(u8R"(
+<!-- ${SRCMARKER} -->
 ${spaceCode}${variableRec.variableLuaname} = {
 
 )", spaceCode, variableRec.variableLuaname);
 
-			OutputStructLuaElementHtml(buffer, subClassRec, spaceCode + "    ");
+			OutputStructLuaElementHtml(buffer, subClassRec, spaceCode + "    ", outputApiId);
 
 			buffer << FORMHTML(u8R"(
 ${spaceCode}}
@@ -8370,7 +7519,12 @@ ${spaceCode}}
 	}
 } // OutputStructLuaElementHtml.
 
-static void OutputStructHtml(StringBuffer & buffer, const ClassRec & classRec)
+/// <summary>
+/// Output structure part of manual to HTML.
+/// </summary>
+/// <param name="buffer">Output destination</param>
+/// <param name="classRec">Class record</param>
+static void OutputStructHtml(StringBuffer & buffer, const ClassRec & classRec, int outputApiId)
 {
 	const auto fullpathLuaname = classRec.GetFullpathLuaname();
 	const auto fullpathCname = classRec.GetFullpathCname();
@@ -8419,7 +7573,7 @@ static void OutputStructHtml(StringBuffer & buffer, const ClassRec & classRec)
 
 )");
 
-	OutputStructLuaElementHtml(buffer, classRec, "    ");
+	OutputStructLuaElementHtml(buffer, classRec, "    ", outputApiId);
 
 	buffer << FORMHTML(u8R"(
 }</code></pre>
@@ -8452,6 +7606,7 @@ static void OutputStructHtml(StringBuffer & buffer, const ClassRec & classRec)
 	{
 		const auto & variableRec = VariableRec::Get(variableName_Id.second);
 		buffer << FORMHTML(u8R"(
+<!-- ${SRCMARKER} -->
     ${variableRec.variableRawCtype} ${variableRec.variableCname};
 
 )", variableRec.variableRawCtype, variableRec.variableCname);
@@ -8464,6 +7619,7 @@ static void OutputStructHtml(StringBuffer & buffer, const ClassRec & classRec)
 )");
 
 	buffer << FORMHTML(u8R"(
+<!-- ${SRCMARKER} -->
 	<div class="structure2">
 		<h3 class="element-name">array&lt;${fullpathLuaname}&gt;<span class="element-name-additional"> table</span></h3>
 		<p class="element-lua-title">Lua</p>
@@ -8516,20 +7672,23 @@ static void OutputStructHtml(StringBuffer & buffer, const ClassRec & classRec)
 )");
 } // OutputStructHtml.
 
-static void OutputModuleHtml(StringBuffer & buffer, const ClassRec & classRec)
+/// <summary>
+/// Output module part of manual to HTML.
+/// </summary>
+/// <param name="buffer">Output destination</param>
+/// <param name="classRec">Class record</param>
+static void OutputModuleHtml(StringBuffer & buffer, const ClassRec & classRec, int outputApiId)
 {
 	// e.g. "ABC module"
 	const auto moduleTitle = (classRec.classType == ClassRec::Type::GLOBAL) ? "Global scope" : classRec.GetFullpathLuaname() + " module";
 	// e.g. "ABC class"
 	const auto classTitle = (classRec.classType == ClassRec::Type::GLOBAL) ? "Global scope" : classRec.GetFullpathLuaname() + " class";
 
-//----- 20.01.22 Fukushiro M. 追加始 ()-----
 	//----- Outputs module structures -----
 	if (classRec.classType == ClassRec::Type::STRUCT)
 	{
-		OutputStructHtml(buffer, classRec);
+		OutputStructHtml(buffer, classRec, outputApiId);
 	}
-//----- 20.01.22 Fukushiro M. 追加終 ()-----
 
 	//----- Outputs module functions -----
 	if (!classRec.staticFuncLuanameToFuncGroupId.empty())
@@ -8548,7 +7707,8 @@ static void OutputModuleHtml(StringBuffer & buffer, const ClassRec & classRec)
 			for (const auto & argCountFuncId : funcGroupRec.argCountToFuncId)
 			{
 				const auto & funcRec = FuncRec::Get(argCountFuncId.second);
-				OutputModuleFuncHtml(buffer, funcRec);
+				if (funcRec.outputApi.find(0) != funcRec.outputApi.end() || funcRec.outputApi.find(outputApiId) != funcRec.outputApi.end())
+					OutputModuleFuncHtml(buffer, funcRec, outputApiId);
 			}
 		}
 		buffer << u8"</div>\n";
@@ -8570,7 +7730,8 @@ static void OutputModuleHtml(StringBuffer & buffer, const ClassRec & classRec)
 			for (const auto & nameConstId : classRec.constantLuanameToConstantId)
 			{
 				const auto & constRec = ConstantRec::Get(nameConstId.second);
-				OutputModuleVariableHtml(buffer, constRec);
+				if (constRec.outputApi.find(0) != constRec.outputApi.end() || constRec.outputApi.find(outputApiId) != constRec.outputApi.end())
+					OutputModuleVariableHtml(buffer, constRec, outputApiId);
 			}
 		}
 		//----- Outputs C++ enumerations as module variables -----
@@ -8579,7 +7740,8 @@ static void OutputModuleHtml(StringBuffer & buffer, const ClassRec & classRec)
 			for (const auto & nameEnumId : classRec.luanameToRegularEnumId)
 			{
 				const auto & enumRec = EnumRec::Get(nameEnumId.second);
-				OutputModuleEnumHtml(buffer, enumRec);
+				if (enumRec.outputApi.find(0) != enumRec.outputApi.end() || enumRec.outputApi.find(outputApiId) != enumRec.outputApi.end())
+					OutputModuleEnumHtml(buffer, enumRec, outputApiId);
 			}
 		}
 		buffer << u8"</div>\n";
@@ -8602,7 +7764,8 @@ static void OutputModuleHtml(StringBuffer & buffer, const ClassRec & classRec)
 			for (const auto & argCountFuncId : funcGroupRec.argCountToFuncId)
 			{
 				const auto & funcRec = FuncRec::Get(argCountFuncId.second);
-				OutputModuleFuncHtml(buffer, funcRec);
+				if (funcRec.outputApi.find(0) != funcRec.outputApi.end() || funcRec.outputApi.find(outputApiId) != funcRec.outputApi.end())
+					OutputModuleFuncHtml(buffer, funcRec, outputApiId);
 			}
 		}
 		buffer << u8"</div>\n";
@@ -8612,7 +7775,9 @@ static void OutputModuleHtml(StringBuffer & buffer, const ClassRec & classRec)
 	for (const auto & nameEnumId : classRec.luanameToClassEnumId)
 	{
 		const auto & enumRec = EnumRec::Get(nameEnumId.second);
-		buffer << FORMHTML(u8R"(
+		if (enumRec.outputApi.find(0) != enumRec.outputApi.end() || enumRec.outputApi.find(outputApiId) != enumRec.outputApi.end())
+		{
+			buffer << FORMHTML(u8R"(
 <!-- ${SRCMARKER} -->
 <div class="module-variables">
 	<h2 class="elements-title">${enumRec.GetFullpathLuaname()} module</h2>
@@ -8620,8 +7785,9 @@ static void OutputModuleHtml(StringBuffer & buffer, const ClassRec & classRec)
 
 )", enumRec.GetFullpathLuaname(), enumRec.summary);
 
-		OutputModuleEnumHtml(buffer, enumRec);
-		buffer << u8"</div>\n";
+			OutputModuleEnumHtml(buffer, enumRec, outputApiId);
+			buffer << u8"</div>\n";
+		}
 	}
 
 	//------------------------------------
@@ -8630,11 +7796,25 @@ static void OutputModuleHtml(StringBuffer & buffer, const ClassRec & classRec)
 	for (const auto & classId : classRec.memberClassIdArray)
 	{
 		const auto & subcr = ClassRec::Get(classId);
-		OutputModuleHtml(buffer, subcr);
+// 23.10.30 Fukushiro M. 1行追加 ()
+		if (subcr.outputApi.find(0) != subcr.outputApi.end() || subcr.outputApi.find(outputApiId) != subcr.outputApi.end())
+			OutputModuleHtml(buffer, subcr, outputApiId);
 	}
 } // OutputModuleHtml
 
-static void OutputHtml(StringBuffer & buffer, const std::string & insertHtml, const ClassRec & classRec, const std::string & filename)
+/// <summary>
+/// Output HTML manual.
+/// </summary>
+/// <param name="buffer">Destination of output</param>
+/// <param name="insertHtml">HTML text to install at the front of HTML manual.</param>
+/// <param name="classRec">Class record</param>
+/// <param name="outputApiId">API-ID of current output file.</param>
+static void OutputHtml(
+	StringBuffer & buffer,
+	const std::string & insertHtml,
+	const ClassRec & classRec,
+	int outputApiId
+)
 {
 	buffer << FORMHTML(u8R"(
 <!-- ${SRCMARKER} -->
@@ -8643,13 +7823,13 @@ static void OutputHtml(StringBuffer & buffer, const std::string & insertHtml, co
 <head>
 <meta charset="UTF-8">
 <title>LuaStick Output API Manual</title>
-<link rel="stylesheet" href="${filename}.css" type="text/css">
+<link rel="stylesheet" href="Stick.css" type="text/css">
 </head>
 <body>
 <h1 class="manual-title">LuaStick Output API Manual</h1>
 
 
-)", filename);
+)");
 
 	buffer << FORMTEXT(u8R"(
 <!-- ${SRCMARKER} -->
@@ -8658,7 +7838,7 @@ ${insertHtml}
 
 )", insertHtml);
 
-	OutputModuleHtml(buffer, classRec);
+	OutputModuleHtml(buffer, classRec, outputApiId);
 
 	buffer << FORMHTML(u8R"(
 </body>
@@ -8673,13 +7853,11 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 	constexpr size_t STICKLIB_LEN = _countof(STICKLIB) - 1;
 	constexpr wchar_t STICKRUN[]{ L"Stickrun.h" };
 	constexpr wchar_t XXHASH[]{ L"xxhash.h" };
-//----- 21.06.10 Fukushiro M. 追加始 ()-----
 	constexpr wchar_t HTMLEXT[]{ L".html" };
 	constexpr size_t HTMLEXT_LEN = _countof(HTMLEXT) - 1;
 	constexpr wchar_t STICKHELP[]{ L"stickhelp.html" };
 
 	constexpr wchar_t DEFAULT_LANG[]{ L"en" };
-//----- 21.06.10 Fukushiro M. 追加終 ()-----
 
 	std::string dummy;
 	try
@@ -8740,6 +7918,14 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 			insertHtml += buffer.data();
 		}
 
+		// Count of API. If application supports 2 or more Lua, LuaStick can prepare API for each Lua.
+		int countOfApi = 1;
+		auto optApi = optionToValue.find(OPTION_API);
+		if (optApi != optionToValue.end())
+			countOfApi = (int)wcstol(optApi->second.c_str(), nullptr, 10);
+		if (countOfApi < 0 || MAX_API < countOfApi)
+			ThrowLeException(LeError::OPTION_IS_OUT_OF_RANGE, OPTION_API);
+
 		// Output file path. It does not include extension. e.g. "C:\folder1\fileA"
 		const auto outFilePath = optionToValue.find(OPTION_OUT)->second;
 		wchar_t fname[_MAX_FNAME];
@@ -8757,6 +7943,10 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 		// std::vector<ClassRec> CLASS_AND_CFUNC_SET;
 		auto & classRec = ClassRec::New(-1);
 		classRec.classType = ClassRec::Type::GLOBAL;
+//----- 23.10.30 Fukushiro M. 追加始 ()-----
+		// API-ID=0 means output to every API.
+		classRec.outputApi.insert(0);
+//----- 23.10.30 Fukushiro M. 追加終 ()-----
 
 		// externで宣言されたC++の関数名セット。グローバル関数名。
 		std::vector<std::string> globalFunction;
@@ -8967,11 +8157,16 @@ static int lm__STICK__IsNullObject__1(lua_State* L)
 	return 1;
 }
 
+)");
+
+		for (int outputApiId = 1; outputApiId <= countOfApi; outputApiId++)
+		{
+			OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 /// <summary>
 /// LuaStick initializing function.
 /// luastick_init must be called to register the classes and its member functions.
 /// </summary>
-void luastick_init(lua_State* L)
+void luastick_init_${outputApiId}(lua_State* L)
 {
 	std::random_device seed_gen;
 	std::mt19937 engine(seed_gen());
@@ -8993,17 +8188,12 @@ void luastick_init(lua_State* L)
 	Sticklib::pop(L);
 	Sticklib::pop(L);
 
+)", outputApiId);
 
-)");
+			OutputStickInitCpp(classRec, outputApiId);
 
-		OutputStickInitCpp(classRec);
-
-		OUTPUT_INITFUNC_STREAM << u8"}\n\n";
-
-		// std::tr2::sys::path path(outFilePath);
-// 22.09.06 Fukushiro M. 1行変更 ()
-//		std::experimental::filesystem::path path(outFilePath);
-		std::filesystem::path path(outFilePath);
+			OUTPUT_INITFUNC_STREAM << u8"}\n\n";
+		}
 
 		UtilFile::SaveFile(OUTPUT_H_FILE_STREAM.get(dummy), (outFilePath + L".h").c_str());
 
@@ -9011,9 +8201,12 @@ void luastick_init(lua_State* L)
 		OUTPUT_CPP_FILE_STREAM.insert(OUTPUT_CPP_FILE_STREAM.end(), OUTPUT_INITFUNC_STREAM.begin(), OUTPUT_INITFUNC_STREAM.end());
 		UtilFile::SaveFile(OUTPUT_CPP_FILE_STREAM.get(dummy), (outFilePath + L".cpp").c_str());
 
-		StringBuffer htmlManualBuffer;
-		OutputHtml(htmlManualBuffer, insertHtml, classRec, path.filename().string());
-		UtilFile::SaveFile(htmlManualBuffer.get(dummy), (outFilePath + L".html").c_str());
+		for (int outputApiId = 1; outputApiId <= countOfApi; outputApiId++)
+		{
+			StringBuffer htmlManualBuffer;
+			OutputHtml(htmlManualBuffer, insertHtml, classRec, outputApiId);
+			UtilFile::SaveFile(htmlManualBuffer.get(dummy), (outFilePath + UtilString::Format(L"%d", outputApiId) + L".html").c_str());
+		}
 	}
 	catch (LeException e)
 	{

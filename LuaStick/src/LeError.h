@@ -21,7 +21,8 @@ public:
 		CANNOT_OPEN_FILE			= 410,	// ファイルが開けません。
 
 		OPTION_NOT_SPECIFIED		= 10000,	// コマンドラインオプションが指定されていません。
-		FILE_NOT_SPECIFIED			= 10001,	// ファイルが指定されていません。
+		OPTION_IS_OUT_OF_RANGE		= 10001,	// コマンドラインオプションの値が範囲外です。
+		FILE_NOT_SPECIFIED			= 10010,	// ファイルが指定されていません。
 		TAG_OCCURED_UNEXPECTED_PLACE= 11000,	// LuaStick tag occured at the unexpected place.
 		UNEXPECTED_EOF				= 11001,	// Application encountered unexpected EOF.
 		UNEXPECTED_CHAR				= 11002,	// Application encountered unexpected character.
@@ -153,6 +154,8 @@ public:
 		case LeError::CANNOT_OPEN_FILE:				return L"ファイルが開けません";
 
 		case LeError::OPTION_NOT_SPECIFIED:			return L"コマンドラインオプションが指定されていません。";
+		case LeError::OPTION_IS_OUT_OF_RANGE:		return L"コマンドラインオプションの値が範囲外です。";
+
 		case LeError::FILE_NOT_SPECIFIED:			return L"ファイルが指定されていません。";
 		case LeError::TAG_OCCURED_UNEXPECTED_PLACE:	return L"LuaStickのタグが間違った場所で使われています。";
 		case LeError::UNEXPECTED_EOF:				return L"予期しないEOFです。";
@@ -269,6 +272,8 @@ public:
 		case LeError::CANNOT_OPEN_FILE:				return L"The file cannot be opened";
 
 		case LeError::OPTION_NOT_SPECIFIED:			return L"Command line option is not specified.";
+		case LeError::OPTION_IS_OUT_OF_RANGE:		return L"Value of command line is out of range.";
+
 		case LeError::FILE_NOT_SPECIFIED:			return L"File is not specified.";
 		case LeError::TAG_OCCURED_UNEXPECTED_PLACE:	return L"LuaStick tag occured at the unexpected place.";
 		case LeError::UNEXPECTED_EOF:				return L"Application encountered unexpected EOF.";
