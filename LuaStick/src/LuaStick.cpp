@@ -8009,10 +8009,18 @@ static unsigned __int64 WRAPPER_SEED = 0;
 
 // ${SRCMARKER}
 struct lua_State;
-extern void luastick_init(lua_State* L);
-
 
 )");
+
+		for (int outputApiId = 1; outputApiId <= countOfApi; outputApiId++)
+		{
+			const std::string funcName = (countOfApi == 1) ? "luastick_init" : UtilString::Format("luastick_init_%d", outputApiId);
+			OUTPUT_H_FILE_STREAM << FORMTEXT(u8R"(
+extern void ${funcName}(lua_State* L);
+
+)", funcName);
+		}
+		OUTPUT_H_FILE_STREAM << "\r\n";
 
 		for (const auto & sourceFile : headerFiles)
 		{
@@ -8161,12 +8169,13 @@ static int lm__STICK__IsNullObject__1(lua_State* L)
 
 		for (int outputApiId = 1; outputApiId <= countOfApi; outputApiId++)
 		{
+			const std::string funcName = (countOfApi == 1) ? "luastick_init" : UtilString::Format("luastick_init_%d", outputApiId);
 			OUTPUT_INITFUNC_STREAM << FORMTEXT(u8R"(
 /// <summary>
 /// LuaStick initializing function.
 /// luastick_init must be called to register the classes and its member functions.
 /// </summary>
-void luastick_init_${outputApiId}(lua_State* L)
+void ${funcName}(lua_State* L)
 {
 	std::random_device seed_gen;
 	std::mt19937 engine(seed_gen());
@@ -8188,7 +8197,7 @@ void luastick_init_${outputApiId}(lua_State* L)
 	Sticklib::pop(L);
 	Sticklib::pop(L);
 
-)", outputApiId);
+)", funcName);
 
 			OutputStickInitCpp(classRec, outputApiId);
 
@@ -8203,9 +8212,11 @@ void luastick_init_${outputApiId}(lua_State* L)
 
 		for (int outputApiId = 1; outputApiId <= countOfApi; outputApiId++)
 		{
+			const std::wstring fileName = (countOfApi == 1) ?
+				outFilePath + L".html" : outFilePath + UtilString::Format(L"%d", outputApiId) + L".html";
 			StringBuffer htmlManualBuffer;
 			OutputHtml(htmlManualBuffer, insertHtml, classRec, outputApiId);
-			UtilFile::SaveFile(htmlManualBuffer.get(dummy), (outFilePath + UtilString::Format(L"%d", outputApiId) + L".html").c_str());
+			UtilFile::SaveFile(htmlManualBuffer.get(dummy), fileName.c_str());
 		}
 	}
 	catch (LeException e)

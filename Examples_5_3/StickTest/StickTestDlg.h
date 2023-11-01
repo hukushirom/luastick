@@ -85,26 +85,34 @@ constexpr int HIJ = 10;
 class X
 {
 public:
-	/// <stick export="true"/>
+	/// <stick export="true" api="1"/>
 	enum class Enum1
 	{
-		A,
-		B,
+		Enum1_A,
+		Enum1_B,
 	};
 
 	/// <stick export="true"/>
 	enum Enum2
 	{
-		CC,
-		DD,
+		Enum2_A,
+		Enum2_B,
 	};
+
+	/// <stick export="true" api="2"/>
+	enum class Enum3
+	{
+		Enum3_A,
+		Enum3_B,
+	};
+
 
 	/// <stick export="true"/>
 	static constexpr int EFG = 10;
 	// constexpr int HIJ = 10;	NG
 
 
-	/// <stick export="true"/>
+	/// <stick export="true" api="1"/>
 	class A
 	{
 	public:
